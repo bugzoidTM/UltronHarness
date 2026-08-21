@@ -11,7 +11,9 @@ from uuid import uuid4
 from ultron.configuration import Settings
 from ultron.core.events import EventBus
 from ultron.core.recovery import RecoveryEngine
+from ultron.core.verifier import StepSuccessVerifier
 from ultron.db import Database
+from ultron.learning.context_builder import ContextBuilder
 from ultron.memory.service import MemoryService
 from ultron.models.gateway import ModelGateway
 from ultron.policy.engine import PolicyEngine
@@ -46,10 +48,13 @@ class Orchestrator:
         self.settings, self.db, self.events = settings, db, events
         self.memory, self.models, self.policy, self.tools = memory, models, policy, tools
         self.recovery = RecoveryEngine()
+        self.verifier = StepSuccessVerifier(tools)
+        self.context_builder = ContextBuilder(db)
         self.skills = SkillService(db)
         self.experience = ExperienceCycle(db, self.skills)
         self.active: dict[str, asyncio.Task[None]] = {}
         self.cancel_events: dict[str, asyncio.Event] = {}
+        self.suspended: dict[str, dict[str, Any]] = {}
 
     async def create_task(self, payload: TaskCreate) -> dict[str, Any]:
         task_id, timestamp = str(uuid4()), utcnow()
@@ -156,41 +161,41 @@ class Orchestrator:
                 arguments=self.db.parse_json(execution["arguments_json"], {}),
             )
             result = await self._execute_allowed_tool(task, execution["id"], call)
-            await self._transition(
+            continuation = self.suspended.pop(task_id, None)
+            if continuation is None:
+                await self._fail(task_id, "Continuação aprovada indisponível; a tarefa não pode ser retomada com segurança.")
+                return self.db.one("SELECT * FROM approvals WHERE id=?", (approval_id,)) or {}
+            self._update_task(task_id, status=TaskStatus.RUNNING, error=None)
+
+            async def resume() -> None:
+                try:
+                    await self._execute_plan(
+                        task_id,
+                        continuation["task"],
+                        continuation["plan"],
+                        continuation["revision"],
+                        continuation["index"],
+                        continuation["actions"],
+                        continuation["errors"],
+                        continuation["routed_context"],
+                        continuation["started"],
+                        continuation["memories"],
+                        pending_result=result,
+                    )
+                except Exception as exc:
+                    await self._fail(task_id, f"Erro ao retomar após aprovação: {exc}")
+                finally:
+                    self.active.pop(task_id, None)
+
+            runner = asyncio.create_task(resume(), name=f"ultron-resume-{task_id}")
+            self.active[task_id] = runner
+            await self.events.emit(
+                "task.resumed",
+                {"approved_execution": execution["id"], "resume_step": continuation["index"]},
                 task_id,
-                CognitiveState.OBSERVE_RESULT,
-                {"approved_execution": execution["id"], "ok": result["status"] == "completed"},
             )
-            if result["status"] == "completed":
-                self.db.execute(
-                    "UPDATE tasks SET step_count=step_count+1, updated_at=? WHERE id=?",
-                    (utcnow(), task_id),
-                )
-                await self._transition(task_id, CognitiveState.VERIFY, {"approved_execution": True})
-                lessons = [f"A operação aprovada {approval['action']} foi concluída e verificada."]
-                await self._transition(task_id, CognitiveState.LEARN, {"success": True})
-                self.memory.store_experience(
-                    task_id,
-                    "approved-tool-execution",
-                    [result],
-                    "Tarefa concluída após aprovação do usuário.",
-                    True,
-                    [],
-                    lessons,
-                    0.9,
-                )
-                self._update_task(
-                    task_id, status=TaskStatus.COMPLETED, completed_at=utcnow(), error=None
-                )
-                await self._transition(task_id, CognitiveState.COMPLETE, {"success": True})
-                await self.events.emit(
-                    "task.completed",
-                    {"approved_execution": execution["id"], "duration_ms": result["duration_ms"]},
-                    task_id,
-                )
-            else:
-                await self._fail(task_id, str(result.get("error", "Falha após aprovação.")))
         else:
+            self.suspended.pop(task_id, None)
             self._update_task(
                 task_id,
                 status=TaskStatus.FAILED,
@@ -300,14 +305,13 @@ class Orchestrator:
             "output": result.output,
             "error": result.error,
             "duration_ms": result.duration_ms,
+            "metadata": result.metadata,
         }
         await self.events.emit("tool.completed", payload, task["id"])
         return {"status": status, **payload}
 
     async def _run_loop(self, task_id: str) -> None:
         started = monotonic()
-        errors: list[str] = []
-        actions: list[dict[str, Any]] = []
         try:
             task = self.get_task(task_id)
             if not task:
@@ -320,9 +324,7 @@ class Orchestrator:
             )
             await self.events.emit("task.started", {"title": task["title"]}, task_id)
             await self._transition(task_id, CognitiveState.OBSERVE, {})
-            await self._transition(
-                task_id, CognitiveState.UNDERSTAND, {"objective": task["objective"]}
-            )
+            await self._transition(task_id, CognitiveState.UNDERSTAND, {"objective": task["objective"]})
             await self._transition(task_id, CognitiveState.RETRIEVE_MEMORY, {})
             memories = self.memory.search(
                 __import__("ultron.schemas", fromlist=["MemorySearch"]).MemorySearch(
@@ -340,119 +342,48 @@ class Orchestrator:
                 },
                 task_id,
             )
-            await self._transition(
-                task_id, CognitiveState.DELIBERATE, {"memory_count": len(memories)}
+            routed_context = self.context_builder.build(task)
+            await self.events.emit(
+                "experience.routed",
+                {
+                    "task_signature_id": routed_context.task_signature_id,
+                    "family": routed_context.task_signature.family,
+                    "candidate_count": routed_context.candidate_count,
+                    "injected": routed_context.injected,
+                    "routing_decision_ids": routed_context.routing_decision_ids,
+                },
+                task_id,
             )
-            plan = await self._make_plan(task, memories)
-            self._save_plan(task_id, plan)
+            await self._transition(
+                task_id,
+                CognitiveState.DELIBERATE,
+                {
+                    "memory_count": len(memories),
+                    "experience_candidates": routed_context.candidate_count,
+                    "experience_injected": routed_context.injected,
+                },
+            )
+            plan = await self._make_plan(task, memories, routed_context.routed_procedures)
+            revision = self._save_plan(task_id, plan)
             await self._transition(
                 task_id,
                 CognitiveState.PLAN,
-                {"steps": len(plan.steps), "confidence": plan.confidence},
+                {"steps": len(plan.steps), "confidence": plan.confidence, "revision": revision},
             )
             await self.events.emit("plan.created", plan.model_dump(mode="json"), task_id)
             self._update_task(task_id, status=TaskStatus.RUNNING, confidence=plan.confidence)
-            for step in plan.steps:
-                self._assert_limits(task_id, started)
-                if self._cancelled(task_id):
-                    return
-                await self._transition(
-                    task_id, CognitiveState.POLICY_CHECK, {"step": step.id, "action": step.action}
-                )
-                await self.events.emit("task.step", {"step": step.model_dump(mode="json")}, task_id)
-                if step.tool:
-                    await self._transition(
-                        task_id, CognitiveState.ACT, {"step": step.id, "tool": step.tool}
-                    )
-                    result = await self.execute_tool(
-                        task_id, ToolCall(tool_name=step.tool, arguments=step.arguments)
-                    )
-                    actions.append(result)
-                    if result["status"] == "waiting_approval":
-                        await self._transition(
-                            task_id,
-                            CognitiveState.PAUSED,
-                            {"reason": "waiting_approval", "step": step.id},
-                        )
-                        return
-                    await self._transition(
-                        task_id,
-                        CognitiveState.OBSERVE_RESULT,
-                        {"step": step.id, "ok": result["status"] == "completed"},
-                    )
-                    if result["status"] != "completed":
-                        error = str(result.get("error", "Falha de ferramenta."))
-                        errors.append(error)
-                        failure = self.recovery.classify(error, step.tool, len(errors))
-                        recovery = self.recovery.propose(failure, self.settings.limits["max_replans"])
-                        self.recovery.persist(self.db, task_id, failure, recovery)
-                        await self.events.emit(
-                            "failure.classified",
-                            {"category": failure.category.value, "recoverable": failure.recoverable, "strategy": recovery.strategy},
-                            task_id,
-                        )
-                        if not recovery.retry or not await self._replan(task_id, task, plan, step, errors):
-                            return
-                else:
-                    actions.append(
-                        {
-                            "step": step.id,
-                            "action": step.action,
-                            "status": "completed",
-                            "evidence": step.success_condition,
-                        }
-                    )
-                self.db.execute(
-                    "UPDATE tasks SET step_count=step_count+1, updated_at=? WHERE id=?",
-                    (utcnow(), task_id),
-                )
-            await self._transition(
-                task_id, CognitiveState.VERIFY, {"actions": len(actions), "errors": len(errors)}
-            )
-            success = not errors
-            lessons = [
-                "O plano foi concluído com verificação operacional."
-                if success
-                else f"A execução encontrou: {errors[-1]}"
-            ]
-            await self._transition(task_id, CognitiveState.LEARN, {"success": success})
-            self.memory.store_experience(
+            await self._execute_plan(
                 task_id,
-                "structured-plan",
-                actions,
-                "Tarefa concluída" if success else "Tarefa falhou",
-                success,
-                errors,
-                lessons,
-                0.85 if success else 0.3,
+                task,
+                plan,
+                revision,
+                0,
+                [],
+                [],
+                routed_context,
+                started,
+                memories,
             )
-            experience = self.experience.consolidate(
-                task["objective"],
-                "Tarefa concluída" if success else "Tarefa falhou",
-                lessons,
-                success,
-                novel_failure=bool(errors),
-            )
-            await self.events.emit(
-                "memory.created", {"type": "episodic", "success": success, "experience": experience}, task_id
-            )
-            if success:
-                self._update_task(
-                    task_id, status=TaskStatus.COMPLETED, completed_at=utcnow(), error=None
-                )
-                await self._transition(task_id, CognitiveState.COMPLETE, {"success": True})
-                await self.events.emit(
-                    "task.completed", {"duration_ms": int((monotonic() - started) * 1000)}, task_id
-                )
-            else:
-                self._update_task(
-                    task_id,
-                    status=TaskStatus.FAILED,
-                    completed_at=utcnow(),
-                    error="; ".join(errors[-3:]),
-                )
-                await self._transition(task_id, CognitiveState.FAILED, {"errors": errors})
-                await self.events.emit("task.failed", {"errors": errors}, task_id)
         except RuntimeError as exc:
             if str(exc) == "TASK_CANCELLED":
                 return
@@ -462,15 +393,216 @@ class Orchestrator:
         finally:
             self.active.pop(task_id, None)
 
-    async def _make_plan(self, task: dict[str, Any], memories: list[dict[str, Any]]) -> Plan:
+    async def _execute_plan(
+        self,
+        task_id: str,
+        task: dict[str, Any],
+        plan: Plan,
+        revision: int,
+        start_index: int,
+        actions: list[dict[str, Any]],
+        errors: list[str],
+        routed_context: Any,
+        started: float,
+        memories: list[dict[str, Any]],
+        pending_result: dict[str, Any] | None = None,
+    ) -> None:
+        """Executa ou retoma um plano, verificando cada etapa antes de avançar."""
+        index = start_index
+        pending = pending_result
+        while index < len(plan.steps):
+            self._assert_limits(task_id, started)
+            if self._cancelled(task_id):
+                return
+            step = plan.steps[index]
+            await self._transition(
+                task_id,
+                CognitiveState.POLICY_CHECK,
+                {"step": step.id, "action": step.action, "revision": revision, "index": index},
+            )
+            await self.events.emit("task.step", {"step": step.model_dump(mode="json"), "revision": revision}, task_id)
+            result: dict[str, Any] | None = None
+            if pending is not None:
+                result, pending = pending, None
+            elif step.tool:
+                await self._transition(task_id, CognitiveState.ACT, {"step": step.id, "tool": step.tool})
+                result = await self.execute_tool(task_id, ToolCall(tool_name=step.tool, arguments=step.arguments))
+                if result["status"] == "waiting_approval":
+                    self.suspended[task_id] = {
+                        "task": task,
+                        "plan": plan,
+                        "revision": revision,
+                        "index": index,
+                        "actions": actions,
+                        "errors": errors,
+                        "routed_context": routed_context,
+                        "started": started,
+                        "memories": memories,
+                    }
+                    await self._transition(
+                        task_id,
+                        CognitiveState.PAUSED,
+                        {"reason": "waiting_approval", "step": step.id, "revision": revision, "index": index},
+                    )
+                    return
+            if result is not None:
+                actions.append(result)
+                await self._transition(
+                    task_id,
+                    CognitiveState.OBSERVE_RESULT,
+                    {"step": step.id, "ok": result["status"] == "completed"},
+                )
+            verification = self.verifier.verify(
+                step,
+                task,
+                result,
+                prior_steps_verified=not errors,
+            )
+            await self._transition(
+                task_id,
+                CognitiveState.VERIFY,
+                {
+                    "step": step.id,
+                    "accepted": verification.accepted,
+                    "basis": verification.basis,
+                    "condition": verification.condition,
+                },
+            )
+            await self.events.emit(
+                "step.verified",
+                {
+                    "step": step.id,
+                    "accepted": verification.accepted,
+                    "basis": verification.basis,
+                    "condition": verification.condition,
+                    "evidence": [
+                        {"kind": item.kind, "value": item.value, "source": item.source}
+                        for item in verification.evidence
+                    ],
+                },
+                task_id,
+            )
+            if not verification.accepted:
+                error = (
+                    str(result.get("error"))
+                    if result and result.get("error")
+                    else f"Verificação falhou: {step.success_condition}"
+                )
+                errors.append(error)
+                failure = self.recovery.classify(error, step.tool, len(errors))
+                recovery = self.recovery.propose(failure, self.settings.limits["max_replans"])
+                self.recovery.persist(self.db, task_id, failure, recovery)
+                await self.events.emit(
+                    "failure.classified",
+                    {
+                        "category": failure.category.value,
+                        "recoverable": failure.recoverable,
+                        "strategy": recovery.strategy,
+                    },
+                    task_id,
+                )
+                replacement = await self._replan(
+                    task_id,
+                    task,
+                    plan,
+                    step,
+                    errors,
+                    memories,
+                    routed_context.routed_procedures,
+                ) if recovery.retry else None
+                if replacement is None:
+                    await self._finalize_execution(task_id, task, actions, errors, routed_context, started)
+                    return
+                plan, revision = replacement
+                # A falha permanece auditável em `failures`, mas foi superada por uma revisão.
+                errors.clear()
+                index = 0
+                continue
+            self.db.execute(
+                "UPDATE tasks SET step_count=step_count+1, updated_at=? WHERE id=?",
+                (utcnow(), task_id),
+            )
+            index += 1
+        await self._finalize_execution(task_id, task, actions, errors, routed_context, started)
+
+    async def _finalize_execution(
+        self,
+        task_id: str,
+        task: dict[str, Any],
+        actions: list[dict[str, Any]],
+        errors: list[str],
+        routed_context: Any,
+        started: float,
+    ) -> None:
+        success = not errors
+        lessons = [
+            "O plano foi concluído com verificações determinísticas por etapa."
+            if success
+            else f"A execução encontrou: {errors[-1]}"
+        ]
+        await self._transition(task_id, CognitiveState.LEARN, {"success": success})
+        experience_id = self.memory.store_experience(
+            task_id,
+            "structured-plan",
+            actions,
+            "Tarefa concluída" if success else "Tarefa falhou",
+            success,
+            errors,
+            lessons,
+            0.85 if success else 0.3,
+        )
+        self.context_builder.record_outcome(
+            task_id,
+            routed_context,
+            success=success,
+            experience_id=experience_id,
+        )
+        experience = self.experience.consolidate(
+            task["objective"],
+            "Tarefa concluída" if success else "Tarefa falhou",
+            lessons,
+            success,
+            novel_failure=bool(errors),
+        )
+        await self.events.emit(
+            "memory.created", {"type": "episodic", "success": success, "experience": experience}, task_id
+        )
+        if success:
+            self._update_task(task_id, status=TaskStatus.COMPLETED, completed_at=utcnow(), error=None)
+            await self._transition(task_id, CognitiveState.COMPLETE, {"success": True})
+            await self.events.emit(
+                "task.completed", {"duration_ms": int((monotonic() - started) * 1000)}, task_id
+            )
+        else:
+            self._update_task(
+                task_id,
+                status=TaskStatus.FAILED,
+                completed_at=utcnow(),
+                error="; ".join(errors[-3:]),
+            )
+            await self._transition(task_id, CognitiveState.FAILED, {"errors": errors})
+            await self.events.emit("task.failed", {"errors": errors}, task_id)
+
+    async def _make_plan(
+        self,
+        task: dict[str, Any],
+        memories: list[dict[str, Any]],
+        routed_procedures: list[str] | None = None,
+    ) -> Plan:
         prompt = [
             {
                 "role": "system",
-                "content": "Você é o planejador do UltronPro. Retorne estritamente JSON: objective, steps[{id,action,tool,arguments,success_condition,risk}], risks, confidence. Use somente ferramentas fornecidas quando indispensáveis.",
+                "content": "Você é o planejador do UltronPro. Retorne estritamente JSON: objective, steps[{id,action,tool,arguments,success_condition,risk}], risks, confidence. Use somente ferramentas fornecidas quando indispensáveis. Cada success_condition DEVE usar uma forma determinística: tool_exit_zero, file_exists:<caminho>, file_contains:<caminho>::<texto>, prior_steps_completed ou task_context.",
             },
             {
                 "role": "user",
-                "content": f"Objetivo: {task['objective']}\nWorkspace: {task['workspace']}\nMemórias relevantes: {[m['summary'] for m in memories]}\nFerramentas: {[m['name'] for m in self.tools.list_manifests()]}.",
+                                    "content": (
+                        f"Objetivo: {task['objective']}\nWorkspace: {task['workspace']}\n"
+                        f"Memórias relevantes: {[m['summary'] for m in memories]}\n"
+                        f"Experiências procedurais roteadas: {routed_procedures or []}\n"
+                        f"Ferramentas: {[m['name'] for m in self.tools.list_manifests()]}."
+                    ),
+
             },
         ]
         try:
@@ -503,7 +635,7 @@ class Orchestrator:
             PlanStep(
                 id=1,
                 action="Analisar objetivo e limites do workspace",
-                success_condition="Objetivo registrado e limites conhecidos.",
+                success_condition="task_context",
             )
         ]
         if any(token in objective for token in ("arquivo", "document", "relatório", "relatorio")):
@@ -516,7 +648,7 @@ class Orchestrator:
                         "path": "ultron_task_note.md",
                         "content": f"# {task['title']}\n\n{task['objective']}\n",
                     },
-                    success_condition="Arquivo de trabalho criado.",
+                    success_condition=f"file_contains:ultron_task_note.md::{task['title']}",
                     risk=RiskLevel.R2,
                 )
             )
@@ -524,7 +656,7 @@ class Orchestrator:
             PlanStep(
                 id=len(steps) + 1,
                 action="Verificar conclusão operacional",
-                success_condition="Plano, eventos e experiência foram persistidos.",
+                success_condition="prior_steps_completed",
             )
         )
         return Plan(
@@ -541,31 +673,51 @@ class Orchestrator:
         plan: Plan,
         failed_step: PlanStep,
         errors: list[str],
-    ) -> bool:
+        memories: list[dict[str, Any]],
+        routed_procedures: list[str],
+    ) -> tuple[Plan, int] | None:
         row = self.get_task(task_id) or task
         if int(row["replan_count"]) >= self.settings.limits["max_replans"]:
-            return False
+            return None
+        next_attempt = int(row["replan_count"]) + 1
         self.db.execute(
             "UPDATE tasks SET replan_count=replan_count+1, updated_at=? WHERE id=?",
             (utcnow(), task_id),
+        )
+        failure_context = (
+            f"Falha verificável na etapa {failed_step.id} ({failed_step.action}): {errors[-1]}. "
+            "Crie uma revisão com uma alternativa segura, preservando as etapas já verificadas."
         )
         await self._transition(
             task_id, CognitiveState.REFLECT, {"failed_step": failed_step.id, "error": errors[-1]}
         )
         await self.events.emit(
             "task.reflect",
+            {"failed_step": failed_step.id, "lesson": failure_context},
+            task_id,
+        )
+        await self._transition(task_id, CognitiveState.REPLAN, {"revision": next_attempt + 1})
+        replan_memories = [*memories, {"summary": failure_context}]
+        revised = await self._make_plan(task, replan_memories, routed_procedures)
+        revision = self._save_plan(task_id, revised)
+        await self._transition(
+            task_id,
+            CognitiveState.PLAN,
+            {"revision": revision, "replanned_from": failed_step.id, "steps": len(revised.steps)},
+        )
+        await self.events.emit(
+            "plan.revised",
             {
+                "revision": revision,
                 "failed_step": failed_step.id,
-                "lesson": "A ferramenta falhou; o plano deve ser revisto.",
+                "strategy": "revisão gerada a partir de evidência determinística de falha",
             },
             task_id,
         )
-        await self._transition(
-            task_id, CognitiveState.REPLAN, {"revision": int(row["replan_count"]) + 1}
-        )
-        return False  # segurança: novas ações só são propostas em uma nova execução explícita
+        return revised, revision
 
-    def _save_plan(self, task_id: str, plan: Plan) -> None:
+    def _save_plan(self, task_id: str, plan: Plan) -> int:
+
         existing = self.db.one(
             "SELECT COALESCE(MAX(revision), 0) AS max_revision FROM plans WHERE task_id=?",
             (task_id,),
@@ -584,6 +736,7 @@ class Orchestrator:
                 utcnow(),
             ),
         )
+        return revision
 
     async def _transition(
         self, task_id: str, state: CognitiveState, context: dict[str, Any]

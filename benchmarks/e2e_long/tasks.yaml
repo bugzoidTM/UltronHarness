@@ -1,0 +1,77 @@
+- id: package_recovery
+  title: Recuperar pacote Python local
+  objective: Criar um pacote Python mínimo, corrigir uma falha de importação e verificar os artefatos do projeto.
+  family: dependency_recovery
+  category: recovery
+  target_domain: python_project
+  steps: 12
+  failure_step: 4
+  fixture:
+    README.md: "# pacote\n"
+  expected_files:
+    package/__init__.py: "VERSION = '1.0'"
+    package/core.py: "def add(a, b):\n    return a + b"
+    tests/test_core.py: "from package.core import add\nassert add(2, 3) == 5"
+    pyproject.toml: "[project]\nname = 'package-recovery'"
+    result.txt: "package-recovery:verified"
+- id: manifest_validation
+  title: Reparar manifesto de serviço
+  objective: Criar um manifesto de serviço válido, recuperar uma validação inválida e verificar o contrato de configuração.
+  family: structured_validation
+  category: reasoning
+  target_domain: service_manifest
+  steps: 11
+  failure_step: 3
+  fixture:
+    NOTES.md: "Validação do manifesto\n"
+  expected_files:
+    service.yaml: "service: api\nport: 8080\nenvironment: test"
+    schema.json: "{\"required\": [\"service\", \"port\"]}"
+    validate.py: "assert 'service: api' in open('service.yaml').read()"
+    result.txt: "manifest-validation:verified"
+- id: repository_state_recovery
+  title: Recuperar estado de repositório
+  objective: Restaurar o estado autorizado de arquivos de configuração, confirmar conteúdo e registrar evidência final.
+  family: state_recovery
+  category: recovery
+  target_domain: repository_worktree
+  steps: 10
+  failure_step: 2
+  fixture:
+    config/app.ini: "mode=broken\n"
+  expected_files:
+    config/app.ini: "mode=safe\nretries=3"
+    checkpoints/state.txt: "config-restored"
+    audit.log: "repository-state:verified"
+    result.txt: "repository-state:verified"
+- id: workflow_planning
+  title: Construir workflow dependente
+  objective: Criar um workflow com pré-condições, validar ordem de dependências e persistir a evidência de conclusão.
+  family: planning
+  category: reasoning
+  target_domain: project_workflow
+  steps: 13
+  failure_step: 5
+  fixture:
+    input/source.txt: "source-ready\n"
+  expected_files:
+    workflow/prepare.txt: "prepared"
+    workflow/build.txt: "built"
+    workflow/test.txt: "tested"
+    workflow/publish.txt: "published"
+    result.txt: "workflow-planning:verified"
+- id: configuration_repair
+  title: Reparar configuração de runtime
+  objective: Corrigir configurações de runtime autorizadas, validar valores e produzir relatório de verificação local.
+  family: configuration_repair
+  category: reasoning
+  target_domain: runtime_configuration
+  steps: 12
+  failure_step: 4
+  fixture:
+    runtime.env: "PORT=invalid\nTIMEOUT=\n"
+  expected_files:
+    runtime.env: "PORT=8080\nTIMEOUT=30"
+    config/check.py: "assert 'PORT=8080' in open('runtime.env').read()"
+    reports/validation.txt: "configuration-repair:verified"
+    result.txt: "configuration-repair:verified"
