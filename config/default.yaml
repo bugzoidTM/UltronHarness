@@ -54,6 +54,9 @@ context:
 learning:
   minimum_experience_quality: 0.60
 
+research:
+  private_benchmark_root: null
+
 models:
   primary: ollama
   timeout_seconds: 120

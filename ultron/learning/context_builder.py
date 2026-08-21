@@ -1,13 +1,14 @@
 """Composição auditável de contexto para o runtime Hermes.
 
-O construtor não promove experiência por similaridade. Ele usa a classificação
-pública da tarefa, avalia candidatos pelo roteador e injeta conteúdo somente quando
-a família foi empiricamente marcada como PROMOTABLE. Até existir evidência pareada,
-o comportamento seguro é contexto fresco.
+O fluxo é assinatura → prefilter → pool diverso → matching → utilidade → injeção.
+Experiências só entram no contexto quando o Router emite USE e a família está
+empiricamente promovida.
 """
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass
 from typing import Any
 
@@ -20,13 +21,12 @@ from ultron.learning.routing_service import ShadowExperienceRoutingService
 
 @dataclass(slots=True)
 class ContextBuild:
-    """Resultado explicitamente separado entre memória ordinária e experiência roteada."""
-
     task_signature: TaskSignature
     task_signature_id: str
     routed_procedures: list[str]
     routing_decision_ids: list[str]
     candidate_count: int
+    prefilter_count: int = 0
 
     @property
     def injected(self) -> bool:
@@ -34,12 +34,23 @@ class ContextBuild:
 
 
 class ContextBuilder:
-    """Integra assinatura, roteamento e experiência no contexto de planejamento."""
+    """Integra assinatura, recuperação de candidatos e roteamento de experiência."""
 
-    def __init__(self, db: Database, *, max_candidates: int = 5, max_procedures: int = 2):
+    def __init__(
+        self,
+        db: Database,
+        *,
+        prefilter_limit: int = 50,
+        match_limit: int = 10,
+        injection_limit: int = 2,
+        max_candidates: int | None = None,
+        max_procedures: int | None = None,
+    ):
         self.db = db
-        self.max_candidates = max(1, max_candidates)
-        self.max_procedures = max(1, max_procedures)
+        # Compatibilidade com a superfície Hermes anterior.
+        self.prefilter_limit = max(1, max_candidates if max_candidates is not None else prefilter_limit)
+        self.match_limit = max(1, match_limit)
+        self.injection_limit = max(1, max_procedures if max_procedures is not None else injection_limit)
         self.routing = ShadowExperienceRoutingService(db)
 
     def _experience_signature(self, row: dict[str, Any]) -> ExperienceSignature:
@@ -59,13 +70,16 @@ class ContextBuilder:
     @staticmethod
     def _json_list(value: object) -> list[str]:
         if isinstance(value, str):
-            import json
-
             parsed = json.loads(value)
             return [str(item) for item in parsed] if isinstance(parsed, list) else []
         return [str(item) for item in value] if isinstance(value, list) else []
 
-    def _candidates(self) -> list[dict[str, Any]]:
+    @staticmethod
+    def _procedure_hash(row: dict[str, Any]) -> str:
+        text = f"{row.get('lessons_json', '')}|{row.get('result', '')}"
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+    def _prefilter(self, signature: TaskSignature) -> list[dict[str, Any]]:
         return self.db.all(
             """SELECT e.id AS experience_id,e.strategy,e.result,e.lessons_json,e.quality,
                       es.category,es.family,es.domain,es.failure_classes_json,
@@ -74,10 +88,29 @@ class ContextBuilder:
                  FROM experiences e
                  JOIN experience_signatures es ON es.experience_id=e.id
                 WHERE e.success=1 AND es.verified=1
+                  AND (es.family=? OR es.category=? OR es.domain=?)
                 ORDER BY es.historical_utility DESC,e.quality DESC,e.created_at DESC
                 LIMIT ?""",
-            (self.max_candidates,),
+            (signature.family, signature.category, signature.domain, self.prefilter_limit),
         )
+
+    def _diverse_ranked_candidates(self, signature: TaskSignature) -> tuple[list[dict[str, Any]], int]:
+        prefetched = self._prefilter(signature)
+        unique: list[dict[str, Any]] = []
+        seen: set[tuple[str, str]] = set()
+        for candidate in prefetched:
+            key = (str(candidate["family"]), self._procedure_hash(candidate))
+            if key not in seen:
+                unique.append(candidate)
+                seen.add(key)
+        ranked = sorted(
+            unique,
+            key=lambda candidate: self.routing.matcher.match(
+                signature, self._experience_signature(candidate)
+            ).score,
+            reverse=True,
+        )
+        return ranked[: self.match_limit], len(prefetched)
 
     def _decision_id(self, task_id: str, experience_id: str) -> str | None:
         row = self.db.one(
@@ -86,12 +119,16 @@ class ContextBuilder:
         )
         return str(row["id"]) if row else None
 
+    def candidate_recall(self, task: dict[str, Any], relevant_experience_id: str) -> bool:
+        """Métrica diagnóstica: candidato útil conhecido entrou no pool pré-filtrado."""
+        signature = TaskSignatureClassifier.classify(task)
+        return relevant_experience_id in {str(row["experience_id"]) for row in self._prefilter(signature)}
+
     def build(self, task: dict[str, Any]) -> ContextBuild:
-        """Avalia candidatos e retorna procedimentos somente após promoção empírica."""
         task_id = str(task["id"])
         signature = TaskSignatureClassifier.classify(task)
         signature_id = TaskSignatureClassifier.persist(self.db, signature, task_id=task_id)
-        candidates = self._candidates()
+        candidates, prefilter_count = self._diverse_ranked_candidates(signature)
         procedures: list[str] = []
         decision_ids: list[str] = []
         for candidate in candidates:
@@ -107,13 +144,13 @@ class ContextBuilder:
             decision_id = self._decision_id(task_id, str(candidate["experience_id"]))
             if decision_id:
                 decision_ids.append(decision_id)
-            if result.decision.value != "USE" or len(procedures) >= self.max_procedures:
+            if result.decision.value != "USE" or len(procedures) >= self.injection_limit:
                 continue
             lessons = self._json_list(candidate.get("lessons_json"))
             procedure = "; ".join(lessons).strip() or str(candidate["result"]).strip()
             if procedure:
                 procedures.append(procedure[:800])
-        return ContextBuild(signature, signature_id, procedures, decision_ids, len(candidates))
+        return ContextBuild(signature, signature_id, procedures, decision_ids, len(candidates), prefilter_count)
 
     def record_outcome(
         self,
@@ -123,7 +160,6 @@ class ContextBuilder:
         success: bool,
         experience_id: str | None = None,
     ) -> None:
-        """Fecha telemetria sem declarar causalidade onde não existe contrafactual."""
         score = 1.0 if success else 0.0
         self.db.execute(
             "UPDATE routing_decisions SET observed_score=? WHERE task_id=? AND observed_score IS NULL",
@@ -149,7 +185,11 @@ class ContextBuilder:
                 WHERE rd.task_id=?""",
             (task_id,),
         )
-        pairs = {(str(row["task_family"]), str(row["experience_family"])) for row in rows if row.get("experience_family")}
+        pairs = {
+            (str(row["task_family"]), str(row["experience_family"]))
+            for row in rows
+            if row.get("experience_family")
+        }
         pairs.add((context.task_signature.family, context.task_signature.family))
         for task_family, experience_family in pairs:
             NegativeTransferFirewall.recalculate(self.db, task_family, experience_family)

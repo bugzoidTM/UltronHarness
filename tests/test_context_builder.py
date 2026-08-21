@@ -69,3 +69,26 @@ def test_context_builder_abstains_without_paired_evidence_and_persists_outcome(t
     assert created_signature == {"verified": 1, "family": "planning"}
     utility = db.one("SELECT state,sample_count FROM family_utility_map WHERE task_family='planning' AND experience_family='planning'")
     assert utility == {"state": "INSUFFICIENT_DATA", "sample_count": 0}
+
+
+def test_candidate_prefilter_preserves_relevant_experience_and_applies_match_budget(tmp_path: Path) -> None:
+    db = _db(tmp_path)
+    task = _task(db, "retrieval-target", "Planejar workflow com dependências", "planning")
+    relevant_id = "experience-relevant"
+    for index in range(12):
+        experience_id = relevant_id if index == 0 else f"experience-planning-{index}"
+        db.execute(
+            "INSERT INTO experiences (id,strategy,actions_json,result,success,errors_json,lessons_json,quality,created_at) VALUES (?,?,?,?,?,?,?,?,?)",
+            (experience_id, "procedure", "[]", f"Resultado {index}", 1, "[]", f'["Lição distinta {index}"]', 0.8, datetime.now(UTC).isoformat()),
+        )
+        ExperienceSignatureBuilder.persist(
+            db,
+            ExperienceSignature(category="reasoning", family="planning", domain="runtime-test", tool_families=["file.write"], abstraction_level=0.8, verified=True),
+            experience_id,
+        )
+    builder = ContextBuilder(db, prefilter_limit=50, match_limit=10, injection_limit=2)
+    assert builder.candidate_recall(task, relevant_id)
+    context = builder.build(task)
+    assert context.prefilter_count == 12
+    assert context.candidate_count == 10
+    assert not context.injected

@@ -1,0 +1,60 @@
+- id: forge_e2e_01
+  title: Reparar módulo Python mínimo
+  objective: Crie uma implementação Python mínima e verificável no workspace para resolver o requisito descrito na documentação local.
+  workspace_fixture: python_repair
+  action_budget: [5, 12]
+  allowed_tools: [file.read, file.write, python.execute]
+- id: forge_e2e_02
+  title: Recuperar configuração local
+  objective: Analise os arquivos disponíveis e aplique a menor correção de configuração que permita a validação local.
+  workspace_fixture: configuration_recovery
+  action_budget: [5, 12]
+  allowed_tools: [file.read, file.write, python.execute]
+- id: forge_e2e_03
+  title: Completar transformação de dados
+  objective: Implemente a transformação de dados especificada pelo material local e produza um artefato verificável.
+  workspace_fixture: data_transformation
+  action_budget: [5, 14]
+  allowed_tools: [file.read, file.write, python.execute]
+- id: forge_e2e_04
+  title: Corrigir importação de projeto
+  objective: Investigue a falha local de importação e repare o projeto sem alterar arquivos fora do escopo.
+  workspace_fixture: import_repair
+  action_budget: [5, 14]
+  allowed_tools: [file.read, file.write, python.execute]
+- id: forge_e2e_05
+  title: Criar manifesto de arquivos
+  objective: Construa o manifesto estruturado solicitado a partir dos arquivos locais e valide seu conteúdo.
+  workspace_fixture: manifest_build
+  action_budget: [5, 12]
+  allowed_tools: [file.read, file.write, python.execute]
+- id: forge_e2e_06
+  title: Atualizar múltiplos arquivos
+  objective: Aplique uma alteração coerente nos arquivos de projeto e valide o resultado com os meios locais autorizados.
+  workspace_fixture: multifile_change
+  action_budget: [6, 16]
+  allowed_tools: [file.read, file.write, python.execute]
+- id: forge_e2e_07
+  title: Recuperar dependência simulada
+  objective: Corrija o estado de dependência descrito no workspace e gere a evidência de resolução local.
+  workspace_fixture: dependency_recovery
+  action_budget: [5, 14]
+  allowed_tools: [file.read, file.write, python.execute]
+- id: forge_e2e_08
+  title: Preparar pequeno aplicativo local
+  objective: Complete o artefato de uma aplicação local de acordo com a documentação do workspace e execute a validação permitida.
+  workspace_fixture: small_app
+  action_budget: [6, 18]
+  allowed_tools: [file.read, file.write, python.execute]
+- id: forge_e2e_09
+  title: Corrigir workflow de projeto
+  objective: Repare o workflow local conforme os sinais de falha presentes e deixe a evidência de verificação no workspace.
+  workspace_fixture: workflow_repair
+  action_budget: [5, 16]
+  allowed_tools: [file.read, file.write, python.execute]
+- id: forge_e2e_10
+  title: Finalizar relatório operacional
+  objective: Produza o relatório local requerido a partir das entradas do workspace e confirme a conclusão verificável.
+  workspace_fixture: report_completion
+  action_budget: [5, 12]
+  allowed_tools: [file.read, file.write, python.execute]

@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "required": [
+    "id",
+    "family",
+    "source_domain",
+    "target_domain",
+    "objective",
+    "actions",
+    "response_format"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "family": {
+      "type": "string"
+    },
+    "source_domain": {
+      "type": "string"
+    },
+    "target_domain": {
+      "type": "string"
+    },
+    "objective": {
+      "type": "string"
+    },
+    "actions": {
+      "type": "array"
+    },
+    "response_format": {
+      "type": "string"
+    }
+  }
+}

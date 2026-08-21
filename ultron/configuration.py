@@ -66,6 +66,11 @@ class Settings:
     def autonomy_mode(self) -> int:
         return int(self.raw["autonomy"]["mode"])
 
+    @property
+    def private_benchmark_root(self) -> Path | None:
+        configured = self.raw.get("research", {}).get("private_benchmark_root")
+        return Path(str(configured)).expanduser().resolve() if configured else None
+
 
 def load_settings(root_dir: Path | None = None) -> Settings:
     root = root_dir or ROOT_DIR
@@ -80,4 +85,6 @@ def load_settings(root_dir: Path | None = None) -> Settings:
         raw["models"]["primary"] = model_override
     if vector_override := os.getenv("ULTRON_VECTOR_ENABLED"):
         raw["memory"]["vector_enabled"] = vector_override.casefold() in {"1", "true", "yes"}
+    if private_root := os.getenv("ULTRON_PRIVATE_BENCHMARK_ROOT"):
+        raw.setdefault("research", {})["private_benchmark_root"] = private_root
     return Settings(raw=raw, root_dir=root)

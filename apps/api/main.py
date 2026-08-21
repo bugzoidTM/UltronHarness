@@ -73,7 +73,8 @@ async def lifespan(app: FastAPI):
         "watchdog": watchdog,
     }
     watchdog.start()
-    await events.emit("system.started", {"host": settings.host, "port": settings.port})
+    recovered_continuations = await orchestrator.recover_continuations()
+    await events.emit("system.started", {"host": settings.host, "port": settings.port, "recovered_continuations": recovered_continuations})
     yield
     await orchestrator.kill_all()
     await watchdog.stop()
@@ -389,7 +390,17 @@ async def research_dashboard() -> dict[str, Any]:
         transfer100 = json.loads(transfer100_path.read_text(encoding="utf-8")) if transfer100_path.exists() else {}
     except (OSError, json.JSONDecodeError):
         transfer100 = {}
-    return {"runs": runs, "experiments": experiments, "model_comparison": models, "cgfe": cgfe, "ablations": ablations, "diagnostics": diagnostics, "context_metrics": context, "memory_utility": utility, "learn2": learn2, "transfer": transfer, "memory_admission": admission, "skills": skills, "capabilities": capabilities, "world_model": world, "hermes": {"routing": routing, "family_utility": family_utility, "distillation": distillation, "skill_family": skill_family, "utility_calibration": utility_calibration, "transfer100": transfer100}}
+    forge_root = svc("settings").artifacts_dir / "research" / "forge"
+    forge = {
+        "privacy": reports(forge_root / "privacy", "*.json"),
+        "router_calibration": reports(forge_root / "router_calibration", "*/*.json"),
+        "router_target": reports(forge_root / "router_target", "*/*.json"),
+        "e2e": reports(forge_root / "e2e_generative", "*/*.json"),
+        "pair_utility": db.one("SELECT COUNT(*) AS observations,ROUND(AVG(paired_delta),4) AS mean_delta FROM experience_pair_utility WHERE dataset_split='calibration'") or {"observations": 0, "mean_delta": None},
+        "continuity": db.one("SELECT COUNT(*) AS pending_continuations FROM task_continuations WHERE status='waiting_approval'") or {"pending_continuations": 0},
+        "execution_traces": db.one("SELECT COUNT(*) AS events,COUNT(DISTINCT execution_trace_id) AS executions FROM execution_traces") or {"events": 0, "executions": 0},
+    }
+    return {"runs": runs, "experiments": experiments, "model_comparison": models, "cgfe": cgfe, "ablations": ablations, "diagnostics": diagnostics, "context_metrics": context, "memory_utility": utility, "learn2": learn2, "transfer": transfer, "memory_admission": admission, "skills": skills, "capabilities": capabilities, "world_model": world, "hermes": {"routing": routing, "family_utility": family_utility, "distillation": distillation, "skill_family": skill_family, "utility_calibration": utility_calibration, "transfer100": transfer100}, "forge": forge}
 
 
 @app.get("/api/system/metrics")

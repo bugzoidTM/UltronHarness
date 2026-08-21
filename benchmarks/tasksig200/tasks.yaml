@@ -1,0 +1,704 @@
+- id: known-structured_validation-001
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 001.
+  expected_family: structured_validation
+- id: known-structured_validation-002
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 002.
+  expected_family: structured_validation
+- id: known-structured_validation-003
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 003.
+  expected_family: structured_validation
+- id: known-structured_validation-004
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 004.
+  expected_family: structured_validation
+- id: known-structured_validation-005
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 005.
+  expected_family: structured_validation
+- id: known-structured_validation-006
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 006.
+  expected_family: structured_validation
+- id: known-structured_validation-007
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 007.
+  expected_family: structured_validation
+- id: known-structured_validation-008
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 008.
+  expected_family: structured_validation
+- id: known-structured_validation-009
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 009.
+  expected_family: structured_validation
+- id: known-structured_validation-010
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 010.
+  expected_family: structured_validation
+- id: known-structured_validation-011
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 011.
+  expected_family: structured_validation
+- id: known-structured_validation-012
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 012.
+  expected_family: structured_validation
+- id: known-structured_validation-013
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 013.
+  expected_family: structured_validation
+- id: known-structured_validation-014
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 014.
+  expected_family: structured_validation
+- id: known-structured_validation-015
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 015.
+  expected_family: structured_validation
+- id: known-structured_validation-016
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 016.
+  expected_family: structured_validation
+- id: known-structured_validation-017
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 017.
+  expected_family: structured_validation
+- id: known-structured_validation-018
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 018.
+  expected_family: structured_validation
+- id: known-structured_validation-019
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 019.
+  expected_family: structured_validation
+- id: known-structured_validation-020
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 020.
+  expected_family: structured_validation
+- id: known-structured_validation-021
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 021.
+  expected_family: structured_validation
+- id: known-structured_validation-022
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 022.
+  expected_family: structured_validation
+- id: known-structured_validation-023
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 023.
+  expected_family: structured_validation
+- id: known-structured_validation-024
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 024.
+  expected_family: structured_validation
+- id: known-structured_validation-025
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 025.
+  expected_family: structured_validation
+- id: known-structured_validation-026
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 026.
+  expected_family: structured_validation
+- id: known-structured_validation-027
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 027.
+  expected_family: structured_validation
+- id: known-structured_validation-028
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 028.
+  expected_family: structured_validation
+- id: known-structured_validation-029
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 029.
+  expected_family: structured_validation
+- id: known-structured_validation-030
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 030.
+  expected_family: structured_validation
+- id: known-structured_validation-031
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 031.
+  expected_family: structured_validation
+- id: known-structured_validation-032
+  objective: Validar schema yaml do registro operacional; caso diagnóstico 032.
+  expected_family: structured_validation
+- id: known-dependency_recovery-001
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    001.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-002
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    002.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-003
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    003.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-004
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    004.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-005
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    005.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-006
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    006.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-007
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    007.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-008
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    008.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-009
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    009.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-010
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    010.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-011
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    011.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-012
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    012.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-013
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    013.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-014
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    014.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-015
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    015.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-016
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    016.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-017
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    017.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-018
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    018.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-019
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    019.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-020
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    020.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-021
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    021.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-022
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    022.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-023
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    023.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-024
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    024.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-025
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    025.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-026
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    026.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-027
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    027.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-028
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    028.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-029
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    029.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-030
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    030.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-031
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    031.
+  expected_family: dependency_recovery
+- id: known-dependency_recovery-032
+  objective: Recuperar dependência package ausente no workspace; caso diagnóstico
+    032.
+  expected_family: dependency_recovery
+- id: known-state_recovery-001
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    001.
+  expected_family: state_recovery
+- id: known-state_recovery-002
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    002.
+  expected_family: state_recovery
+- id: known-state_recovery-003
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    003.
+  expected_family: state_recovery
+- id: known-state_recovery-004
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    004.
+  expected_family: state_recovery
+- id: known-state_recovery-005
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    005.
+  expected_family: state_recovery
+- id: known-state_recovery-006
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    006.
+  expected_family: state_recovery
+- id: known-state_recovery-007
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    007.
+  expected_family: state_recovery
+- id: known-state_recovery-008
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    008.
+  expected_family: state_recovery
+- id: known-state_recovery-009
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    009.
+  expected_family: state_recovery
+- id: known-state_recovery-010
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    010.
+  expected_family: state_recovery
+- id: known-state_recovery-011
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    011.
+  expected_family: state_recovery
+- id: known-state_recovery-012
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    012.
+  expected_family: state_recovery
+- id: known-state_recovery-013
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    013.
+  expected_family: state_recovery
+- id: known-state_recovery-014
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    014.
+  expected_family: state_recovery
+- id: known-state_recovery-015
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    015.
+  expected_family: state_recovery
+- id: known-state_recovery-016
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    016.
+  expected_family: state_recovery
+- id: known-state_recovery-017
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    017.
+  expected_family: state_recovery
+- id: known-state_recovery-018
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    018.
+  expected_family: state_recovery
+- id: known-state_recovery-019
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    019.
+  expected_family: state_recovery
+- id: known-state_recovery-020
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    020.
+  expected_family: state_recovery
+- id: known-state_recovery-021
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    021.
+  expected_family: state_recovery
+- id: known-state_recovery-022
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    022.
+  expected_family: state_recovery
+- id: known-state_recovery-023
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    023.
+  expected_family: state_recovery
+- id: known-state_recovery-024
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    024.
+  expected_family: state_recovery
+- id: known-state_recovery-025
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    025.
+  expected_family: state_recovery
+- id: known-state_recovery-026
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    026.
+  expected_family: state_recovery
+- id: known-state_recovery-027
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    027.
+  expected_family: state_recovery
+- id: known-state_recovery-028
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    028.
+  expected_family: state_recovery
+- id: known-state_recovery-029
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    029.
+  expected_family: state_recovery
+- id: known-state_recovery-030
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    030.
+  expected_family: state_recovery
+- id: known-state_recovery-031
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    031.
+  expected_family: state_recovery
+- id: known-state_recovery-032
+  objective: Executar rollback de state autorizado após divergência; caso diagnóstico
+    032.
+  expected_family: state_recovery
+- id: known-planning-001
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 001.
+  expected_family: planning
+- id: known-planning-002
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 002.
+  expected_family: planning
+- id: known-planning-003
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 003.
+  expected_family: planning
+- id: known-planning-004
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 004.
+  expected_family: planning
+- id: known-planning-005
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 005.
+  expected_family: planning
+- id: known-planning-006
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 006.
+  expected_family: planning
+- id: known-planning-007
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 007.
+  expected_family: planning
+- id: known-planning-008
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 008.
+  expected_family: planning
+- id: known-planning-009
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 009.
+  expected_family: planning
+- id: known-planning-010
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 010.
+  expected_family: planning
+- id: known-planning-011
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 011.
+  expected_family: planning
+- id: known-planning-012
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 012.
+  expected_family: planning
+- id: known-planning-013
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 013.
+  expected_family: planning
+- id: known-planning-014
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 014.
+  expected_family: planning
+- id: known-planning-015
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 015.
+  expected_family: planning
+- id: known-planning-016
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 016.
+  expected_family: planning
+- id: known-planning-017
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 017.
+  expected_family: planning
+- id: known-planning-018
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 018.
+  expected_family: planning
+- id: known-planning-019
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 019.
+  expected_family: planning
+- id: known-planning-020
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 020.
+  expected_family: planning
+- id: known-planning-021
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 021.
+  expected_family: planning
+- id: known-planning-022
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 022.
+  expected_family: planning
+- id: known-planning-023
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 023.
+  expected_family: planning
+- id: known-planning-024
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 024.
+  expected_family: planning
+- id: known-planning-025
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 025.
+  expected_family: planning
+- id: known-planning-026
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 026.
+  expected_family: planning
+- id: known-planning-027
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 027.
+  expected_family: planning
+- id: known-planning-028
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 028.
+  expected_family: planning
+- id: known-planning-029
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 029.
+  expected_family: planning
+- id: known-planning-030
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 030.
+  expected_family: planning
+- id: known-planning-031
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 031.
+  expected_family: planning
+- id: known-planning-032
+  objective: Ordenar workflow segundo precondition de etapas; caso diagnóstico 032.
+  expected_family: planning
+- id: known-configuration_repair-001
+  objective: Reparar config de environment do serviço; caso diagnóstico 001.
+  expected_family: configuration_repair
+- id: known-configuration_repair-002
+  objective: Reparar config de environment do serviço; caso diagnóstico 002.
+  expected_family: configuration_repair
+- id: known-configuration_repair-003
+  objective: Reparar config de environment do serviço; caso diagnóstico 003.
+  expected_family: configuration_repair
+- id: known-configuration_repair-004
+  objective: Reparar config de environment do serviço; caso diagnóstico 004.
+  expected_family: configuration_repair
+- id: known-configuration_repair-005
+  objective: Reparar config de environment do serviço; caso diagnóstico 005.
+  expected_family: configuration_repair
+- id: known-configuration_repair-006
+  objective: Reparar config de environment do serviço; caso diagnóstico 006.
+  expected_family: configuration_repair
+- id: known-configuration_repair-007
+  objective: Reparar config de environment do serviço; caso diagnóstico 007.
+  expected_family: configuration_repair
+- id: known-configuration_repair-008
+  objective: Reparar config de environment do serviço; caso diagnóstico 008.
+  expected_family: configuration_repair
+- id: known-configuration_repair-009
+  objective: Reparar config de environment do serviço; caso diagnóstico 009.
+  expected_family: configuration_repair
+- id: known-configuration_repair-010
+  objective: Reparar config de environment do serviço; caso diagnóstico 010.
+  expected_family: configuration_repair
+- id: known-configuration_repair-011
+  objective: Reparar config de environment do serviço; caso diagnóstico 011.
+  expected_family: configuration_repair
+- id: known-configuration_repair-012
+  objective: Reparar config de environment do serviço; caso diagnóstico 012.
+  expected_family: configuration_repair
+- id: known-configuration_repair-013
+  objective: Reparar config de environment do serviço; caso diagnóstico 013.
+  expected_family: configuration_repair
+- id: known-configuration_repair-014
+  objective: Reparar config de environment do serviço; caso diagnóstico 014.
+  expected_family: configuration_repair
+- id: known-configuration_repair-015
+  objective: Reparar config de environment do serviço; caso diagnóstico 015.
+  expected_family: configuration_repair
+- id: known-configuration_repair-016
+  objective: Reparar config de environment do serviço; caso diagnóstico 016.
+  expected_family: configuration_repair
+- id: known-configuration_repair-017
+  objective: Reparar config de environment do serviço; caso diagnóstico 017.
+  expected_family: configuration_repair
+- id: known-configuration_repair-018
+  objective: Reparar config de environment do serviço; caso diagnóstico 018.
+  expected_family: configuration_repair
+- id: known-configuration_repair-019
+  objective: Reparar config de environment do serviço; caso diagnóstico 019.
+  expected_family: configuration_repair
+- id: known-configuration_repair-020
+  objective: Reparar config de environment do serviço; caso diagnóstico 020.
+  expected_family: configuration_repair
+- id: known-configuration_repair-021
+  objective: Reparar config de environment do serviço; caso diagnóstico 021.
+  expected_family: configuration_repair
+- id: known-configuration_repair-022
+  objective: Reparar config de environment do serviço; caso diagnóstico 022.
+  expected_family: configuration_repair
+- id: known-configuration_repair-023
+  objective: Reparar config de environment do serviço; caso diagnóstico 023.
+  expected_family: configuration_repair
+- id: known-configuration_repair-024
+  objective: Reparar config de environment do serviço; caso diagnóstico 024.
+  expected_family: configuration_repair
+- id: known-configuration_repair-025
+  objective: Reparar config de environment do serviço; caso diagnóstico 025.
+  expected_family: configuration_repair
+- id: known-configuration_repair-026
+  objective: Reparar config de environment do serviço; caso diagnóstico 026.
+  expected_family: configuration_repair
+- id: known-configuration_repair-027
+  objective: Reparar config de environment do serviço; caso diagnóstico 027.
+  expected_family: configuration_repair
+- id: known-configuration_repair-028
+  objective: Reparar config de environment do serviço; caso diagnóstico 028.
+  expected_family: configuration_repair
+- id: known-configuration_repair-029
+  objective: Reparar config de environment do serviço; caso diagnóstico 029.
+  expected_family: configuration_repair
+- id: known-configuration_repair-030
+  objective: Reparar config de environment do serviço; caso diagnóstico 030.
+  expected_family: configuration_repair
+- id: known-configuration_repair-031
+  objective: Reparar config de environment do serviço; caso diagnóstico 031.
+  expected_family: configuration_repair
+- id: known-configuration_repair-032
+  objective: Reparar config de environment do serviço; caso diagnóstico 032.
+  expected_family: configuration_repair
+- id: unknown-001
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    001.
+  expected_family: unknown
+- id: unknown-002
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    002.
+  expected_family: unknown
+- id: unknown-003
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    003.
+  expected_family: unknown
+- id: unknown-004
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    004.
+  expected_family: unknown
+- id: unknown-005
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    005.
+  expected_family: unknown
+- id: unknown-006
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    006.
+  expected_family: unknown
+- id: unknown-007
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    007.
+  expected_family: unknown
+- id: unknown-008
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    008.
+  expected_family: unknown
+- id: unknown-009
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    009.
+  expected_family: unknown
+- id: unknown-010
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    010.
+  expected_family: unknown
+- id: unknown-011
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    011.
+  expected_family: unknown
+- id: unknown-012
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    012.
+  expected_family: unknown
+- id: unknown-013
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    013.
+  expected_family: unknown
+- id: unknown-014
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    014.
+  expected_family: unknown
+- id: unknown-015
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    015.
+  expected_family: unknown
+- id: unknown-016
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    016.
+  expected_family: unknown
+- id: unknown-017
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    017.
+  expected_family: unknown
+- id: unknown-018
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    018.
+  expected_family: unknown
+- id: unknown-019
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    019.
+  expected_family: unknown
+- id: unknown-020
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    020.
+  expected_family: unknown
+- id: unknown-021
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    021.
+  expected_family: unknown
+- id: unknown-022
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    022.
+  expected_family: unknown
+- id: unknown-023
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    023.
+  expected_family: unknown
+- id: unknown-024
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    024.
+  expected_family: unknown
+- id: unknown-025
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    025.
+  expected_family: unknown
+- id: unknown-026
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    026.
+  expected_family: unknown
+- id: unknown-027
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    027.
+  expected_family: unknown
+- id: unknown-028
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    028.
+  expected_family: unknown
+- id: unknown-029
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    029.
+  expected_family: unknown
+- id: unknown-030
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    030.
+  expected_family: unknown
+- id: unknown-031
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    031.
+  expected_family: unknown
+- id: unknown-032
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    032.
+  expected_family: unknown
+- id: unknown-033
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    033.
+  expected_family: unknown
+- id: unknown-034
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    034.
+  expected_family: unknown
+- id: unknown-035
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    035.
+  expected_family: unknown
+- id: unknown-036
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    036.
+  expected_family: unknown
+- id: unknown-037
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    037.
+  expected_family: unknown
+- id: unknown-038
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    038.
+  expected_family: unknown
+- id: unknown-039
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    039.
+  expected_family: unknown
+- id: unknown-040
+  objective: Resumir material conceitual sem procedimento técnico definido; caso externo
+    040.
+  expected_family: unknown

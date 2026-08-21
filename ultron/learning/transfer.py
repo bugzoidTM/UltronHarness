@@ -33,13 +33,44 @@ ROUTING_CONDITIONS: tuple[InjectionCondition, ...] = (
 )
 
 
+class PrivateBenchmarkRootError(FileNotFoundError):
+    """Acesso a benchmark privado sem uma raiz externa configurada."""
+
+
+def resolve_private_contract_root(
+    settings: Settings,
+    benchmark_name: str,
+    explicit_root: Path | None = None,
+) -> Path:
+    if explicit_root is not None:
+        return explicit_root.resolve()
+    configured = settings.private_benchmark_root
+    if configured is None:
+        raise PrivateBenchmarkRootError(
+            "Benchmark privado solicitado sem ULTRON_PRIVATE_BENCHMARK_ROOT ou research.private_benchmark_root."
+        )
+    nested = configured / benchmark_name
+    return configured if (configured / "answers.json").exists() else nested
+
+
 class TransferDataset:
     """Carrega tarefas públicas e contratos privados de raízes separadas."""
 
-    def __init__(self, root: Path, contract_root: Path | None = None):
+    def __init__(
+        self,
+        root: Path,
+        contract_root: Path | None = None,
+        *,
+        require_external_contracts: bool = False,
+    ):
         self.root = root
-        # Compatibilidade retroativa: benchmarks anteriores mantêm contratos no root.
+        self.require_external_contracts = require_external_contracts
+        if require_external_contracts and contract_root is None:
+            raise PrivateBenchmarkRootError("Transfer-100 v4 requer contratos em raiz privada externa configurada.")
+        # Compatibilidade retroativa apenas para benchmarks históricos.
         self.contract_root = contract_root or root
+        if require_external_contracts and self.contract_root.resolve() == self.root.resolve():
+            raise PrivateBenchmarkRootError("A raiz privada não pode coincidir com o diretório público do Transfer-100 v4.")
 
     def public_tasks(self) -> list[dict]:
         tasks = yaml.safe_load((self.root / "tasks.yaml").read_text(encoding="utf-8")) or []
@@ -110,7 +141,17 @@ class TransferExperiment:
         self.origin_corpus = origin_corpus or self.ORIGIN_CORPUS
         self.batch_by_family = batch_by_family
         self.batch_size = max(1, batch_size)
-        self.dataset = TransferDataset(settings.root_dir / "benchmarks" / benchmark_name, contract_root)
+        requires_private_root = benchmark_name == "transfer100_v4"
+        resolved_contract_root = (
+            resolve_private_contract_root(settings, benchmark_name, contract_root)
+            if requires_private_root
+            else contract_root
+        )
+        self.dataset = TransferDataset(
+            settings.root_dir / "benchmarks" / benchmark_name,
+            resolved_contract_root,
+            require_external_contracts=requires_private_root,
+        )
         self.db, self.models = Database(settings.db_path), ModelGateway(settings)
         self.db.initialize()
 
@@ -198,7 +239,15 @@ class TransferExperiment:
         run_id = str(uuid4())
         artifact = self.settings.artifacts_dir / "transfer" / self.benchmark_name / run_id
         artifact.mkdir(parents=True, exist_ok=True)
-        version = "procedural-v2" if self.benchmark_name == "transfer20" else "transfer100-v3" if self.benchmark_name == "transfer100_v3" else "transfer100-v2"
+        version = (
+            "procedural-v2"
+            if self.benchmark_name == "transfer20"
+            else "transfer100-v4"
+            if self.benchmark_name == "transfer100_v4"
+            else "transfer100-v3"
+            if self.benchmark_name == "transfer100_v3"
+            else "transfer100-v2"
+        )
         result = {"run_id": run_id, "benchmark_version": version, "benchmark": self.benchmark_name, "execution_mode": "batched_by_family" if self.batch_by_family else "per_task", "fresh": fresh, "experienced": experienced, "transfer_gain": round(experienced - fresh, 4), "by_family": gain_by, "seed": self.seed, "model": self.model_name, "traces": {"fresh": fresh_traces, "experienced": experienced_traces}}
         (artifact / "transfer.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         self.db.execute("INSERT INTO transfer_runs (id,family,model_name,seed,fresh_score,experienced_score,transfer_gain,artifact_dir,created_at) VALUES (?, 'aggregate', ?, ?, ?, ?, ?, ?, ?)", (run_id, self.model_name, self.seed, fresh, experienced, result["transfer_gain"], str(artifact), datetime.now(UTC).isoformat()))

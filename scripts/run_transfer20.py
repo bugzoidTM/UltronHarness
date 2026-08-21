@@ -15,13 +15,13 @@ from ultron.research.statistics import summarize
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Executa benchmark procedural de transferência")
     parser.add_argument("--model", default="ollama_research")
-    parser.add_argument("--benchmark", default="transfer20", choices=["transfer20", "transfer100", "transfer100_v3"])
+    parser.add_argument("--benchmark", default="transfer20", choices=["transfer20", "transfer100", "transfer100_v3", "transfer100_v4"])
     parser.add_argument("--seeds", nargs="+", type=int, required=True)
     parser.add_argument("--report", type=Path, default=None)
     parser.add_argument("--timeout-seconds", type=int, default=300)
     parser.add_argument("--batch-by-family", action="store_true")
     parser.add_argument("--batch-size", type=int, default=5)
-    parser.add_argument("--contract-root", type=Path, default=None, help="Obrigatória para Transfer-100 v3; diretório externo com answers.json.")
+    parser.add_argument("--contract-root", type=Path, default=None, help="Raiz privada externa opcional; v4 também aceita ULTRON_PRIVATE_BENCHMARK_ROOT.")
     return parser.parse_args()
 
 
@@ -30,6 +30,8 @@ def benchmark_version(args: argparse.Namespace) -> str:
         return "procedural-v2"
     if args.benchmark == "transfer100_v3":
         return "transfer100-v3-batched-control" if args.batch_by_family else "transfer100-v3-per-task"
+    if args.benchmark == "transfer100_v4":
+        return "transfer100-v4-batched-control" if args.batch_by_family else "transfer100-v4-per-task"
     return "transfer100-v2-batched" if args.batch_by_family else "transfer100-v1"
 
 
@@ -45,7 +47,7 @@ def build_report(args: argparse.Namespace, results: list[dict], status: str) -> 
         "timeout_seconds": args.timeout_seconds,
         "execution_mode": "batched_by_family" if args.batch_by_family else "per_task",
         "batch_size": args.batch_size if args.batch_by_family else None,
-        "contract_root": str(args.contract_root) if args.contract_root else None,
+        "private_contract_root_configured": bool(args.contract_root),
         "results": [{"run_id": item["run_id"], "seed": item["seed"], "fresh": item["fresh"], "experienced": item["experienced"], "transfer_gain": item["transfer_gain"], "by_family": item["by_family"]} for item in results],
         "statistics": {"transfer_gain": summarize(gains).model_dump()},
     }
@@ -75,6 +77,8 @@ def main() -> None:
             raise SystemExit("Transfer-100 v3 requer --contract-root externo contendo answers.json.")
         if len(args.seeds) < 3:
             raise SystemExit("Transfer-100 v3 requer pelo menos três seeds para declarar um gate.")
+    if args.benchmark == "transfer100_v4" and args.batch_by_family:
+        raise SystemExit("Transfer-100 v4 deve ser executado por tarefa para preservar o protocolo Forge.")
     results = asyncio.run(run_many(args))
     report = build_report(args, results, "completed")
     write_report(args.report, report)

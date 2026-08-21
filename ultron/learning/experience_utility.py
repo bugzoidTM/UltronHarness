@@ -24,11 +24,41 @@ class ExperienceUtilityModel:
     """Não consulta LLM; aprende somente de deltas de pares verificáveis."""
 
     @staticmethod
-    def estimate(db: Database, experience_id: str, match: MatchResult) -> UtilityEstimate:
-        row = db.one(
-            "SELECT COUNT(*) AS sample_count, COALESCE(AVG(paired_delta),0) AS mean_delta FROM experience_pair_utility WHERE experience_id=?",
-            (experience_id,),
-        ) or {"sample_count": 0, "mean_delta": 0.0}
+    def estimate(
+        db: Database,
+        experience_id: str,
+        match: MatchResult,
+        *,
+        task_family: str | None = None,
+        target_domain: str | None = None,
+    ) -> UtilityEstimate:
+        queries: list[tuple[str, tuple[object, ...]]] = []
+        if task_family:
+            queries.append(
+                (
+                    "SELECT COUNT(*) AS sample_count, COALESCE(AVG(paired_delta),0) AS mean_delta FROM experience_pair_utility WHERE experience_id=? AND task_family=? AND dataset_split IN ('calibration','legacy')",
+                    (experience_id, task_family),
+                )
+            )
+        if target_domain:
+            queries.append(
+                (
+                    "SELECT COUNT(*) AS sample_count, COALESCE(AVG(paired_delta),0) AS mean_delta FROM experience_pair_utility WHERE experience_id=? AND target_domain=? AND dataset_split IN ('calibration','legacy')",
+                    (experience_id, target_domain),
+                )
+            )
+        queries.append(
+            (
+                "SELECT COUNT(*) AS sample_count, COALESCE(AVG(paired_delta),0) AS mean_delta FROM experience_pair_utility WHERE experience_id=? AND dataset_split IN ('calibration','legacy')",
+                (experience_id,),
+            )
+        )
+        row = {"sample_count": 0, "mean_delta": 0.0}
+        for sql, params in queries:
+            candidate = db.one(sql, params) or row
+            if int(candidate["sample_count"]) > 0:
+                row = candidate
+                break
         sample_count = int(row["sample_count"])
         mean_delta = float(row["mean_delta"])
         confidence = sample_count / (sample_count + 3.0)
@@ -53,21 +83,39 @@ class ExperienceUtilityModel:
         fresh_score: float,
         experienced_score: float,
         run_id: str | None = None,
+        task_id: str | None = None,
+        task_family: str | None = None,
+        experience_family: str | None = None,
+        source_domain: str | None = None,
+        target_domain: str | None = None,
+        seed: int | None = None,
+        model_name: str | None = None,
+        prompt_version: str | None = None,
+        dataset_split: str = "legacy",
     ) -> float:
         from datetime import UTC, datetime
         from uuid import uuid4
 
         delta = round(experienced_score - fresh_score, 6)
         db.execute(
-            "INSERT INTO experience_pair_utility (id,run_id,task_signature_id,experience_id,fresh_score,experienced_score,paired_delta,created_at) VALUES (?,?,?,?,?,?,?,?)",
+            "INSERT INTO experience_pair_utility (id,run_id,task_signature_id,experience_id,task_id,task_family,experience_family,source_domain,target_domain,fresh_score,experienced_score,paired_delta,seed,model_name,prompt_version,dataset_split,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (
                 str(uuid4()),
                 run_id,
                 task_signature_id,
                 experience_id,
+                task_id,
+                task_family,
+                experience_family,
+                source_domain,
+                target_domain,
                 fresh_score,
                 experienced_score,
                 delta,
+                seed,
+                model_name,
+                prompt_version,
+                dataset_split,
                 datetime.now(UTC).isoformat(),
             ),
         )

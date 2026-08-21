@@ -1,0 +1,10 @@
+{
+  "benchmark": "forge_router_v1",
+  "calibration_tasks": 100,
+  "target_tasks": 100,
+  "target_variants": {
+    "canonical": 30,
+    "paraphrased": 40,
+    "adversarial": 30
+  }
+}

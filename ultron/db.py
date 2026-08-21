@@ -125,6 +125,34 @@ CREATE TABLE IF NOT EXISTS approvals (
     decision_note TEXT
 );
 
+CREATE TABLE IF NOT EXISTS task_continuations (
+    task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE CASCADE,
+    approval_id TEXT NOT NULL REFERENCES approvals(id) ON DELETE CASCADE,
+    tool_execution_id TEXT NOT NULL REFERENCES tool_executions(id) ON DELETE CASCADE,
+    plan_revision INTEGER NOT NULL,
+    step_index INTEGER NOT NULL,
+    payload_json TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'waiting_approval',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_task_continuations_status ON task_continuations(status, updated_at);
+
+CREATE TABLE IF NOT EXISTS execution_traces (
+    id TEXT PRIMARY KEY,
+    execution_trace_id TEXT NOT NULL,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    plan_revision INTEGER,
+    step_id INTEGER,
+    tool_execution_id TEXT REFERENCES tool_executions(id) ON DELETE SET NULL,
+    event_type TEXT NOT NULL,
+    evidence_json TEXT NOT NULL DEFAULT '[]',
+    router_decision_ids_json TEXT NOT NULL DEFAULT '[]',
+    payload_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_execution_traces_task ON execution_traces(task_id, created_at);
+
 CREATE TABLE IF NOT EXISTS skills (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
@@ -323,9 +351,18 @@ CREATE TABLE IF NOT EXISTS experience_pair_utility (
     run_id TEXT REFERENCES research_runs(id) ON DELETE SET NULL,
     task_signature_id TEXT NOT NULL REFERENCES task_signatures(id) ON DELETE CASCADE,
     experience_id TEXT NOT NULL REFERENCES experiences(id) ON DELETE CASCADE,
+    task_id TEXT,
+    task_family TEXT,
+    experience_family TEXT,
+    source_domain TEXT,
+    target_domain TEXT,
     fresh_score REAL NOT NULL,
     experienced_score REAL NOT NULL,
     paired_delta REAL NOT NULL,
+    seed INTEGER,
+    model_name TEXT,
+    prompt_version TEXT,
+    dataset_split TEXT NOT NULL DEFAULT 'legacy',
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_pair_utility_experience ON experience_pair_utility(experience_id, created_at);
@@ -516,6 +553,19 @@ CREATE TABLE IF NOT EXISTS assertions (
 """
 
 
+PAIR_UTILITY_MIGRATIONS = {
+    "task_id": "TEXT",
+    "task_family": "TEXT",
+    "experience_family": "TEXT",
+    "source_domain": "TEXT",
+    "target_domain": "TEXT",
+    "seed": "INTEGER",
+    "model_name": "TEXT",
+    "prompt_version": "TEXT",
+    "dataset_split": "TEXT NOT NULL DEFAULT 'legacy'",
+}
+
+
 class Database:
     def __init__(self, path: Path):
         self.path = path
@@ -537,6 +587,10 @@ class Database:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as connection:
             connection.executescript(SCHEMA)
+            present = {str(row[1]) for row in connection.execute("PRAGMA table_info(experience_pair_utility)")}
+            for name, definition in PAIR_UTILITY_MIGRATIONS.items():
+                if name not in present:
+                    connection.execute(f"ALTER TABLE experience_pair_utility ADD COLUMN {name} {definition}")
 
     def execute(self, sql: str, params: tuple[Any, ...] = ()) -> int:
         with self.connect() as connection:

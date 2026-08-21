@@ -54,7 +54,13 @@ class ShadowExperienceRoutingService:
         require_promotable: bool = False,
     ) -> RoutingResult:
         match = self.matcher.match(task, experience)
-        estimate = ExperienceUtilityModel.estimate(self.db, experience_id, match)
+        estimate = ExperienceUtilityModel.estimate(
+            self.db,
+            experience_id,
+            match,
+            task_family=task.family,
+            target_domain=task.domain,
+        )
         blocked = NegativeTransferFirewall.is_blocked(self.db, task.family, experience.family)
         result = self.router.decide(task, estimate, blocked=blocked)
         if (

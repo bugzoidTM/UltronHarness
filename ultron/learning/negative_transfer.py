@@ -49,7 +49,7 @@ class NegativeTransferFirewall:
     @classmethod
     def recalculate(cls, db: Database, task_family: str, experience_family: str) -> FamilyUtility:
         rows = db.all(
-            "SELECT paired_delta FROM experience_pair_utility epu JOIN experience_signatures es ON es.experience_id=epu.experience_id JOIN task_signatures ts ON ts.id=epu.task_signature_id WHERE ts.family=? AND es.family=?",
+            "SELECT paired_delta FROM experience_pair_utility epu JOIN experience_signatures es ON es.experience_id=epu.experience_id JOIN task_signatures ts ON ts.id=epu.task_signature_id WHERE ts.family=? AND es.family=? AND epu.dataset_split IN ('calibration','legacy')",
             (task_family, experience_family),
         )
         utility = cls.classify(task_family, experience_family, [float(row["paired_delta"]) for row in rows])

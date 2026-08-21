@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def _orchestrator(tmp_path: Path) -> Orchestrator:
     settings = Settings(raw=deepcopy(load_settings(ROOT).raw), root_dir=tmp_path)
+    settings.raw["memory"]["vector_enabled"] = False
     db = Database(settings.db_path)
     db.initialize()
     return Orchestrator(
@@ -171,3 +172,79 @@ def test_orchestrator_resumes_remaining_steps_after_approval(tmp_path: Path) -> 
     assert (workspace / "continued.txt").read_text() == "continued"
     events = orchestrator.db.all("SELECT event_type FROM events WHERE task_id=?", (task["id"],))
     assert "task.resumed" in {event["event_type"] for event in events}
+
+
+def test_continuation_survives_restart_before_approval(tmp_path: Path) -> None:
+    original = _orchestrator(tmp_path)
+
+    async def planned(_task, _memories, _routed=None):
+        return Plan(
+            objective="Persistir e retomar",
+            steps=[
+                PlanStep(
+                    id=1,
+                    action="Criar arquivo após aprovação",
+                    tool="file.write",
+                    arguments={"path": "persisted.md", "content": "persisted"},
+                    success_condition="file_contains:persisted.md::persisted",
+                ),
+                PlanStep(id=2, action="Confirmar continuidade", success_condition="prior_steps_completed"),
+            ],
+            confidence=0.9,
+        )
+
+    original._make_plan = planned
+
+    async def run_case() -> tuple[str, str]:
+        created = await original.create_task(
+            TaskCreate(
+                title="Continuidade persistida",
+                objective="Aguardar aprovação e sobreviver à reinicialização.",
+                workspace="continuation_restart",
+                autonomy_mode=2,
+            )
+        )
+        await original.run(created["id"])
+        await original.active[created["id"]]
+        approval = original.db.one("SELECT id FROM approvals WHERE task_id=? AND status='pending'", (created["id"],))
+        assert approval
+        continuation = original.db.one("SELECT task_id,status FROM task_continuations WHERE task_id=?", (created["id"],))
+        assert continuation == {"task_id": created["id"], "status": "waiting_approval"}
+        return created["id"], approval["id"]
+
+    task_id, approval_id = asyncio.run(run_case())
+    restarted = _orchestrator(tmp_path)
+
+    async def recover_and_approve() -> dict:
+        assert await restarted.recover_continuations() == 1
+        await restarted.decide_approval(approval_id, True, "aprovar após reinício")
+        await restarted.active[task_id]
+        return restarted.get_task(task_id) or {}
+
+    task = asyncio.run(recover_and_approve())
+    assert task["status"] == "completed"
+    assert (restarted.tools.workspace_for("continuation_restart") / "persisted.md").read_text() == "persisted"
+    assert restarted.db.one("SELECT task_id FROM task_continuations WHERE task_id=?", (task_id,)) is None
+    traces = restarted.db.all("SELECT event_type FROM execution_traces WHERE task_id=?", (task_id,))
+    assert "step_verified" in {trace["event_type"] for trace in traces}
+
+
+def test_verifier_registry_rejects_shell_free_conditions_and_checks_task_contract(tmp_path: Path) -> None:
+    orchestrator = _orchestrator(tmp_path)
+    verifier = StepSuccessVerifier(orchestrator.tools)
+    task = {"workspace": "verify_registry", "objective": "Verificar contrato"}
+    unregistered = verifier.verify(
+        PlanStep(id=1, action="Executar shell", success_condition="shell:pytest -q"),
+        task,
+        {"status": "completed"},
+        prior_steps_verified=True,
+    )
+    assert not unregistered.accepted
+    from ultron.core.verifier import TaskSuccessContract
+
+    contract = verifier.verify_task_contract(
+        TaskSuccessContract(("task_context", "prior_steps_completed")),
+        task,
+        prior_steps_verified=True,
+    )
+    assert contract.accepted

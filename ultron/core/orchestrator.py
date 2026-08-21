@@ -8,12 +8,14 @@ from time import monotonic
 from typing import Any
 from uuid import uuid4
 
+from ultron.cognition.task_signature import TaskSignature
 from ultron.configuration import Settings
+from ultron.core.continuations import ContinuationStore
 from ultron.core.events import EventBus
 from ultron.core.recovery import RecoveryEngine
 from ultron.core.verifier import StepSuccessVerifier
 from ultron.db import Database
-from ultron.learning.context_builder import ContextBuilder
+from ultron.learning.context_builder import ContextBuild, ContextBuilder
 from ultron.memory.service import MemoryService
 from ultron.models.gateway import ModelGateway
 from ultron.policy.engine import PolicyEngine
@@ -50,11 +52,61 @@ class Orchestrator:
         self.recovery = RecoveryEngine()
         self.verifier = StepSuccessVerifier(tools)
         self.context_builder = ContextBuilder(db)
+        self.continuations = ContinuationStore(db)
         self.skills = SkillService(db)
         self.experience = ExperienceCycle(db, self.skills)
         self.active: dict[str, asyncio.Task[None]] = {}
         self.cancel_events: dict[str, asyncio.Event] = {}
-        self.suspended: dict[str, dict[str, Any]] = {}
+        self.suspended: dict[str, dict[str, Any]] = {}  # Compatibilidade temporária; a fonte de verdade é SQLite.
+
+    @staticmethod
+    def _serialize_context(context: ContextBuild) -> dict[str, Any]:
+        return {
+            "task_signature": context.task_signature.model_dump(mode="json"),
+            "task_signature_id": context.task_signature_id,
+            "routed_procedures": context.routed_procedures,
+            "routing_decision_ids": context.routing_decision_ids,
+            "candidate_count": context.candidate_count,
+            "prefilter_count": context.prefilter_count,
+        }
+
+    @staticmethod
+    def _restore_context(payload: dict[str, Any]) -> ContextBuild:
+        return ContextBuild(
+            TaskSignature.model_validate(payload["task_signature"]),
+            str(payload["task_signature_id"]),
+            [str(item) for item in payload.get("routed_procedures", [])],
+            [str(item) for item in payload.get("routing_decision_ids", [])],
+            int(payload.get("candidate_count", 0)),
+            int(payload.get("prefilter_count", 0)),
+        )
+
+    def _trace(
+        self,
+        task_id: str,
+        event_type: str,
+        *,
+        revision: int | None = None,
+        step_id: int | None = None,
+        evidence: list[dict[str, Any]] | None = None,
+        router_decision_ids: list[str] | None = None,
+        payload: dict[str, Any] | None = None,
+    ) -> None:
+        self.db.execute(
+            "INSERT INTO execution_traces (id,execution_trace_id,task_id,plan_revision,step_id,event_type,evidence_json,router_decision_ids_json,payload_json,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+            (
+                str(uuid4()),
+                f"trace-{task_id}",
+                task_id,
+                revision,
+                step_id,
+                event_type,
+                self.db.json(evidence or []),
+                self.db.json(router_decision_ids or []),
+                self.db.json(payload or {}),
+                utcnow(),
+            ),
+        )
 
     async def create_task(self, payload: TaskCreate) -> dict[str, Any]:
         task_id, timestamp = str(uuid4()), utcnow()
@@ -134,6 +186,24 @@ class Orchestrator:
             await self.cancel(task_id)
         return len(tasks)
 
+    async def recover_continuations(self) -> int:
+        """Restaura a visibilidade de pausas persistidas; nunca reaplica uma ação pendente."""
+        recovered = 0
+        for continuation in self.continuations.recoverable():
+            approval = self.db.one("SELECT status FROM approvals WHERE id=?", (continuation["approval_id"],))
+            task = self.get_task(str(continuation["task_id"]))
+            if not approval or not task or approval["status"] != "pending":
+                continue
+            self._update_task(str(continuation["task_id"]), status=TaskStatus.WAITING_APPROVAL)
+            await self._transition(
+                str(continuation["task_id"]),
+                CognitiveState.PAUSED,
+                {"reason": "recovered_waiting_approval", "revision": continuation["plan_revision"], "index": continuation["step_index"]},
+            )
+            await self.events.emit("task.continuation_recovered", {"approval_id": continuation["approval_id"]}, str(continuation["task_id"]))
+            recovered += 1
+        return recovered
+
     async def decide_approval(self, approval_id: str, approved: bool, note: str) -> dict[str, Any]:
         approval = self.db.one("SELECT * FROM approvals WHERE id=?", (approval_id,))
         if not approval or approval["status"] != "pending":
@@ -160,42 +230,46 @@ class Orchestrator:
                 tool_name=approval["action"],
                 arguments=self.db.parse_json(execution["arguments_json"], {}),
             )
-            result = await self._execute_allowed_tool(task, execution["id"], call)
-            continuation = self.suspended.pop(task_id, None)
+            continuation = self.continuations.load(str(task_id), approval_id)
             if continuation is None:
                 await self._fail(task_id, "Continuação aprovada indisponível; a tarefa não pode ser retomada com segurança.")
                 return self.db.one("SELECT * FROM approvals WHERE id=?", (approval_id,)) or {}
-            self._update_task(task_id, status=TaskStatus.RUNNING, error=None)
+            self.continuations.mark_resuming(str(task_id))
+            result = await self._execute_allowed_tool(task, execution["id"], call)
+            payload = continuation["payload"]
+            plan = Plan.model_validate(payload["plan"])
+            routed_context = self._restore_context(payload["routed_context"])
+            self._update_task(str(task_id), status=TaskStatus.RUNNING, error=None)
 
             async def resume() -> None:
                 try:
                     await self._execute_plan(
-                        task_id,
-                        continuation["task"],
-                        continuation["plan"],
-                        continuation["revision"],
-                        continuation["index"],
-                        continuation["actions"],
-                        continuation["errors"],
-                        continuation["routed_context"],
-                        continuation["started"],
-                        continuation["memories"],
+                        str(task_id),
+                        task,
+                        plan,
+                        int(continuation["plan_revision"]),
+                        int(continuation["step_index"]),
+                        list(payload.get("actions", [])),
+                        list(payload.get("errors", [])),
+                        routed_context,
+                        monotonic(),
+                        list(payload.get("memories", [])),
                         pending_result=result,
                     )
                 except Exception as exc:
-                    await self._fail(task_id, f"Erro ao retomar após aprovação: {exc}")
+                    await self._fail(str(task_id), f"Erro ao retomar após aprovação: {exc}")
                 finally:
-                    self.active.pop(task_id, None)
+                    self.active.pop(str(task_id), None)
 
             runner = asyncio.create_task(resume(), name=f"ultron-resume-{task_id}")
-            self.active[task_id] = runner
+            self.active[str(task_id)] = runner
             await self.events.emit(
                 "task.resumed",
-                {"approved_execution": execution["id"], "resume_step": continuation["index"]},
-                task_id,
+                {"approved_execution": execution["id"], "resume_step": continuation["step_index"]},
+                str(task_id),
             )
         else:
-            self.suspended.pop(task_id, None)
+            self.continuations.delete(str(task_id))
             self._update_task(
                 task_id,
                 status=TaskStatus.FAILED,
@@ -428,17 +502,21 @@ class Orchestrator:
                 await self._transition(task_id, CognitiveState.ACT, {"step": step.id, "tool": step.tool})
                 result = await self.execute_tool(task_id, ToolCall(tool_name=step.tool, arguments=step.arguments))
                 if result["status"] == "waiting_approval":
-                    self.suspended[task_id] = {
-                        "task": task,
-                        "plan": plan,
-                        "revision": revision,
-                        "index": index,
+                    payload = {
+                        "plan": plan.model_dump(mode="json"),
                         "actions": actions,
                         "errors": errors,
-                        "routed_context": routed_context,
-                        "started": started,
+                        "routed_context": self._serialize_context(routed_context),
                         "memories": memories,
                     }
+                    self.continuations.save(
+                        task_id,
+                        str(result["approval_id"]),
+                        str(result["execution_id"]),
+                        revision,
+                        index,
+                        payload,
+                    )
                     await self._transition(
                         task_id,
                         CognitiveState.PAUSED,
@@ -468,6 +546,19 @@ class Orchestrator:
                     "condition": verification.condition,
                 },
             )
+            evidence_payload = [
+                {"kind": item.kind, "value": item.value, "source": item.source}
+                for item in verification.evidence
+            ]
+            self._trace(
+                task_id,
+                "step_verified",
+                revision=revision,
+                step_id=step.id,
+                evidence=evidence_payload,
+                router_decision_ids=routed_context.routing_decision_ids,
+                payload={"accepted": verification.accepted, "basis": verification.basis, "condition": verification.condition},
+            )
             await self.events.emit(
                 "step.verified",
                 {
@@ -475,10 +566,7 @@ class Orchestrator:
                     "accepted": verification.accepted,
                     "basis": verification.basis,
                     "condition": verification.condition,
-                    "evidence": [
-                        {"kind": item.kind, "value": item.value, "source": item.source}
-                        for item in verification.evidence
-                    ],
+                    "evidence": evidence_payload,
                 },
                 task_id,
             )
@@ -535,6 +623,7 @@ class Orchestrator:
         started: float,
     ) -> None:
         success = not errors
+        self.continuations.delete(task_id)
         lessons = [
             "O plano foi concluído com verificações determinísticas por etapa."
             if success
