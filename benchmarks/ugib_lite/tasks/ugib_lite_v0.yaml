@@ -1,0 +1,142 @@
+- id: reasoning_01
+  category: reasoning
+  objective: "Calcule 17 multiplicado por 3 e some 2. Responda somente com o número final."
+  allowed_tools: []
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: reasoning_02
+  category: reasoning
+  objective: "A sequência é 3, 9, 27, 81. Qual é o próximo número? Responda somente com o número."
+  allowed_tools: []
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: reasoning_03
+  category: reasoning
+  objective: "Em uma caixa há 8 bolas azuis e 2 vermelhas. Qual a fração de bolas azuis? Responda no formato a/b simplificado."
+  allowed_tools: []
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: reasoning_04
+  category: reasoning
+  objective: "Se todos os glims são veks e nenhum vek é azul, um glim pode ser azul? Responda somente SIM ou NAO."
+  allowed_tools: []
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: reasoning_05
+  category: reasoning
+  objective: "Qual é o menor número inteiro positivo divisível por 3 e por 4? Responda somente com o número."
+  allowed_tools: []
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: coding_01
+  category: coding
+  objective: "Escreva somente código Python para uma função def add(a, b): que retorna a soma dos argumentos."
+  allowed_tools: [file.write, python.execute]
+  timeout_seconds: 60
+  expected_artifacts: [solution.py]
+  evaluator: file_content
+- id: coding_02
+  category: coding
+  objective: "Escreva somente código Python para uma função def is_even(value): que retorna True quando o inteiro for par."
+  allowed_tools: [file.write, python.execute]
+  timeout_seconds: 60
+  expected_artifacts: [solution.py]
+  evaluator: file_content
+- id: coding_03
+  category: coding
+  objective: "Escreva somente código Python para uma função def reverse_text(text): que retorna o texto invertido."
+  allowed_tools: [file.write, python.execute]
+  timeout_seconds: 60
+  expected_artifacts: [solution.py]
+  evaluator: file_content
+- id: coding_04
+  category: coding
+  objective: "Escreva somente código Python para uma função def count_words(text): que retorna a quantidade de palavras separadas por espaços."
+  allowed_tools: [file.write, python.execute]
+  timeout_seconds: 60
+  expected_artifacts: [solution.py]
+  evaluator: file_content
+- id: coding_05
+  category: coding
+  objective: "Escreva somente código Python para uma função def clamp(value, low, high): que limita value ao intervalo inclusivo."
+  allowed_tools: [file.write, python.execute]
+  timeout_seconds: 60
+  expected_artifacts: [solution.py]
+  evaluator: file_content
+- id: tool_use_01
+  category: tool_use
+  objective: "Para descobrir o conteúdo de um arquivo local antes de responder, qual ferramenta deve ser escolhida? Responda somente com o nome da ferramenta."
+  workspace_fixture: tool_files
+  allowed_tools: [file.list, file.read, file.search]
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: tool_use_02
+  category: tool_use
+  objective: "Para localizar todas as linhas que contêm uma palavra em arquivos locais, qual ferramenta deve ser escolhida? Responda somente com o nome da ferramenta."
+  workspace_fixture: tool_files
+  allowed_tools: [file.list, file.read, file.search]
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: tool_use_03
+  category: tool_use
+  objective: "Para criar um arquivo Markdown dentro do workspace, qual ferramenta deve ser escolhida? Responda somente com o nome da ferramenta."
+  allowed_tools: [file.write, file.delete]
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: tool_use_04
+  category: tool_use
+  objective: "Para verificar mudanças não confirmadas em um repositório Git local, qual ferramenta deve ser escolhida? Responda somente com o nome da ferramenta."
+  allowed_tools: [git.status, git.diff, git.log]
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: tool_use_05
+  category: tool_use
+  objective: "Para executar cálculo Python isolado dentro do workspace, qual ferramenta deve ser escolhida? Responda somente com o nome da ferramenta."
+  allowed_tools: [python.execute, shell.run]
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: recovery_01
+  category: recovery
+  objective: "Uma tentativa de ler um arquivo falhou porque o arquivo não existe. Qual categoria de falha deve ser registrada? Responda somente com a categoria."
+  allowed_tools: [file.read]
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: recovery_02
+  category: recovery
+  objective: "Uma ferramenta excedeu o tempo máximo permitido. Qual categoria de falha deve ser registrada? Responda somente com a categoria."
+  allowed_tools: [python.execute]
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: recovery_03
+  category: recovery
+  objective: "Uma resposta esperada em JSON não pode ser analisada. Qual categoria de falha deve ser registrada? Responda somente com a categoria."
+  allowed_tools: []
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: recovery_04
+  category: recovery
+  objective: "Uma ação foi negada por violar a política de segurança. Qual categoria de falha deve ser registrada? Responda somente com a categoria."
+  allowed_tools: [shell.run]
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact
+- id: recovery_05
+  category: recovery
+  objective: "Uma biblioteca Python necessária não está instalada. Qual categoria de falha deve ser registrada? Responda somente com a categoria."
+  allowed_tools: [python.execute]
+  timeout_seconds: 30
+  expected_artifacts: []
+  evaluator: exact

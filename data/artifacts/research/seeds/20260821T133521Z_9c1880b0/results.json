@@ -1,0 +1,80 @@
+{
+  "configuration": {
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "experience_count": 50
+  },
+  "results": [
+    {
+      "seed": 42,
+      "experiment_id": "f7060073-67a3-4125-8677-6933cc25bd7b",
+      "fresh_score": 0.38,
+      "experienced_score": 0.36,
+      "cgfe": -0.02,
+      "recovery_gain": 0.0,
+      "efficiency_gain": -743.36,
+      "fresh_run_id": "e9a1d8ef-a4a1-4d72-87e5-9065ca9ebeb1",
+      "experienced_run_id": "438030fe-08e6-4e1d-ba61-be5d02206553",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\f7060073-67a3-4125-8677-6933cc25bd7b"
+    },
+    {
+      "seed": 43,
+      "experiment_id": "238fa4ee-a51c-451d-86e4-0074ae161177",
+      "fresh_score": 0.38,
+      "experienced_score": 0.36,
+      "cgfe": -0.02,
+      "recovery_gain": 0.0,
+      "efficiency_gain": -181.6,
+      "fresh_run_id": "665b2213-d092-470b-84db-3eaaaf6e6756",
+      "experienced_run_id": "fbf48822-f826-4502-a5e1-e9723f51123a",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\238fa4ee-a51c-451d-86e4-0074ae161177"
+    },
+    {
+      "seed": 44,
+      "experiment_id": "565359bc-cfde-4ab1-99e5-16f933afcfe6",
+      "fresh_score": 0.38,
+      "experienced_score": 0.36,
+      "cgfe": -0.02,
+      "recovery_gain": 0.0,
+      "efficiency_gain": -147.66,
+      "fresh_run_id": "88ca2327-49b3-4d5b-9f12-b517a6b67a04",
+      "experienced_run_id": "e47daf63-ea0b-48a9-aaff-89bb4c27a09e",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\565359bc-cfde-4ab1-99e5-16f933afcfe6"
+    }
+  ],
+  "statistics": {
+    "fresh": {
+      "count": 3,
+      "mean": 0.38,
+      "median": 0.38,
+      "min": 0.38,
+      "max": 0.38,
+      "stddev": 0.0,
+      "ci95_low": 0.38,
+      "ci95_high": 0.38
+    },
+    "experienced": {
+      "count": 3,
+      "mean": 0.36,
+      "median": 0.36,
+      "min": 0.36,
+      "max": 0.36,
+      "stddev": 0.0,
+      "ci95_low": 0.36,
+      "ci95_high": 0.36
+    },
+    "cgfe": {
+      "count": 3,
+      "mean": -0.02,
+      "median": -0.02,
+      "min": -0.02,
+      "max": -0.02,
+      "stddev": 0.0,
+      "ci95_low": -0.02,
+      "ci95_high": -0.02
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "run_id": "3881bfd7-d2ca-4215-b614-a4f5316f3fd8",
+  "fresh": 0.45,
+  "experienced": 0.35,
+  "transfer_gain": -0.1,
+  "by_family": {
+    "structured_validation": 0.0,
+    "dependency_recovery": 0.0,
+    "recovery": -0.2,
+    "planning": -0.2
+  },
+  "seed": 44,
+  "model": "ollama_research"
+}

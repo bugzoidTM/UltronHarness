@@ -1,0 +1,2024 @@
+{
+  "run_id": "c617d9ae-3689-4c49-bd12-d72d3155330e",
+  "benchmark_version": "transfer100-v2-batched",
+  "benchmark": "transfer100",
+  "execution_mode": "batched_by_family",
+  "fresh": 0.16,
+  "experienced": 0.16,
+  "transfer_gain": 0.0,
+  "by_family": {
+    "configuration_repair": -0.2,
+    "dependency_recovery": 0.0,
+    "planning": 0.0,
+    "state_recovery": 0.0,
+    "structured_validation": 0.2
+  },
+  "seed": 49,
+  "model": "ollama_research",
+  "traces": {
+    "fresh": [
+      {
+        "task_id": "configuration_repair_01",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_02",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_03",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_04",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_05",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_06",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_07",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_08",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_09",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_10",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_11",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_12",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_13",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_14",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_15",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_16",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_17",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_18",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_19",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_20",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\nconfiguration_repair_07=I>R>V\nconfiguration_repair_08=I>R>V\nconfiguration_repair_09=I>R>V\nconfiguration_repair_10=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\nconfiguration_repair_12=I>R>V\nconfiguration_repair_13=I>R>V\nconfiguration_repair_14=I>R>V\nconfiguration_repair_15=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_01",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_02",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_03",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_04",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_05",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_06",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>L>V>E",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_07",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_08",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_09",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_10",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_11",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_12",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_13",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_14",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_15",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_16",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_17",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_18",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_19",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_20",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>E>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "planning_01",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_02",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_03",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_04",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_05",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_06",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_07",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_08",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_09",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_10",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_11",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_12",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_13",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_14",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_15",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_16",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_17",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_18",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_19",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_20",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\ntask_id=planning_06>I>V.  \ntask_id=planning_07>E>V.  \ntask_id=planning_08>E>V.  \ntask_id=planning_09>K>V.  \ntask_id=planning_10>I>V.\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "state_recovery_01",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>F>N",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_02",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_03",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_04",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_05",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_06",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_07",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_08",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_09",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_10",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_11",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "S>R>V>F",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_12",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>F",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_13",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>F",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_14",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "N>V>F",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_15",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "S>R>V>F",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_16",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_17",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_18",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "S>N>V",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_19",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "S>R>F",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_20",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V",
+        "success": true,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "structured_validation_01",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_02",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_03",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_04",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_05",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_06",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_07",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_08",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_09",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_10",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_11",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_12",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_13",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_14",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_15",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_16",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_17",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_18",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_19",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      },
+      {
+        "task_id": "structured_validation_20",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family",
+        "batch_output": "task_id=structured_validation_01>I>R>V.\ntask_id=structured_validation_02>I>C>R>A.\ntask_id=structured_validation_03>I>C>R>A.\ntask_id=structured_validation_04>I>C>A.\ntask_id=structured_validation_05>I>R>V.\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>R>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\ntask_id=structured_validation_11>I>R>V\ntask_id=structured_validation_12>I>C>A\ntask_id=structured_validation_13>I>R>V\ntask_id=structured_validation_14>I>C>R\ntask_id=structured_validation_15>I>C>R\n--- batch ---\ntask_id=structured_validation_16>I>R>V.\ntask_id=structured_validation_17>I>R>V.\ntask_id=structured_validation_18>I>C>R>V.\ntask_id=structured_validation_19>I>C>R>V.\ntask_id=structured_validation_20>I>C>R>V."
+      }
+    ],
+    "experienced": [
+      {
+        "task_id": "configuration_repair_01",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_02",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_03",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_04",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_05",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_06",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_07",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_08",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_09",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_10",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_11",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_12",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_13",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_14",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_15",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_16",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_17",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_18",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_19",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "configuration_repair_20",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "configuration_repair_01=I>R>V\nconfiguration_repair_02=I>R>V\nconfiguration_repair_03=I>R>V\nconfiguration_repair_04=I>R>V\nconfiguration_repair_05=I>R>V\n--- batch ---\nconfiguration_repair_06=I>R>V\n--- batch ---\nconfiguration_repair_11=I>R>V\n--- batch ---\nconfiguration_repair_16=I>R>V\nconfiguration_repair_17=I>R>V\nconfiguration_repair_18=I>R>V\nconfiguration_repair_19=I>R>V\nconfiguration_repair_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_01",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_02",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_03",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_04",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_05",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_06",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>L>V>E",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_07",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>L>V>E",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_08",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "I>L>V>E",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_09",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "I>L>V>E",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_10",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>L>V>E",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_11",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_12",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_13",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_14",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_15",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_16",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_17",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_18",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_19",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "dependency_recovery_20",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "dependency_recovery_01=I>R>V\ndependency_recovery_02=I>R>V\ndependency_recovery_03=I>R>V\ndependency_recovery_04=I>R>V\ndependency_recovery_05=I>R>V\n--- batch ---\ndependency_recovery_06=I>L>V>E>\ndependency_recovery_07=I>L>V>E>\ndependency_recovery_08=I>L>V>E>\ndependency_recovery_09=I>L>V>E>\ndependency_recovery_10=I>L>V>E>\n--- batch ---\ndependency_recovery_11=I>R>V\ndependency_recovery_12=I>R>V\ndependency_recovery_13=I>R>V\ndependency_recovery_14=I>R>V\ndependency_recovery_15=I>R>V\n--- batch ---\ndependency_recovery_16=I>R>V\ndependency_recovery_17=I>R>V\ndependency_recovery_18=I>R>V\ndependency_recovery_19=I>R>V\ndependency_recovery_20=I>R>V"
+      },
+      {
+        "task_id": "planning_01",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_02",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_03",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_04",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_05",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_06",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_07",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_08",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_09",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_10",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_11",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>V",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_12",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_13",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_14",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_15",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>V",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_16",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_17",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_18",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_19",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "planning_20",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>K>E>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "planning_01=C>K>E>V\nplanning_02=C>K>E>V\nplanning_03=C>K>E>V\nplanning_04=C>K>E>V\nplanning_05=C>K>E>V\n--- batch ---\nplanning_06=C>K>E>V\nplanning_07=C>K>E>V\nplanning_08=C>K>E>V\nplanning_09=C>K>E>V\nplanning_10=C>K>E>V\n--- batch ---\nplanning_11=C>E>V\nplanning_12=C>E>V\nplanning_13=C>K>V\nplanning_14=C>E>V\nplanning_15=C>E>V\n--- batch ---\nplanning_16=C>K>E>V\nplanning_17=C>K>E>V\nplanning_18=C>K>E>V\nplanning_19=C>K>E>V\nplanning_20=C>K>E>V"
+      },
+      {
+        "task_id": "state_recovery_01",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>F>N",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_02",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_03",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_04",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_05",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_06",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_07",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_08",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_09",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_10",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_11",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "S>R>V>F",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_12",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>F",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_13",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>F",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_14",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "N>V>F",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_15",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "S>R>V>F",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_16",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_17",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_18",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "S>N>V",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_19",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "S>R>F",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "state_recovery_20",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "state_recovery_01=S>R>V>F>N\n--- batch ---\ntask_id=state_recovery_06>I>R>V.  \ntask_id=state_recovery_07>I>R>V.  \ntask_id=state_recovery_08>I>R>V.  \ntask_id=state_recovery_09>I>R>V.  \ntask_id=state_recovery_10>I>R>V.\n--- batch ---\nstate_recovery_11=S>R>V>F\nstate_recovery_12=S>R>V>F\nstate_recovery_13=S>R>V>F\nstate_recovery_14=N>V>F\nstate_recovery_15=S>R>V>F\n--- batch ---\nstate_recovery_16=S>R>V\nstate_recovery_17=S>R>V\nstate_recovery_18=S>N>V\nstate_recovery_19=S>R>F\nstate_recovery_20=S>R>V"
+      },
+      {
+        "task_id": "structured_validation_01",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_02",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_03",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_04",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "P>C>A",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_05",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_06",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_07",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_08",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "P>C>A",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_09",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_10",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_11",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_12",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "P>C>A",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_13",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_14",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R",
+        "success": true,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_15",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_16",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_17",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_18",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_19",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      },
+      {
+        "task_id": "structured_validation_20",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family",
+        "batch_output": "structured_validation_01=P>C>R>A\nstructured_validation_02=P>C>R>A\nstructured_validation_03=P>C>R>A\nstructured_validation_04=P>C>A\nstructured_validation_05=P>C>R>A\n--- batch ---\nstructured_validation_06=P>C>R>A\nstructured_validation_07=P>C>R>A\nstructured_validation_08=P>C>A\nstructured_validation_09=P>C>R>A\nstructured_validation_10=P>C>R>A\n--- batch ---\nstructured_validation_11=P>C>R>A\nstructured_validation_12=P>C>A\nstructured_validation_13=P>C>R\nstructured_validation_14=P>C>R\nstructured_validation_15=P>C>R>A\n--- batch ---\nstructured_validation_16=P>C>R>A\nstructured_validation_17=P>C>R>A\nstructured_validation_18=P>C>R>A\nstructured_validation_19=P>C>R>A\nstructured_validation_20=P>C>R>A"
+      }
+    ]
+  }
+}

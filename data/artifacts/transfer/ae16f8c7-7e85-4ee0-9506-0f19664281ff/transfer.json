@@ -1,0 +1,341 @@
+{
+  "run_id": "ae16f8c7-7e85-4ee0-9506-0f19664281ff",
+  "benchmark_version": "procedural-v2",
+  "fresh": 0.2,
+  "experienced": 0.5,
+  "transfer_gain": 0.3,
+  "by_family": {
+    "dependency_recovery": 1.0,
+    "planning": -0.2,
+    "recovery": 0.0,
+    "structured_validation": 0.4
+  },
+  "seed": 44,
+  "model": "ollama_research",
+  "traces": {
+    "fresh": [
+      {
+        "task_id": "yaml_parse_then_required",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "R>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "yaml_missing_service",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>R",
+        "success": true,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "yaml_type_mismatch",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>A>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "yaml_valid_contract",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "C>P>C>R",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "yaml_parse_failure",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "R",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "node_manifest_missing",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "M>V>I",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "node_lock_stale",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>V>L",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "node_declared_version",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "M>V>I>G>M>V>I>G>M>V>I>G",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "node_missing_transitive",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "V>M>G",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "node_manifest_clean",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "E>I",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "git_modified_file",
+        "family": "recovery",
+        "expected": "S>R>V",
+        "actual": "S>V>R>X",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "git_untracked_file",
+        "family": "recovery",
+        "expected": "S>R>V",
+        "actual": "S>V>R",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "git_staged_scope",
+        "family": "recovery",
+        "expected": "S>R>V",
+        "actual": "X>R>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "git_clean_noop",
+        "family": "recovery",
+        "expected": "S>N",
+        "actual": "N>N",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "git_verify_failure",
+        "family": "recovery",
+        "expected": "S>R>F",
+        "actual": "R>X>S",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "workflow_chain",
+        "family": "planning",
+        "expected": "P>B>U",
+        "actual": "P>B>U",
+        "success": true,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "workflow_blocked",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K",
+        "success": true,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "workflow_parallel_join",
+        "family": "planning",
+        "expected": "C>R>V",
+        "actual": "C>X>C>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "workflow_failed_dependency",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K",
+        "success": true,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "workflow_single_step",
+        "family": "planning",
+        "expected": "A>V",
+        "actual": "X>V",
+        "success": false,
+        "mode": "fresh"
+      }
+    ],
+    "experienced": [
+      {
+        "task_id": "yaml_parse_then_required",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>R",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "yaml_missing_service",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>R",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "yaml_type_mismatch",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>A>R",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "yaml_valid_contract",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "P>C>A",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "yaml_parse_failure",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>R>A",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "node_manifest_missing",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "M>I>V",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "node_lock_stale",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>L>V",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "node_declared_version",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "M>I>V",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "node_missing_transitive",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>L>V",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "node_manifest_clean",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "M>E",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "git_modified_file",
+        "family": "recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>X",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "git_untracked_file",
+        "family": "recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>S>R>S>R>S>V>S>R>S>R>S>R>S>V>S>R>S>R>S>R>S>V>S>R>S>R>S>R>S>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "git_staged_scope",
+        "family": "recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>S>X",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "git_clean_noop",
+        "family": "recovery",
+        "expected": "S>N",
+        "actual": "N>N",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "git_verify_failure",
+        "family": "recovery",
+        "expected": "S>R>F",
+        "actual": "R>S>F",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "workflow_chain",
+        "family": "planning",
+        "expected": "P>B>U",
+        "actual": "P>B>U",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "workflow_blocked",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>C>D",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "workflow_parallel_join",
+        "family": "planning",
+        "expected": "C>R>V",
+        "actual": "C>X>C>R>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "workflow_failed_dependency",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "workflow_single_step",
+        "family": "planning",
+        "expected": "A>V",
+        "actual": "A>X>V",
+        "success": false,
+        "mode": "experienced"
+      }
+    ]
+  }
+}

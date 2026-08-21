@@ -1,0 +1,9 @@
+{
+  "run_id": "85d3cee4-8b96-4d05-8494-449ac90941a5",
+  "experiment": "SEED-1",
+  "model": "ollama_research",
+  "seed": 42,
+  "config_hash": "4b62a546498f31d1d72209768ab081e5b52c5cb9ec11bbb1183cbf0b0663cb20",
+  "created_at": "2026-08-21T15:18:02.424744+00:00",
+  "negative_result_policy": "never_discard_bad_run"
+}

@@ -1,0 +1,87 @@
+{
+  "configuration": {
+    "top_k_values": [
+      0,
+      1,
+      2,
+      3,
+      5,
+      8,
+      10
+    ]
+  },
+  "baseline_score": 0.4,
+  "best_top_k": 0,
+  "results": [
+    {
+      "top_k": 0,
+      "run_id": "b7165ba5-2e69-477a-bf93-9066fc0ea187",
+      "score": 0.4,
+      "cgfe": 0.0,
+      "tokens_injected": 0,
+      "context_efficiency": 0.4,
+      "average_steps": 1.0,
+      "average_latency_ms": 948.45
+    },
+    {
+      "top_k": 1,
+      "run_id": "23bc1e98-e1e7-4d9b-9869-c6024bbe156a",
+      "score": 0.25,
+      "cgfe": -0.15,
+      "tokens_injected": 20,
+      "context_efficiency": 0.0125,
+      "average_steps": 1.0,
+      "average_latency_ms": 843.15
+    },
+    {
+      "top_k": 2,
+      "run_id": "c0674d8b-7b30-4315-95c9-0321d19c0d13",
+      "score": 0.25,
+      "cgfe": -0.15,
+      "tokens_injected": 40,
+      "context_efficiency": 0.00625,
+      "average_steps": 1.0,
+      "average_latency_ms": 743.7
+    },
+    {
+      "top_k": 3,
+      "run_id": "93e6662d-b06a-44b7-99cc-bb2a14e3d4ec",
+      "score": 0.35,
+      "cgfe": -0.05,
+      "tokens_injected": 60,
+      "context_efficiency": 0.005833,
+      "average_steps": 1.0,
+      "average_latency_ms": 747.65
+    },
+    {
+      "top_k": 5,
+      "run_id": "c1d0399f-a1be-4a4c-84d8-39a9d96a292a",
+      "score": 0.3,
+      "cgfe": -0.1,
+      "tokens_injected": 100,
+      "context_efficiency": 0.003,
+      "average_steps": 1.0,
+      "average_latency_ms": 870.35
+    },
+    {
+      "top_k": 8,
+      "run_id": "91011318-d2b9-41be-8e80-248bbd0bafe4",
+      "score": 0.3,
+      "cgfe": -0.1,
+      "tokens_injected": 160,
+      "context_efficiency": 0.001875,
+      "average_steps": 1.0,
+      "average_latency_ms": 920.15
+    },
+    {
+      "top_k": 10,
+      "run_id": "5eb25ba4-c096-430d-892c-a7347d075f07",
+      "score": 0.25,
+      "cgfe": -0.15,
+      "tokens_injected": 200,
+      "context_efficiency": 0.00125,
+      "average_steps": 1.0,
+      "average_latency_ms": 880.45
+    }
+  ]
+}

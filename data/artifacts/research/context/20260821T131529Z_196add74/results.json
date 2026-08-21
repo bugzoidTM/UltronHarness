@@ -1,0 +1,69 @@
+{
+  "configuration": {
+    "variants": [
+      "FULL",
+      "NO_MEMORY",
+      "NO_SKILLS",
+      "NO_LONG_HISTORY",
+      "NO_PLAN_HISTORY",
+      "MINIMAL"
+    ]
+  },
+  "results": [
+    {
+      "variant": "FULL",
+      "run_id": "ba2770f3-9175-49e3-a21c-5d122ada519f",
+      "score": 0.4,
+      "average_context_tokens": 134.05,
+      "average_steps": 1.0,
+      "average_latency_ms": 1527.45,
+      "delta_vs_full": 0.0
+    },
+    {
+      "variant": "NO_MEMORY",
+      "run_id": "2d6a7f79-2532-46ac-b17c-c6a4c2e491d3",
+      "score": 0.4,
+      "average_context_tokens": 120.05,
+      "average_steps": 1.0,
+      "average_latency_ms": 1253.4,
+      "delta_vs_full": 0.0
+    },
+    {
+      "variant": "NO_SKILLS",
+      "run_id": "b0fd7780-7585-443c-b067-f3d9645612ed",
+      "score": 0.45,
+      "average_context_tokens": 121.05,
+      "average_steps": 1.0,
+      "average_latency_ms": 1197.0,
+      "delta_vs_full": 0.05
+    },
+    {
+      "variant": "NO_LONG_HISTORY",
+      "run_id": "970a9263-2ef7-458c-a39c-b57e2f2f33d7",
+      "score": 0.4,
+      "average_context_tokens": 120.05,
+      "average_steps": 1.0,
+      "average_latency_ms": 1155.15,
+      "delta_vs_full": 0.0
+    },
+    {
+      "variant": "NO_PLAN_HISTORY",
+      "run_id": "a43c4538-92e7-4e3a-a55c-eafb1af399e2",
+      "score": 0.4,
+      "average_context_tokens": 108.05,
+      "average_steps": 1.0,
+      "average_latency_ms": 1103.1,
+      "delta_vs_full": 0.0
+    },
+    {
+      "variant": "MINIMAL",
+      "run_id": "c3914d15-537b-4130-b5d0-291adbfcf5fe",
+      "score": 0.35,
+      "average_context_tokens": 81.05,
+      "average_steps": 1.0,
+      "average_latency_ms": 881.5,
+      "delta_vs_full": -0.05
+    }
+  ],
+  "interpretation": "Correlação e deltas são descritivos; não estabelecem causalidade isoladamente."
+}

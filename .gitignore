@@ -1,0 +1,36 @@
+# Ambientes e dependências
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+apps/ui/node_modules/
+apps/ui/dist/
+
+# Dados e estado local persistente
+/data/*.db
+/data/ultron.db
+/data/ultron.db-*
+/data/vectors/
+/data/artifacts/*
+!/data/artifacts/research/
+!/data/artifacts/research/**
+!/data/artifacts/transfer/
+!/data/artifacts/transfer/**
+/data/backups/
+/data/browser_profiles/
+/data/workspaces/*
+!/data/workspaces/.gitkeep
+
+# Configuração local e segredos
+/config/local.yaml
+.env
+*.log
+.coverage
+coverage_report.txt
+coverage_html/
+/data/ollama_*.json
+
+# Windows
+Thumbs.db
+Desktop.ini

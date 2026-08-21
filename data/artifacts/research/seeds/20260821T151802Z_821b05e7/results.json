@@ -1,0 +1,171 @@
+{
+  "configuration": {
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51
+    ],
+    "experience_count": 50
+  },
+  "results": [
+    {
+      "seed": 42,
+      "experiment_id": "88d58c3b-7a01-4ba2-86b2-117ed467a4e3",
+      "fresh_score": 0.68,
+      "experienced_score": 0.72,
+      "cgfe": 0.04,
+      "recovery_gain": 0.0,
+      "efficiency_gain": -181.9,
+      "fresh_run_id": "6f2dd1a9-6527-4d57-b934-158e16c26d30",
+      "experienced_run_id": "80b55a75-9d74-42de-8df6-517f4381ca3a",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\88d58c3b-7a01-4ba2-86b2-117ed467a4e3"
+    },
+    {
+      "seed": 43,
+      "experiment_id": "ed66301d-165c-49c5-ab4f-b35afa912a8f",
+      "fresh_score": 0.72,
+      "experienced_score": 0.72,
+      "cgfe": 0.0,
+      "recovery_gain": 0.0,
+      "efficiency_gain": 51.72,
+      "fresh_run_id": "21940b3a-373e-4c86-8df8-928b4279f0cf",
+      "experienced_run_id": "1dae26d6-a2b1-46b0-8a9a-50c55fe67d45",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\ed66301d-165c-49c5-ab4f-b35afa912a8f"
+    },
+    {
+      "seed": 44,
+      "experiment_id": "e080f3dd-9b8d-42aa-a2f2-488e31ee3cc5",
+      "fresh_score": 0.72,
+      "experienced_score": 0.72,
+      "cgfe": 0.0,
+      "recovery_gain": 0.0,
+      "efficiency_gain": 202.26,
+      "fresh_run_id": "0a53bf98-fc8c-4e2e-8acd-a79710e90356",
+      "experienced_run_id": "0c0335c2-b328-443c-b971-758b9ad52128",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\e080f3dd-9b8d-42aa-a2f2-488e31ee3cc5"
+    },
+    {
+      "seed": 45,
+      "experiment_id": "10190714-d476-4cd3-9551-5eab63a81725",
+      "fresh_score": 0.72,
+      "experienced_score": 0.72,
+      "cgfe": 0.0,
+      "recovery_gain": 0.0,
+      "efficiency_gain": 148.56,
+      "fresh_run_id": "830f02df-6244-4727-a23a-aaa9a8535d87",
+      "experienced_run_id": "7636c2ca-7ae0-4820-b245-17cfb6f31974",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\10190714-d476-4cd3-9551-5eab63a81725"
+    },
+    {
+      "seed": 46,
+      "experiment_id": "f32abe50-4554-425f-8023-5893ef8af233",
+      "fresh_score": 0.72,
+      "experienced_score": 0.72,
+      "cgfe": 0.0,
+      "recovery_gain": 0.0,
+      "efficiency_gain": 108.96,
+      "fresh_run_id": "3a7d7e89-26ed-40e1-812b-6825d9fb54ed",
+      "experienced_run_id": "c94c7a91-a726-492f-9663-bd993ec7facc",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\f32abe50-4554-425f-8023-5893ef8af233"
+    },
+    {
+      "seed": 47,
+      "experiment_id": "e0eba5bb-e4c9-4727-8da5-c2e34599b2ee",
+      "fresh_score": 0.68,
+      "experienced_score": 0.72,
+      "cgfe": 0.04,
+      "recovery_gain": 0.0,
+      "efficiency_gain": 144.76,
+      "fresh_run_id": "c12282f4-542c-4656-8a7d-0c1dc750b208",
+      "experienced_run_id": "4beb6ee6-0a50-421f-a449-d3445c4c403a",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\e0eba5bb-e4c9-4727-8da5-c2e34599b2ee"
+    },
+    {
+      "seed": 48,
+      "experiment_id": "4eb9d8b3-efe7-446d-a7ab-09a2003ecbf3",
+      "fresh_score": 0.72,
+      "experienced_score": 0.72,
+      "cgfe": 0.0,
+      "recovery_gain": 0.0,
+      "efficiency_gain": 138.96,
+      "fresh_run_id": "60736916-f0d1-4847-851c-4726d838944c",
+      "experienced_run_id": "e6c99b6a-69a4-4fe6-b546-5391f1f8fb0e",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\4eb9d8b3-efe7-446d-a7ab-09a2003ecbf3"
+    },
+    {
+      "seed": 49,
+      "experiment_id": "3db9d93c-dba3-4990-b8ab-d8260380bdda",
+      "fresh_score": 0.72,
+      "experienced_score": 0.72,
+      "cgfe": 0.0,
+      "recovery_gain": 0.0,
+      "efficiency_gain": 141.76,
+      "fresh_run_id": "00af5129-aa7f-47a0-9da5-73e5ddcb74c0",
+      "experienced_run_id": "d21d9b51-7921-46e6-bd46-9c4e2ffeb57c",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\3db9d93c-dba3-4990-b8ab-d8260380bdda"
+    },
+    {
+      "seed": 50,
+      "experiment_id": "6fd9b0d4-3d7c-49b9-87e7-9b36fa33a210",
+      "fresh_score": 0.72,
+      "experienced_score": 0.72,
+      "cgfe": 0.0,
+      "recovery_gain": 0.0,
+      "efficiency_gain": 126.66,
+      "fresh_run_id": "aa4dc769-29b5-4eb9-807c-5204e82816da",
+      "experienced_run_id": "e9436949-3305-4e98-828e-fdb9f4fbba48",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\6fd9b0d4-3d7c-49b9-87e7-9b36fa33a210"
+    },
+    {
+      "seed": 51,
+      "experiment_id": "c38ca9bc-8a04-465a-9013-f93919a7ced2",
+      "fresh_score": 0.72,
+      "experienced_score": 0.72,
+      "cgfe": 0.0,
+      "recovery_gain": 0.0,
+      "efficiency_gain": 99.1,
+      "fresh_run_id": "e7b6caa3-c950-4680-9665-eec9b534f57f",
+      "experienced_run_id": "1b994cd4-8b7a-4de9-9e9d-47537f03fa3f",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\c38ca9bc-8a04-465a-9013-f93919a7ced2"
+    }
+  ],
+  "statistics": {
+    "fresh": {
+      "count": 10,
+      "mean": 0.712,
+      "median": 0.72,
+      "min": 0.68,
+      "max": 0.72,
+      "stddev": 0.016865,
+      "ci95_low": 0.701547,
+      "ci95_high": 0.722453
+    },
+    "experienced": {
+      "count": 10,
+      "mean": 0.72,
+      "median": 0.72,
+      "min": 0.72,
+      "max": 0.72,
+      "stddev": 0.0,
+      "ci95_low": 0.72,
+      "ci95_high": 0.72
+    },
+    "cgfe": {
+      "count": 10,
+      "mean": 0.008,
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.04,
+      "stddev": 0.016865,
+      "ci95_low": -0.002453,
+      "ci95_high": 0.018453
+    }
+  }
+}

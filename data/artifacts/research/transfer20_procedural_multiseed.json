@@ -1,0 +1,124 @@
+{
+  "benchmark_version": "procedural-v2",
+  "model": "ollama_research",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "runs": [
+    {
+      "run_id": "4265dac9-0f99-4a1b-aa83-8a299d8a9a66",
+      "seed": 42,
+      "fresh": 0.2,
+      "experienced": 0.45,
+      "transfer_gain": 0.25,
+      "by_family": {
+        "dependency_recovery": 0.8,
+        "planning": -0.2,
+        "recovery": 0.0,
+        "structured_validation": 0.4
+      }
+    },
+    {
+      "run_id": "7a3c9eba-e297-48c2-bbdf-04cf241e8cb6",
+      "seed": 43,
+      "fresh": 0.2,
+      "experienced": 0.45,
+      "transfer_gain": 0.25,
+      "by_family": {
+        "dependency_recovery": 1.0,
+        "planning": -0.2,
+        "recovery": 0.0,
+        "structured_validation": 0.2
+      }
+    },
+    {
+      "run_id": "ae16f8c7-7e85-4ee0-9506-0f19664281ff",
+      "seed": 44,
+      "fresh": 0.2,
+      "experienced": 0.5,
+      "transfer_gain": 0.3,
+      "by_family": {
+        "dependency_recovery": 1.0,
+        "planning": -0.2,
+        "recovery": 0.0,
+        "structured_validation": 0.4
+      }
+    }
+  ],
+  "statistics": {
+    "fresh": {
+      "count": 3,
+      "mean": 0.2,
+      "median": 0.2,
+      "min": 0.2,
+      "max": 0.2,
+      "stddev": 0.0,
+      "ci95_low": 0.2,
+      "ci95_high": 0.2
+    },
+    "experienced": {
+      "count": 3,
+      "mean": 0.466667,
+      "median": 0.45,
+      "min": 0.45,
+      "max": 0.5,
+      "stddev": 0.028868,
+      "ci95_low": 0.434,
+      "ci95_high": 0.499333
+    },
+    "transfer_gain": {
+      "count": 3,
+      "mean": 0.266667,
+      "median": 0.25,
+      "min": 0.25,
+      "max": 0.3,
+      "stddev": 0.028868,
+      "ci95_low": 0.234,
+      "ci95_high": 0.299333
+    },
+    "by_family": {
+      "dependency_recovery": {
+        "count": 3,
+        "mean": 0.933333,
+        "median": 1.0,
+        "min": 0.8,
+        "max": 1.0,
+        "stddev": 0.11547,
+        "ci95_low": 0.802667,
+        "ci95_high": 1.064
+      },
+      "planning": {
+        "count": 3,
+        "mean": -0.2,
+        "median": -0.2,
+        "min": -0.2,
+        "max": -0.2,
+        "stddev": 0.0,
+        "ci95_low": -0.2,
+        "ci95_high": -0.2
+      },
+      "recovery": {
+        "count": 3,
+        "mean": 0.0,
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "stddev": 0.0,
+        "ci95_low": 0.0,
+        "ci95_high": 0.0
+      },
+      "structured_validation": {
+        "count": 3,
+        "mean": 0.333333,
+        "median": 0.4,
+        "min": 0.2,
+        "max": 0.4,
+        "stddev": 0.11547,
+        "ci95_low": 0.202667,
+        "ci95_high": 0.464
+      }
+    }
+  }
+}

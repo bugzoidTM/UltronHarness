@@ -1,0 +1,402 @@
+{
+  "structured_validation_01": {
+    "fixture_state": "private_structured_validation_01",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_02": {
+    "fixture_state": "private_structured_validation_02",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_03": {
+    "fixture_state": "private_structured_validation_03",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_04": {
+    "fixture_state": "private_structured_validation_04",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_05": {
+    "fixture_state": "private_structured_validation_05",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_06": {
+    "fixture_state": "private_structured_validation_06",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_07": {
+    "fixture_state": "private_structured_validation_07",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_08": {
+    "fixture_state": "private_structured_validation_08",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_09": {
+    "fixture_state": "private_structured_validation_09",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_10": {
+    "fixture_state": "private_structured_validation_10",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_11": {
+    "fixture_state": "private_structured_validation_11",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_12": {
+    "fixture_state": "private_structured_validation_12",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_13": {
+    "fixture_state": "private_structured_validation_13",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_14": {
+    "fixture_state": "private_structured_validation_14",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_15": {
+    "fixture_state": "private_structured_validation_15",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_16": {
+    "fixture_state": "private_structured_validation_16",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_17": {
+    "fixture_state": "private_structured_validation_17",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_18": {
+    "fixture_state": "private_structured_validation_18",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_19": {
+    "fixture_state": "private_structured_validation_19",
+    "contract_version": "transfer100-v1"
+  },
+  "structured_validation_20": {
+    "fixture_state": "private_structured_validation_20",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_01": {
+    "fixture_state": "private_dependency_recovery_01",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_02": {
+    "fixture_state": "private_dependency_recovery_02",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_03": {
+    "fixture_state": "private_dependency_recovery_03",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_04": {
+    "fixture_state": "private_dependency_recovery_04",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_05": {
+    "fixture_state": "private_dependency_recovery_05",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_06": {
+    "fixture_state": "private_dependency_recovery_06",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_07": {
+    "fixture_state": "private_dependency_recovery_07",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_08": {
+    "fixture_state": "private_dependency_recovery_08",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_09": {
+    "fixture_state": "private_dependency_recovery_09",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_10": {
+    "fixture_state": "private_dependency_recovery_10",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_11": {
+    "fixture_state": "private_dependency_recovery_11",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_12": {
+    "fixture_state": "private_dependency_recovery_12",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_13": {
+    "fixture_state": "private_dependency_recovery_13",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_14": {
+    "fixture_state": "private_dependency_recovery_14",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_15": {
+    "fixture_state": "private_dependency_recovery_15",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_16": {
+    "fixture_state": "private_dependency_recovery_16",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_17": {
+    "fixture_state": "private_dependency_recovery_17",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_18": {
+    "fixture_state": "private_dependency_recovery_18",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_19": {
+    "fixture_state": "private_dependency_recovery_19",
+    "contract_version": "transfer100-v1"
+  },
+  "dependency_recovery_20": {
+    "fixture_state": "private_dependency_recovery_20",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_01": {
+    "fixture_state": "private_state_recovery_01",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_02": {
+    "fixture_state": "private_state_recovery_02",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_03": {
+    "fixture_state": "private_state_recovery_03",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_04": {
+    "fixture_state": "private_state_recovery_04",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_05": {
+    "fixture_state": "private_state_recovery_05",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_06": {
+    "fixture_state": "private_state_recovery_06",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_07": {
+    "fixture_state": "private_state_recovery_07",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_08": {
+    "fixture_state": "private_state_recovery_08",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_09": {
+    "fixture_state": "private_state_recovery_09",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_10": {
+    "fixture_state": "private_state_recovery_10",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_11": {
+    "fixture_state": "private_state_recovery_11",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_12": {
+    "fixture_state": "private_state_recovery_12",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_13": {
+    "fixture_state": "private_state_recovery_13",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_14": {
+    "fixture_state": "private_state_recovery_14",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_15": {
+    "fixture_state": "private_state_recovery_15",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_16": {
+    "fixture_state": "private_state_recovery_16",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_17": {
+    "fixture_state": "private_state_recovery_17",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_18": {
+    "fixture_state": "private_state_recovery_18",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_19": {
+    "fixture_state": "private_state_recovery_19",
+    "contract_version": "transfer100-v1"
+  },
+  "state_recovery_20": {
+    "fixture_state": "private_state_recovery_20",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_01": {
+    "fixture_state": "private_planning_01",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_02": {
+    "fixture_state": "private_planning_02",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_03": {
+    "fixture_state": "private_planning_03",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_04": {
+    "fixture_state": "private_planning_04",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_05": {
+    "fixture_state": "private_planning_05",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_06": {
+    "fixture_state": "private_planning_06",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_07": {
+    "fixture_state": "private_planning_07",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_08": {
+    "fixture_state": "private_planning_08",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_09": {
+    "fixture_state": "private_planning_09",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_10": {
+    "fixture_state": "private_planning_10",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_11": {
+    "fixture_state": "private_planning_11",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_12": {
+    "fixture_state": "private_planning_12",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_13": {
+    "fixture_state": "private_planning_13",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_14": {
+    "fixture_state": "private_planning_14",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_15": {
+    "fixture_state": "private_planning_15",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_16": {
+    "fixture_state": "private_planning_16",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_17": {
+    "fixture_state": "private_planning_17",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_18": {
+    "fixture_state": "private_planning_18",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_19": {
+    "fixture_state": "private_planning_19",
+    "contract_version": "transfer100-v1"
+  },
+  "planning_20": {
+    "fixture_state": "private_planning_20",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_01": {
+    "fixture_state": "private_configuration_repair_01",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_02": {
+    "fixture_state": "private_configuration_repair_02",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_03": {
+    "fixture_state": "private_configuration_repair_03",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_04": {
+    "fixture_state": "private_configuration_repair_04",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_05": {
+    "fixture_state": "private_configuration_repair_05",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_06": {
+    "fixture_state": "private_configuration_repair_06",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_07": {
+    "fixture_state": "private_configuration_repair_07",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_08": {
+    "fixture_state": "private_configuration_repair_08",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_09": {
+    "fixture_state": "private_configuration_repair_09",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_10": {
+    "fixture_state": "private_configuration_repair_10",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_11": {
+    "fixture_state": "private_configuration_repair_11",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_12": {
+    "fixture_state": "private_configuration_repair_12",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_13": {
+    "fixture_state": "private_configuration_repair_13",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_14": {
+    "fixture_state": "private_configuration_repair_14",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_15": {
+    "fixture_state": "private_configuration_repair_15",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_16": {
+    "fixture_state": "private_configuration_repair_16",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_17": {
+    "fixture_state": "private_configuration_repair_17",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_18": {
+    "fixture_state": "private_configuration_repair_18",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_19": {
+    "fixture_state": "private_configuration_repair_19",
+    "contract_version": "transfer100-v1"
+  },
+  "configuration_repair_20": {
+    "fixture_state": "private_configuration_repair_20",
+    "contract_version": "transfer100-v1"
+  }
+}

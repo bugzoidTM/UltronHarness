@@ -1,0 +1,63 @@
+version: "0.1"
+memories:
+  - id: mem_json
+    type: semantic
+    content: "Para saída estruturada, responda somente JSON válido e valide os campos obrigatórios."
+  - id: mem_workspace
+    type: procedural
+    content: "Use somente caminhos relativos ao workspace autorizado e verifique o artefato escrito."
+  - id: mem_timeout
+    type: procedural
+    content: "Em timeout, classifique a falha, limite tentativas e aplique recuperação segura."
+  - id: mem_policy
+    type: semantic
+    content: "Caminhos UNC, device paths, expansão de ambiente e escape de workspace são bloqueados."
+  - id: mem_testing
+    type: procedural
+    content: "Use avaliador determinístico quando ele existir e preserve evidências do resultado."
+  - id: mem_context
+    type: semantic
+    content: "Contexto excessivo pode degradar modelos pequenos; entregue apenas blocos relevantes."
+  - id: mem_skill
+    type: procedural
+    content: "Uma skill requer usos repetidos e sucesso medido antes de ser reutilizada."
+  - id: mem_leakage
+    type: semantic
+    content: "Tarefas e respostas privadas de benchmark não entram em experiências ou prompts."
+  - id: mem_recovery
+    type: procedural
+    content: "Recurso ausente: confirme caminho permitido e proponha alternativa antes de repetir."
+  - id: mem_bad_recipe
+    type: world
+    content: "Receitas de bolo usam farinha e fermento."
+queries:
+  - {query: "como retornar dados estruturados", relevant_memory_ids: [mem_json], acceptable_memory_ids: [], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "validar campos JSON obrigatórios", relevant_memory_ids: [mem_json], acceptable_memory_ids: [], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "resposta estritamente em JSON", relevant_memory_ids: [mem_json], acceptable_memory_ids: [], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "criar arquivo em caminho seguro", relevant_memory_ids: [mem_workspace], acceptable_memory_ids: [mem_policy], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "workspace permitido para escrita", relevant_memory_ids: [mem_workspace], acceptable_memory_ids: [mem_policy], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "verificar artefato no workspace", relevant_memory_ids: [mem_workspace], acceptable_memory_ids: [mem_testing], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "timeout na ferramenta", relevant_memory_ids: [mem_timeout], acceptable_memory_ids: [mem_recovery], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "limitar tentativas após timeout", relevant_memory_ids: [mem_timeout], acceptable_memory_ids: [mem_recovery], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "recuperação segura de falha transitória", relevant_memory_ids: [mem_timeout], acceptable_memory_ids: [mem_recovery], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "bloquear caminho UNC", relevant_memory_ids: [mem_policy], acceptable_memory_ids: [mem_workspace], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "path traversal fora do workspace", relevant_memory_ids: [mem_policy], acceptable_memory_ids: [mem_workspace], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "negar expansão de ambiente em arquivo", relevant_memory_ids: [mem_policy], acceptable_memory_ids: [mem_workspace], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "avaliar resultado sem LLM juiz", relevant_memory_ids: [mem_testing], acceptable_memory_ids: [mem_json], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "evidência de teste determinístico", relevant_memory_ids: [mem_testing], acceptable_memory_ids: [], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "verificação automática da saída", relevant_memory_ids: [mem_testing], acceptable_memory_ids: [mem_json], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "modelo pequeno recebe contexto demais", relevant_memory_ids: [mem_context], acceptable_memory_ids: [], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "reduzir blocos irrelevantes no prompt", relevant_memory_ids: [mem_context], acceptable_memory_ids: [mem_skill], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "eficiência de contexto", relevant_memory_ids: [mem_context], acceptable_memory_ids: [], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "quando promover uma skill", relevant_memory_ids: [mem_skill], acceptable_memory_ids: [mem_testing], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "skill validada por sucesso repetido", relevant_memory_ids: [mem_skill], acceptable_memory_ids: [], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "habilidade exige pelo menos três usos", relevant_memory_ids: [mem_skill], acceptable_memory_ids: [], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "evitar vazamento do benchmark", relevant_memory_ids: [mem_leakage], acceptable_memory_ids: [mem_testing], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "respostas privadas não podem virar memória", relevant_memory_ids: [mem_leakage], acceptable_memory_ids: [], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "isolamento entre experiência e teste", relevant_memory_ids: [mem_leakage], acceptable_memory_ids: [], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "arquivo ausente durante execução", relevant_memory_ids: [mem_recovery], acceptable_memory_ids: [mem_workspace], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "alternativa segura para recurso ausente", relevant_memory_ids: [mem_recovery], acceptable_memory_ids: [mem_timeout], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "confirmar caminho antes de retry", relevant_memory_ids: [mem_recovery], acceptable_memory_ids: [mem_policy], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "formato JSON e validação", relevant_memory_ids: [mem_json], acceptable_memory_ids: [mem_testing], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "proteção de device paths", relevant_memory_ids: [mem_policy], acceptable_memory_ids: [mem_workspace], harmful_memory_ids: [mem_bad_recipe]}
+  - {query: "não poluir contexto de agente", relevant_memory_ids: [mem_context], acceptable_memory_ids: [mem_leakage], harmful_memory_ids: [mem_bad_recipe]}

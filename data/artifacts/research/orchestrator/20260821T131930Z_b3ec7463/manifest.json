@@ -1,0 +1,9 @@
+{
+  "run_id": "96a79b28-e5a6-4f34-a4c9-c85cac3e0566",
+  "experiment": "ORCH-1",
+  "model": "ollama",
+  "seed": 42,
+  "config_hash": "a88912d62c39b0137a4cafb8e67423f9c1e24bc3bfdc601873b1f6fa59a42c35",
+  "created_at": "2026-08-21T13:19:30.365504+00:00",
+  "negative_result_policy": "never_discard_bad_run"
+}

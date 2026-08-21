@@ -1,0 +1,174 @@
+{
+  "benchmark": "transfer100",
+  "benchmark_version": "transfer100-v2-batched",
+  "model": "ollama_research",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51
+  ],
+  "timeout_seconds": 300,
+  "execution_mode": "batched_by_family",
+  "batch_size": 5,
+  "results": [
+    {
+      "run_id": "94d8e8a0-e686-48d8-8d29-b334d37a4a3c",
+      "seed": 42,
+      "fresh": 0.16,
+      "experienced": 0.13,
+      "transfer_gain": -0.03,
+      "by_family": {
+        "configuration_repair": -0.2,
+        "dependency_recovery": 0.0,
+        "planning": 0.0,
+        "state_recovery": 0.0,
+        "structured_validation": 0.05
+      }
+    },
+    {
+      "run_id": "9e982fae-9661-4da3-b735-9c8f443a234f",
+      "seed": 43,
+      "fresh": 0.15,
+      "experienced": 0.15,
+      "transfer_gain": 0.0,
+      "by_family": {
+        "configuration_repair": -0.2,
+        "dependency_recovery": 0.0,
+        "planning": 0.0,
+        "state_recovery": 0.0,
+        "structured_validation": 0.2
+      }
+    },
+    {
+      "run_id": "2d13bf05-bc67-4fc4-a93c-942d0dd3f8af",
+      "seed": 44,
+      "fresh": 0.16,
+      "experienced": 0.14,
+      "transfer_gain": -0.02,
+      "by_family": {
+        "configuration_repair": -0.2,
+        "dependency_recovery": 0.0,
+        "planning": 0.0,
+        "state_recovery": 0.0,
+        "structured_validation": 0.1
+      }
+    },
+    {
+      "run_id": "ded16d45-1f37-4cdf-b465-3bcca18fc3f3",
+      "seed": 45,
+      "fresh": 0.15,
+      "experienced": 0.13,
+      "transfer_gain": -0.02,
+      "by_family": {
+        "configuration_repair": -0.2,
+        "dependency_recovery": 0.0,
+        "planning": 0.0,
+        "state_recovery": 0.0,
+        "structured_validation": 0.1
+      }
+    },
+    {
+      "run_id": "e4bda1fa-7c3e-4ba9-9f6c-135f1a57e757",
+      "seed": 46,
+      "fresh": 0.15,
+      "experienced": 0.14,
+      "transfer_gain": -0.01,
+      "by_family": {
+        "configuration_repair": -0.2,
+        "dependency_recovery": 0.0,
+        "planning": 0.0,
+        "state_recovery": 0.0,
+        "structured_validation": 0.15
+      }
+    },
+    {
+      "run_id": "ec6c6e29-756c-4b0e-aa6c-f9a418fe85e9",
+      "seed": 47,
+      "fresh": 0.12,
+      "experienced": 0.1,
+      "transfer_gain": -0.02,
+      "by_family": {
+        "configuration_repair": -0.2,
+        "dependency_recovery": 0.0,
+        "planning": 0.0,
+        "state_recovery": 0.0,
+        "structured_validation": 0.1
+      }
+    },
+    {
+      "run_id": "27da2edd-a9ee-4762-99cd-3c5dc3a8764a",
+      "seed": 48,
+      "fresh": 0.15,
+      "experienced": 0.13,
+      "transfer_gain": -0.02,
+      "by_family": {
+        "configuration_repair": -0.2,
+        "dependency_recovery": 0.0,
+        "planning": 0.0,
+        "state_recovery": 0.0,
+        "structured_validation": 0.1
+      }
+    },
+    {
+      "run_id": "c617d9ae-3689-4c49-bd12-d72d3155330e",
+      "seed": 49,
+      "fresh": 0.16,
+      "experienced": 0.16,
+      "transfer_gain": 0.0,
+      "by_family": {
+        "configuration_repair": -0.2,
+        "dependency_recovery": 0.0,
+        "planning": 0.0,
+        "state_recovery": 0.0,
+        "structured_validation": 0.2
+      }
+    },
+    {
+      "run_id": "f5b366a7-6b5e-4890-99a6-fbc8713d6d2c",
+      "seed": 50,
+      "fresh": 0.12,
+      "experienced": 0.09,
+      "transfer_gain": -0.03,
+      "by_family": {
+        "configuration_repair": -0.2,
+        "dependency_recovery": 0.0,
+        "planning": 0.0,
+        "state_recovery": 0.0,
+        "structured_validation": 0.05
+      }
+    },
+    {
+      "run_id": "018c00a0-ff62-4020-9729-54be4129015d",
+      "seed": 51,
+      "fresh": 0.15,
+      "experienced": 0.15,
+      "transfer_gain": 0.0,
+      "by_family": {
+        "configuration_repair": -0.2,
+        "dependency_recovery": 0.0,
+        "planning": 0.0,
+        "state_recovery": 0.0,
+        "structured_validation": 0.2
+      }
+    }
+  ],
+  "statistics": {
+    "transfer_gain": {
+      "count": 10,
+      "mean": -0.015,
+      "median": -0.02,
+      "min": -0.03,
+      "max": 0.0,
+      "stddev": 0.011785,
+      "ci95_low": -0.022304,
+      "ci95_high": -0.007696
+    }
+  }
+}

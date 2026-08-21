@@ -1,0 +1,73 @@
+{
+  "configuration": {
+    "counts": [
+      10,
+      25,
+      50,
+      100,
+      200
+    ]
+  },
+  "results": [
+    {
+      "experience_count": 10,
+      "experiment_id": "de7917e7-3ed0-4eba-8001-5d6a557a2d40",
+      "fresh_score": 0.38,
+      "experienced_score": 0.36,
+      "cgfe": -0.02,
+      "recovery_gain": 0.0,
+      "efficiency_gain": -789.9,
+      "fresh_run_id": "9b3404f6-3da2-4076-b1a4-25871b358c33",
+      "experienced_run_id": "92f4c35e-3588-4e44-821b-c83a0ecaf5f4",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\de7917e7-3ed0-4eba-8001-5d6a557a2d40"
+    },
+    {
+      "experience_count": 25,
+      "experiment_id": "9d88bc2e-0640-4568-9e5d-e4f6d28ef88d",
+      "fresh_score": 0.38,
+      "experienced_score": 0.36,
+      "cgfe": -0.02,
+      "recovery_gain": 0.0,
+      "efficiency_gain": -784.96,
+      "fresh_run_id": "85391063-63b1-4403-a4ec-88746191c308",
+      "experienced_run_id": "f83136dc-456a-4fb2-b7ee-f267262e3e3b",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\9d88bc2e-0640-4568-9e5d-e4f6d28ef88d"
+    },
+    {
+      "experience_count": 50,
+      "experiment_id": "aa8048f8-00b4-4f4d-acf8-b68bc7c60d54",
+      "fresh_score": 0.38,
+      "experienced_score": 0.36,
+      "cgfe": -0.02,
+      "recovery_gain": 0.0,
+      "efficiency_gain": -757.2,
+      "fresh_run_id": "1f47f696-f65a-457d-81ad-5262c38033ca",
+      "experienced_run_id": "9d390d3d-e326-47a2-98f9-589b44ff9722",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\aa8048f8-00b4-4f4d-acf8-b68bc7c60d54"
+    },
+    {
+      "experience_count": 100,
+      "experiment_id": "6eac0d30-6e29-42ca-ae88-59a6e1708a07",
+      "fresh_score": 0.38,
+      "experienced_score": 0.36,
+      "cgfe": -0.02,
+      "recovery_gain": 0.0,
+      "efficiency_gain": -767.74,
+      "fresh_run_id": "8d44689e-bf30-4bd0-ad6e-1acc1cf03307",
+      "experienced_run_id": "ecce6f12-3a4e-4f39-b6ac-3a157be86945",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\6eac0d30-6e29-42ca-ae88-59a6e1708a07"
+    },
+    {
+      "experience_count": 200,
+      "experiment_id": "8cf7ba7c-c4c2-4f74-9568-1c352fc1effb",
+      "fresh_score": 0.38,
+      "experienced_score": 0.36,
+      "cgfe": -0.02,
+      "recovery_gain": 0.0,
+      "efficiency_gain": -748.42,
+      "fresh_run_id": "49e94d89-a199-4018-b256-32705a58188c",
+      "experienced_run_id": "b6ab77d9-a9d2-414e-9e16-b7896197f97c",
+      "report_dir": "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\experiments\\8cf7ba7c-c4c2-4f74-9568-1c352fc1effb"
+    }
+  ]
+}

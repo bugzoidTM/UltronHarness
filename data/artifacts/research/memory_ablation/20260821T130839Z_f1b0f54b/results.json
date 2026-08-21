@@ -1,0 +1,99 @@
+{
+  "configuration": {
+    "variants": [
+      "NONE",
+      "EPISODIC",
+      "SEMANTIC",
+      "PROCEDURAL",
+      "SELF",
+      "WORLD",
+      "SKILLS_ONLY",
+      "SEMANTIC_PROCEDURAL",
+      "PROCEDURAL_SKILLS",
+      "ALL"
+    ]
+  },
+  "baseline_score": 0.4,
+  "results": [
+    {
+      "memory_type": "NONE",
+      "run_id": "49ca4399-de64-4055-a0f0-03e54327ab4f",
+      "score": 0.4,
+      "context_tokens": 0,
+      "retrieval_count": 0,
+      "delta": 0.0
+    },
+    {
+      "memory_type": "EPISODIC",
+      "run_id": "4db5874f-345b-4949-9ac7-f1c3898f9a55",
+      "score": 0.3,
+      "context_tokens": 21,
+      "retrieval_count": 1,
+      "delta": -0.1
+    },
+    {
+      "memory_type": "SEMANTIC",
+      "run_id": "7264cf2d-b8ae-48c3-b662-1040088caa32",
+      "score": 0.25,
+      "context_tokens": 21,
+      "retrieval_count": 1,
+      "delta": -0.15
+    },
+    {
+      "memory_type": "PROCEDURAL",
+      "run_id": "f7eb5d67-a6c3-451b-afed-9ce3b0fc9cbe",
+      "score": 0.3,
+      "context_tokens": 21,
+      "retrieval_count": 1,
+      "delta": -0.1
+    },
+    {
+      "memory_type": "SELF",
+      "run_id": "ec951068-5606-476f-b882-f6dddbea7207",
+      "score": 0.4,
+      "context_tokens": 21,
+      "retrieval_count": 1,
+      "delta": 0.0
+    },
+    {
+      "memory_type": "WORLD",
+      "run_id": "e5590c25-0540-4bde-82a2-a50df0c72bf1",
+      "score": 0.3,
+      "context_tokens": 24,
+      "retrieval_count": 1,
+      "delta": -0.1
+    },
+    {
+      "memory_type": "SKILLS_ONLY",
+      "run_id": "647c3a05-3834-4de8-aa07-1b199263347d",
+      "score": 0.35,
+      "context_tokens": 20,
+      "retrieval_count": 1,
+      "delta": -0.05
+    },
+    {
+      "memory_type": "SEMANTIC_PROCEDURAL",
+      "run_id": "bf7f2844-4453-4ba1-a1a6-04e36d2c62fa",
+      "score": 0.25,
+      "context_tokens": 42,
+      "retrieval_count": 2,
+      "delta": -0.15
+    },
+    {
+      "memory_type": "PROCEDURAL_SKILLS",
+      "run_id": "38377ca7-78c9-46ea-a2c4-b4966974b044",
+      "score": 0.3,
+      "context_tokens": 41,
+      "retrieval_count": 2,
+      "delta": -0.1
+    },
+    {
+      "memory_type": "ALL",
+      "run_id": "b3232a9d-e35e-417b-bed6-abdeb71997fd",
+      "score": 0.35,
+      "context_tokens": 128,
+      "retrieval_count": 6,
+      "delta": -0.05
+    }
+  ]
+}

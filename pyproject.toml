@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ultronpro"
+version = "0.1.0"
+description = "Plataforma local-first para pesquisa de agentes inteligentes persistentes"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115,<1.0",
+  "uvicorn[standard]>=0.30,<1.0",
+  "pydantic>=2.9,<3.0",
+  "pydantic-settings>=2.5,<3.0",
+  "httpx>=0.27,<1.0",
+  "PyYAML>=6.0,<7.0",
+  "psutil>=6.0,<8.0",
+]
+
+[project.optional-dependencies]
+vector = ["qdrant-client>=1.11,<2.0"]
+browser = ["playwright>=1.48,<2.0"]
+dev = ["pytest>=8.3,<9.0", "pytest-asyncio>=0.24,<1.0", "coverage>=7.6,<8.0", "pytest-cov>=6.0,<7.0", "ruff>=0.7,<1.0"]
+
+[tool.setuptools.packages.find]
+include = ["ultron*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+  "agent: teste cognitivo com agente local real",
+  "slow: teste potencialmente demorado",
+  "llm: teste que requer um runtime LLM local",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501", "UP042"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.coverage.run]
+branch = true
+source = ["ultron"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 70
+
+[project.scripts]
+ultron-api = "apps.api.main:run"

@@ -1,0 +1,1623 @@
+{
+  "run_id": "b054367c-a65f-4f68-9610-c5342f783181",
+  "benchmark_version": "transfer100-v1",
+  "benchmark": "transfer100",
+  "fresh": 0.07,
+  "experienced": 0.18,
+  "transfer_gain": 0.11,
+  "by_family": {
+    "configuration_repair": 0.05,
+    "dependency_recovery": 0.0,
+    "planning": 0.0,
+    "state_recovery": 0.0,
+    "structured_validation": 0.5
+  },
+  "seed": 42,
+  "model": "ollama_research",
+  "traces": {
+    "fresh": [
+      {
+        "task_id": "structured_validation_01",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_02",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_03",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_04",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_05",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_06",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_07",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_08",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_09",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_10",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_11",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_12",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_13",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "C>R>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_14",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_15",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_16",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_17",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_18",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_19",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "structured_validation_20",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "C>R>C>A",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_01",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "E>M>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_02",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>V>L>V>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_03",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "E>M>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_04",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "E>M>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_05",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "E>M>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_06",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>L>V>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_07",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>L>V>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_08",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "E>M>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_09",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "M>L>V>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_10",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>E>V>L",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_11",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>L>V>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_12",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "E>M>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_13",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "E>M>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_14",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>L>V>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_15",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "E>M>C>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_16",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "E>M>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_17",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "M>E>L>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_18",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>L>V>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_19",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>L>V>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "dependency_recovery_20",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "E>M>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_01",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>FW>R>F>N",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_02",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "N>N",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_03",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "R>V>S>N",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_04",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V",
+        "success": true,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_05",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>FN",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_06",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "N>N",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_07",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "R>V>S>N",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_08",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V",
+        "success": true,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_09",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>FN",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_10",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "N>N",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_11",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "S>R>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_12",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "N>S>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_13",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>FN",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_14",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "N>N",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_15",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "R>V>S>N",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_16",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "N>S>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_17",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>FN",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_18",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "N>N",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_19",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "R>V>S>N",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "state_recovery_20",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V",
+        "success": true,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_01",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_02",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_03",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>C>V>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_04",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>E>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_05",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_06",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_07",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>C>E>C>E>C>E>C>E>C>E>C>E>C>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_08",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>E>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_09",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>C>K",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_10",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_11",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>C>E>C>E>C>E>C>E>C>E>C>E>C>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_12",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>E>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_13",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>C>K",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_14",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_15",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>C>V>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_16",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>E>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_17",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_18",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_19",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>C>E>C>E>C>E>C>E>C>E>C>E>C>E",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "planning_20",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>E>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_01",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "H>R>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_02",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_03",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "H>V>R>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_04",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>V>H>R",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_05",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "H>V>R",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_06",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "H>R>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_07",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "H>V>R>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_08",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>V>H>R",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_09",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "H>R>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_10",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_11",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "H>V>R>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_12",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>V>R>V>H>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_13",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "H>V>R",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_14",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_15",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "H>V>R>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_16",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>V>I>V>H",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_17",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "H>R>V",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_18",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_19",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "H>V>R>C",
+        "success": false,
+        "mode": "fresh"
+      },
+      {
+        "task_id": "configuration_repair_20",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>V>H>R",
+        "success": false,
+        "mode": "fresh"
+      }
+    ],
+    "experienced": [
+      {
+        "task_id": "structured_validation_01",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_02",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_03",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_04",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_05",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_06",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_07",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_08",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_09",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_10",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_11",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_12",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_13",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_14",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_15",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_16",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_17",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "P>C>R",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_18",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_19",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "P>C>R",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "structured_validation_20",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "P>C>R>A",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_01",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "M>E>I>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_02",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>V>C>L>E>C>V>C",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_03",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>I>V>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_04",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "E>M>I>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_05",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "E>M>I>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_06",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>V>L>V>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_07",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>I>V>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_08",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "E>M>I>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_09",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "M>E>I>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_10",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>V>L>V>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_11",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>I>V>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_12",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "E>M>I>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_13",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "E>M>I>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_14",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>V>I>L>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_15",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>I>V>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_16",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "E>M>I>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_17",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "I>V>L>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_18",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>V>I>L>V>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_19",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "M>I>V>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "dependency_recovery_20",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "E>M>I>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_01",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>FW>R>F>N",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_02",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "N>N",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_03",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "R>V>S>N",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_04",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_05",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>FN",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_06",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "N>N",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_07",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "R>V>S>N",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_08",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_09",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>FN",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_10",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "N>N",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_11",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "S>R>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_12",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "N>S>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_13",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>FN",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_14",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "N>N",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_15",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "R>V>S>N",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_16",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "N>S>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_17",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V>FN",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_18",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "N>N",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_19",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "R>V>S>N",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "state_recovery_20",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "S>R>V",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_01",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>C>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_02",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_03",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>C>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_04",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>E>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_05",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>C",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_06",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_07",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>C>V>E>V>C>E>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_08",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "E>V>C",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_09",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>C",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_10",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>C>K",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_11",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>V>C>E>V>C>E>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_12",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>E>E>V>C",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_13",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_14",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>C>V>C>K>C>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_15",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>C>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_16",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "C>E>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_17",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>E>C",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_18",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "C>K>E",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_19",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "C>E>C>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "planning_20",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "E>V>C",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_01",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_02",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V>H",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_03",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "H>R>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_04",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>V>C>H",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_05",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_06",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V>H",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_07",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "H>V>R>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_08",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_09",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "H>R>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_10",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_11",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "H>V>R",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_12",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "V>H",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_13",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_14",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V>H",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_15",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "H>V>R",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_16",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>R>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_17",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V",
+        "success": true,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_18",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "I>R>V>H",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_19",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "H>V>R>V",
+        "success": false,
+        "mode": "experienced"
+      },
+      {
+        "task_id": "configuration_repair_20",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "I>V>H>R>V",
+        "success": false,
+        "mode": "experienced"
+      }
+    ]
+  }
+}

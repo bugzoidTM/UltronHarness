@@ -1,0 +1,9 @@
+{
+  "run_id": "2a80746d-d268-43e7-a9c0-264aa681c611",
+  "experiment": "MEM-2",
+  "model": "ollama",
+  "seed": 42,
+  "config_hash": "d7b828e19cee558cf6708516def2b3cd93d1a921acd5bb29e8096417faa4b8fe",
+  "created_at": "2026-08-21T13:08:39.374346+00:00",
+  "negative_result_policy": "never_discard_bad_run"
+}

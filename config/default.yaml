@@ -1,0 +1,118 @@
+system:
+  host: 127.0.0.1
+  port: 8741
+  app_name: UltronPro
+  log_level: INFO
+
+autonomy:
+  mode: 2
+
+limits:
+  max_steps: 30
+  max_tool_calls: 50
+  max_replans: 5
+  max_runtime_seconds: 1800
+  max_llm_calls: 50
+  max_output_chars: 20000
+
+memory:
+  vector_enabled: true
+  consolidation_enabled: true
+  embeddings:
+    provider: ollama
+    endpoint: http://127.0.0.1:11434
+    model: nomic-embed-text
+    timeout_seconds: 30
+  retrieval:
+    top_k: 3
+  feature_flags:
+    episodic: true
+    semantic: true
+    procedural: true
+    self: true
+    world: true
+    skills: true
+  retrieval_weights:
+    semantic: 0.50
+    lexical: 0.20
+    relevance: 0.00
+    recency: 0.10
+    importance: 0.10
+    usefulness: 0.10
+
+context:
+  max_input_tokens: 4096
+  allocations:
+    system: 0.15
+    task: 0.15
+    plan: 0.15
+    memory: 0.20
+    skills: 0.10
+    tools: 0.15
+    history: 0.10
+
+learning:
+  minimum_experience_quality: 0.60
+
+models:
+  primary: ollama
+  timeout_seconds: 120
+  smoke: local-fallback
+  research_small: local-fallback
+  research_primary: ollama_research
+  research_secondary: ollama
+  registry:
+    local-fallback:
+      provider: fallback
+      enabled: true
+      roles: [planning, verification, chat]
+    ollama:
+      provider: ollama
+      endpoint: http://127.0.0.1:11434
+      model: qwen2.5:0.5b
+      enabled: true
+      roles: [planning, reasoning, tools]
+    ollama_research:
+      provider: ollama
+      endpoint: http://127.0.0.1:11434
+      model: qwen2.5:3b
+      enabled: true
+      roles: [planning, reasoning, tools, research]
+    llamacpp:
+      provider: llamacpp
+      endpoint: http://127.0.0.1:8080/v1
+      model: local-model
+      enabled: false
+      roles: [planning, reasoning, tools]
+
+network:
+  internet_read: false
+  internet_write: false
+
+workspace:
+  root: data/workspaces
+  allowed_extensions: [".py", ".txt", ".md", ".json", ".yaml", ".yml", ".csv", ".html", ".css", ".js", ".ts"]
+
+security:
+  external_telemetry: false
+  cloud_llm: false
+  remote_storage: false
+  require_approval_for: [R2, R3, R4]
+  blocked_shell_patterns:
+    - "format "
+    - "diskpart"
+    - "shutdown"
+    - "restart-computer"
+    - "remove-item c:\\\\"
+    - "del c:\\\\"
+    - "reg delete"
+    - "net user"
+    - "net localgroup"
+    - "set-mppreference"
+    - "disable-windowsoptionalfeature"
+
+watchdog:
+  max_cpu_percent: 95
+  max_memory_percent: 90
+  min_disk_free_gb: 1
+  poll_seconds: 3

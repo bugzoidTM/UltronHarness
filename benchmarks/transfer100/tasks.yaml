@@ -1,0 +1,1680 @@
+- id: structured_validation_01
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 1: O documento não pode ser lido pelo parser. Qual sequência segura
+    de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_02
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 2: O documento é legível, mas um campo obrigatório está ausente.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_03
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 3: O documento é legível, mas um campo obrigatório possui tipo
+    incompatível. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_04
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 4: O documento é legível e todos os campos obrigatórios têm tipos
+    compatíveis. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_05
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 5: O documento não pode ser lido pelo parser. Qual sequência segura
+    de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_06
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 6: O documento é legível, mas um campo obrigatório está ausente.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_07
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 7: O documento é legível, mas um campo obrigatório possui tipo
+    incompatível. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_08
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 8: O documento é legível e todos os campos obrigatórios têm tipos
+    compatíveis. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_09
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 9: O documento não pode ser lido pelo parser. Qual sequência segura
+    de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_10
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 10: O documento é legível, mas um campo obrigatório está ausente.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_11
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 11: O documento é legível, mas um campo obrigatório possui tipo
+    incompatível. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_12
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 12: O documento é legível e todos os campos obrigatórios têm tipos
+    compatíveis. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_13
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 13: O documento não pode ser lido pelo parser. Qual sequência segura
+    de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_14
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 14: O documento é legível, mas um campo obrigatório está ausente.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_15
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 15: O documento é legível, mas um campo obrigatório possui tipo
+    incompatível. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_16
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 16: O documento é legível e todos os campos obrigatórios têm tipos
+    compatíveis. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_17
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 17: O documento não pode ser lido pelo parser. Qual sequência segura
+    de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_18
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 18: O documento é legível, mas um campo obrigatório está ausente.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_19
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 19: O documento é legível, mas um campo obrigatório possui tipo
+    incompatível. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: structured_validation_20
+  family: structured_validation
+  source_domain: json_validation
+  target_domain: yaml_validation
+  objective: 'Caso 20: O documento é legível e todos os campos obrigatórios têm tipos
+    compatíveis. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: P
+    description: ler a estrutura com o parser permitido
+  - code: C
+    description: confirmar campos obrigatórios e tipos declarados
+  - code: R
+    description: rejeitar e registrar a violação observada
+  - code: A
+    description: aceitar somente após verificações bem-sucedidas
+- id: dependency_recovery_01
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 1: Um recurso declarado está ausente do ambiente resolvido. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_02
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 2: A declaração e a resolução registram versões incompatíveis.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_03
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 3: Um recurso transitivo está ausente na resolução declarada. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_04
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 4: A falha cita um recurso que não está declarado no projeto. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_05
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 5: Um recurso declarado está ausente do ambiente resolvido. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_06
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 6: A declaração e a resolução registram versões incompatíveis.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_07
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 7: Um recurso transitivo está ausente na resolução declarada. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_08
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 8: A falha cita um recurso que não está declarado no projeto. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_09
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 9: Um recurso declarado está ausente do ambiente resolvido. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_10
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 10: A declaração e a resolução registram versões incompatíveis.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_11
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 11: Um recurso transitivo está ausente na resolução declarada.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_12
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 12: A falha cita um recurso que não está declarado no projeto.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_13
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 13: Um recurso declarado está ausente do ambiente resolvido. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_14
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 14: A declaração e a resolução registram versões incompatíveis.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_15
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 15: Um recurso transitivo está ausente na resolução declarada.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_16
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 16: A falha cita um recurso que não está declarado no projeto.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_17
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 17: Um recurso declarado está ausente do ambiente resolvido. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_18
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 18: A declaração e a resolução registram versões incompatíveis.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_19
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 19: Um recurso transitivo está ausente na resolução declarada.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: dependency_recovery_20
+  family: dependency_recovery
+  source_domain: python_dependency
+  target_domain: node_dependency
+  objective: 'Caso 20: A falha cita um recurso que não está declarado no projeto.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: M
+    description: inspecionar declaração e resolução de dependências
+  - code: I
+    description: restaurar somente o recurso explicitamente declarado
+  - code: L
+    description: restaurar a resolução coerente com a declaração
+  - code: V
+    description: verificar que a resolução final funciona
+  - code: E
+    description: registrar que o recurso não é declarado e parar
+- id: state_recovery_01
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 1: Um artefato autorizado está modificado e precisa ser restaurado.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_02
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 2: O artefato já se encontra no estado solicitado. Qual sequência
+    segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_03
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 3: A reversão autorizada ocorreu, mas a verificação ainda mostra
+    divergência. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_04
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 4: Somente um dentre vários artefatos é autorizado para recuperação.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_05
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 5: Um artefato autorizado está modificado e precisa ser restaurado.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_06
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 6: O artefato já se encontra no estado solicitado. Qual sequência
+    segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_07
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 7: A reversão autorizada ocorreu, mas a verificação ainda mostra
+    divergência. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_08
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 8: Somente um dentre vários artefatos é autorizado para recuperação.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_09
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 9: Um artefato autorizado está modificado e precisa ser restaurado.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_10
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 10: O artefato já se encontra no estado solicitado. Qual sequência
+    segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_11
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 11: A reversão autorizada ocorreu, mas a verificação ainda mostra
+    divergência. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_12
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 12: Somente um dentre vários artefatos é autorizado para recuperação.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_13
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 13: Um artefato autorizado está modificado e precisa ser restaurado.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_14
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 14: O artefato já se encontra no estado solicitado. Qual sequência
+    segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_15
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 15: A reversão autorizada ocorreu, mas a verificação ainda mostra
+    divergência. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_16
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 16: Somente um dentre vários artefatos é autorizado para recuperação.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_17
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 17: Um artefato autorizado está modificado e precisa ser restaurado.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_18
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 18: O artefato já se encontra no estado solicitado. Qual sequência
+    segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_19
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 19: A reversão autorizada ocorreu, mas a verificação ainda mostra
+    divergência. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: state_recovery_20
+  family: state_recovery
+  source_domain: filesystem_recovery
+  target_domain: repository_state
+  objective: 'Caso 20: Somente um dentre vários artefatos é autorizado para recuperação.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: S
+    description: inspecionar o estado atual antes de modificar
+  - code: R
+    description: aplicar somente a reversão explicitamente autorizada
+  - code: V
+    description: confirmar o estado final com evidência
+  - code: N
+    description: registrar que nenhuma alteração é necessária
+  - code: F
+    description: registrar falha de confirmação sem ampliar o escopo
+- id: planning_01
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 1: A pré-condição obrigatória não possui evidência de conclusão.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_02
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 2: A pré-condição falhou e a etapa seguinte permanece dependente.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_03
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 3: Todas as pré-condições possuem evidência válida para uma etapa
+    dependente. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_04
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 4: Uma etapa sem dependências deve registrar evidência de conclusão.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_05
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 5: A pré-condição obrigatória não possui evidência de conclusão.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_06
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 6: A pré-condição falhou e a etapa seguinte permanece dependente.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_07
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 7: Todas as pré-condições possuem evidência válida para uma etapa
+    dependente. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_08
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 8: Uma etapa sem dependências deve registrar evidência de conclusão.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_09
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 9: A pré-condição obrigatória não possui evidência de conclusão.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_10
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 10: A pré-condição falhou e a etapa seguinte permanece dependente.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_11
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 11: Todas as pré-condições possuem evidência válida para uma etapa
+    dependente. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_12
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 12: Uma etapa sem dependências deve registrar evidência de conclusão.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_13
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 13: A pré-condição obrigatória não possui evidência de conclusão.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_14
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 14: A pré-condição falhou e a etapa seguinte permanece dependente.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_15
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 15: Todas as pré-condições possuem evidência válida para uma etapa
+    dependente. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_16
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 16: Uma etapa sem dependências deve registrar evidência de conclusão.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_17
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 17: A pré-condição obrigatória não possui evidência de conclusão.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_18
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 18: A pré-condição falhou e a etapa seguinte permanece dependente.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_19
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 19: Todas as pré-condições possuem evidência válida para uma etapa
+    dependente. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: planning_20
+  family: planning
+  source_domain: algorithmic_planning
+  target_domain: workflow_planning
+  objective: 'Caso 20: Uma etapa sem dependências deve registrar evidência de conclusão.
+    Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: C
+    description: confirmar evidência de pré-condição
+  - code: K
+    description: manter a etapa dependente bloqueada
+  - code: E
+    description: executar a etapa somente após pré-condições
+  - code: V
+    description: validar a evidência de conclusão
+- id: configuration_repair_01
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 1: Uma chave obrigatória possui valor ausente e a reparação autorizada
+    é conhecida. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_02
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 2: Uma chave possui tipo incompatível e existe reparação mínima
+    autorizada. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_03
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 3: A alteração necessária excede a autorização declarada. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_04
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 4: A configuração já satisfaz as restrições declaradas. Qual sequência
+    segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_05
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 5: Uma chave obrigatória possui valor ausente e a reparação autorizada
+    é conhecida. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_06
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 6: Uma chave possui tipo incompatível e existe reparação mínima
+    autorizada. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_07
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 7: A alteração necessária excede a autorização declarada. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_08
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 8: A configuração já satisfaz as restrições declaradas. Qual sequência
+    segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_09
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 9: Uma chave obrigatória possui valor ausente e a reparação autorizada
+    é conhecida. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_10
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 10: Uma chave possui tipo incompatível e existe reparação mínima
+    autorizada. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_11
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 11: A alteração necessária excede a autorização declarada. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_12
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 12: A configuração já satisfaz as restrições declaradas. Qual sequência
+    segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_13
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 13: Uma chave obrigatória possui valor ausente e a reparação autorizada
+    é conhecida. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_14
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 14: Uma chave possui tipo incompatível e existe reparação mínima
+    autorizada. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_15
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 15: A alteração necessária excede a autorização declarada. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_16
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 16: A configuração já satisfaz as restrições declaradas. Qual sequência
+    segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_17
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 17: Uma chave obrigatória possui valor ausente e a reparação autorizada
+    é conhecida. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_18
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 18: Uma chave possui tipo incompatível e existe reparação mínima
+    autorizada. Qual sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_19
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 19: A alteração necessária excede a autorização declarada. Qual
+    sequência segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização
+- id: configuration_repair_20
+  family: configuration_repair
+  source_domain: structured_configuration
+  target_domain: service_configuration
+  objective: 'Caso 20: A configuração já satisfaz as restrições declaradas. Qual sequência
+    segura de ações deve ser usada?'
+  response_format: CÓDIGO>CÓDIGO(>CÓDIGO)
+  actions:
+  - code: I
+    description: inspecionar estrutura e valores da configuração
+  - code: R
+    description: aplicar a reparação mínima explicitamente autorizada
+  - code: V
+    description: validar a configuração resultante com verificador local
+  - code: H
+    description: registrar que a mudança solicitada excede a autorização

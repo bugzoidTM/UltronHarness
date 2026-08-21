@@ -1,0 +1,20 @@
+﻿{
+    "pid":  13736,
+    "started_at":  "2026-08-21T18:25:29.6782418Z",
+    "report":  "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\research\\hermes\\transfer100\\transfer100_json_compact_multiseed_42_51.json",
+    "stdout":  "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\research\\hermes\\transfer100\\transfer100_background.stdout.log",
+    "stderr":  "D:\\sistemas\\Nova pasta\\UltronHarness\\data\\artifacts\\research\\hermes\\transfer100\\transfer100_background.stderr.log",
+    "requested_seeds":  [
+                            42,
+                            43,
+                            44,
+                            45,
+                            46,
+                            47,
+                            48,
+                            49,
+                            50,
+                            51
+                        ],
+    "status":  "running"
+}

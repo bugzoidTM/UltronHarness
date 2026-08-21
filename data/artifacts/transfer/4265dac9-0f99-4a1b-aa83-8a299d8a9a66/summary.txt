@@ -1,0 +1,4 @@
+﻿fresh=0.2
+experienced=0.45
+tg=0.25
+families={"dependency_recovery":0.8,"planning":-0.2,"recovery":0.0,"structured_validation":0.4}

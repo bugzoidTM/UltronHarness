@@ -1,0 +1,127 @@
+{
+  "configuration": {
+    "models": [
+      "local-fallback",
+      "ollama"
+    ],
+    "variants": [
+      "A_LLM_ONLY",
+      "B_LLM_TOOLS",
+      "C_ORCHESTRATOR",
+      "E_MEMORY",
+      "F_MEMORY_SKILLS"
+    ]
+  },
+  "results": [
+    {
+      "model": "local-fallback",
+      "variant": "A_LLM_ONLY",
+      "mode": "baseline",
+      "run_id": "31d9c2f8-c8a5-462e-9f1c-595fd204ff23",
+      "score": 0.3,
+      "latency_ms": 0.0,
+      "invalid_outputs": 0,
+      "ram_mb": null,
+      "vram_mb": null
+    },
+    {
+      "model": "local-fallback",
+      "variant": "B_LLM_TOOLS",
+      "mode": "tools",
+      "run_id": "ffa39017-d8d4-4eb2-b1df-55d1b6e87896",
+      "score": 0.55,
+      "latency_ms": 0.0,
+      "invalid_outputs": 0,
+      "ram_mb": null,
+      "vram_mb": null
+    },
+    {
+      "model": "local-fallback",
+      "variant": "C_ORCHESTRATOR",
+      "mode": "ultron-fresh",
+      "run_id": "cce431ca-6790-45b0-a756-1c03f20e8870",
+      "score": 0.55,
+      "latency_ms": 0.0,
+      "invalid_outputs": 0,
+      "ram_mb": null,
+      "vram_mb": null
+    },
+    {
+      "model": "local-fallback",
+      "variant": "E_MEMORY",
+      "mode": "ultron-experienced",
+      "run_id": "f3d53a32-c70b-4f64-8664-0e62668b84bc",
+      "score": 0.3,
+      "latency_ms": 0.0,
+      "invalid_outputs": 0,
+      "ram_mb": null,
+      "vram_mb": null
+    },
+    {
+      "model": "local-fallback",
+      "variant": "F_MEMORY_SKILLS",
+      "mode": "ultron-experienced",
+      "run_id": "881169cb-9b5f-41f5-a66d-24022a5b189d",
+      "score": 0.3,
+      "latency_ms": 0.0,
+      "invalid_outputs": 0,
+      "ram_mb": null,
+      "vram_mb": null
+    },
+    {
+      "model": "ollama",
+      "variant": "A_LLM_ONLY",
+      "mode": "baseline",
+      "run_id": "5f192edd-403a-486b-9d23-0b1ef358bfdf",
+      "score": 0.4,
+      "latency_ms": 974.45,
+      "invalid_outputs": 0,
+      "ram_mb": null,
+      "vram_mb": null
+    },
+    {
+      "model": "ollama",
+      "variant": "B_LLM_TOOLS",
+      "mode": "tools",
+      "run_id": "dd7b933d-33d6-406e-bdfe-78d068718530",
+      "score": 0.6,
+      "latency_ms": 874.05,
+      "invalid_outputs": 0,
+      "ram_mb": null,
+      "vram_mb": null
+    },
+    {
+      "model": "ollama",
+      "variant": "C_ORCHESTRATOR",
+      "mode": "ultron-fresh",
+      "run_id": "ef82de52-fdec-4e99-b24e-d6a15918b289",
+      "score": 0.45,
+      "latency_ms": 839.95,
+      "invalid_outputs": 0,
+      "ram_mb": null,
+      "vram_mb": null
+    },
+    {
+      "model": "ollama",
+      "variant": "E_MEMORY",
+      "mode": "ultron-experienced",
+      "run_id": "910e8758-da8b-4dee-a5d5-4ba242d1fbc1",
+      "score": 0.3,
+      "latency_ms": 870.05,
+      "invalid_outputs": 0,
+      "ram_mb": null,
+      "vram_mb": null
+    },
+    {
+      "model": "ollama",
+      "variant": "F_MEMORY_SKILLS",
+      "mode": "ultron-experienced",
+      "run_id": "628a771a-f4b4-4991-a0a8-345c490850e2",
+      "score": 0.3,
+      "latency_ms": 897.3,
+      "invalid_outputs": 0,
+      "ram_mb": null,
+      "vram_mb": null
+    }
+  ]
+}

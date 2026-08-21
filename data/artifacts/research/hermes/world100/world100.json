@@ -1,0 +1,7 @@
+{
+  "count": 100,
+  "accuracy": 0.81,
+  "brier": 0.122109,
+  "baseline_brier": 0.1275,
+  "calibration_error": 0.079055
+}

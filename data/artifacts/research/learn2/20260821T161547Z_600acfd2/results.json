@@ -1,0 +1,77 @@
+{
+  "configuration": {
+    "counts": [
+      0,
+      10,
+      25,
+      50,
+      100,
+      200
+    ],
+    "selection_policy": "MAS_verified_category_compatible",
+    "negative_result_policy": "never_discard_bad_run"
+  },
+  "results": [
+    {
+      "experience_count": 0,
+      "fresh_score": 0.68,
+      "experienced_score": 0.68,
+      "cgfe": 0.0,
+      "fresh_run_id": "bb829d1a-4612-483b-9e3a-d733cc52676d",
+      "experienced_run_id": "bb829d1a-4612-483b-9e3a-d733cc52676d",
+      "admitted_pool_size": 200,
+      "selection_policy": "MAS_verified_category_compatible"
+    },
+    {
+      "experience_count": 10,
+      "fresh_score": 0.68,
+      "experienced_score": 0.68,
+      "cgfe": 0.0,
+      "fresh_run_id": "bb829d1a-4612-483b-9e3a-d733cc52676d",
+      "experienced_run_id": "6e74c334-f088-42a0-bbb5-44962367a7e4",
+      "admitted_pool_size": 200,
+      "selection_policy": "MAS_verified_category_compatible"
+    },
+    {
+      "experience_count": 25,
+      "fresh_score": 0.68,
+      "experienced_score": 0.66,
+      "cgfe": -0.02,
+      "fresh_run_id": "bb829d1a-4612-483b-9e3a-d733cc52676d",
+      "experienced_run_id": "1d50be34-3fe6-41f3-8b46-b72a3f013673",
+      "admitted_pool_size": 200,
+      "selection_policy": "MAS_verified_category_compatible"
+    },
+    {
+      "experience_count": 50,
+      "fresh_score": 0.68,
+      "experienced_score": 0.68,
+      "cgfe": 0.0,
+      "fresh_run_id": "bb829d1a-4612-483b-9e3a-d733cc52676d",
+      "experienced_run_id": "d9cac598-d299-40ed-bbef-82fd0fd2be55",
+      "admitted_pool_size": 200,
+      "selection_policy": "MAS_verified_category_compatible"
+    },
+    {
+      "experience_count": 100,
+      "fresh_score": 0.68,
+      "experienced_score": 0.68,
+      "cgfe": 0.0,
+      "fresh_run_id": "bb829d1a-4612-483b-9e3a-d733cc52676d",
+      "experienced_run_id": "46b412c2-af34-456c-9124-3d6e40272ba6",
+      "admitted_pool_size": 200,
+      "selection_policy": "MAS_verified_category_compatible"
+    },
+    {
+      "experience_count": 200,
+      "fresh_score": 0.68,
+      "experienced_score": 0.68,
+      "cgfe": 0.0,
+      "fresh_run_id": "bb829d1a-4612-483b-9e3a-d733cc52676d",
+      "experienced_run_id": "9c2deae8-3600-411f-b49d-37518c5ecdda",
+      "admitted_pool_size": 200,
+      "selection_policy": "MAS_verified_category_compatible"
+    }
+  ],
+  "admitted_pool_size": 200
+}

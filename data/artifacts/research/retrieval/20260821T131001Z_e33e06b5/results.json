@@ -1,0 +1,359 @@
+{
+  "configuration": {
+    "top_k": 3,
+    "dataset_version": "0.1"
+  },
+  "queries": [
+    {
+      "query": "como retornar dados estruturados",
+      "selected": [
+        "mem_bad_recipe",
+        "mem_recovery",
+        "mem_leakage"
+      ],
+      "precision_at_k": 0.0,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "validar campos JSON obrigatórios",
+      "selected": [
+        "mem_json",
+        "mem_bad_recipe",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "resposta estritamente em JSON",
+      "selected": [
+        "mem_leakage",
+        "mem_timeout",
+        "mem_json"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": []
+    },
+    {
+      "query": "criar arquivo em caminho seguro",
+      "selected": [
+        "mem_recovery",
+        "mem_leakage",
+        "mem_policy"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": []
+    },
+    {
+      "query": "workspace permitido para escrita",
+      "selected": [
+        "mem_recovery",
+        "mem_policy",
+        "mem_workspace"
+      ],
+      "precision_at_k": 0.666667,
+      "harmful_selected": []
+    },
+    {
+      "query": "verificar artefato no workspace",
+      "selected": [
+        "mem_workspace",
+        "mem_context",
+        "mem_policy"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": []
+    },
+    {
+      "query": "timeout na ferramenta",
+      "selected": [
+        "mem_recovery",
+        "mem_context",
+        "mem_timeout"
+      ],
+      "precision_at_k": 0.666667,
+      "harmful_selected": []
+    },
+    {
+      "query": "limitar tentativas após timeout",
+      "selected": [
+        "mem_timeout",
+        "mem_bad_recipe",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.666667,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "recuperação segura de falha transitória",
+      "selected": [
+        "mem_timeout",
+        "mem_bad_recipe",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.666667,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "bloquear caminho UNC",
+      "selected": [
+        "mem_policy",
+        "mem_recovery",
+        "mem_workspace"
+      ],
+      "precision_at_k": 0.666667,
+      "harmful_selected": []
+    },
+    {
+      "query": "path traversal fora do workspace",
+      "selected": [
+        "mem_policy",
+        "mem_workspace",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.666667,
+      "harmful_selected": []
+    },
+    {
+      "query": "negar expansão de ambiente em arquivo",
+      "selected": [
+        "mem_policy",
+        "mem_leakage",
+        "mem_bad_recipe"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "avaliar resultado sem LLM juiz",
+      "selected": [
+        "mem_testing",
+        "mem_bad_recipe",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "evidência de teste determinístico",
+      "selected": [
+        "mem_testing",
+        "mem_bad_recipe",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "verificação automática da saída",
+      "selected": [
+        "mem_json",
+        "mem_leakage",
+        "mem_skill"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": []
+    },
+    {
+      "query": "modelo pequeno recebe contexto demais",
+      "selected": [
+        "mem_context",
+        "mem_bad_recipe",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "reduzir blocos irrelevantes no prompt",
+      "selected": [
+        "mem_context",
+        "mem_leakage",
+        "mem_bad_recipe"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "eficiência de contexto",
+      "selected": [
+        "mem_context",
+        "mem_bad_recipe",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "quando promover uma skill",
+      "selected": [
+        "mem_skill",
+        "mem_testing",
+        "mem_bad_recipe"
+      ],
+      "precision_at_k": 0.666667,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "skill validada por sucesso repetido",
+      "selected": [
+        "mem_skill",
+        "mem_bad_recipe",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "habilidade exige pelo menos três usos",
+      "selected": [
+        "mem_skill",
+        "mem_bad_recipe",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "evitar vazamento do benchmark",
+      "selected": [
+        "mem_recovery",
+        "mem_leakage",
+        "mem_skill"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": []
+    },
+    {
+      "query": "respostas privadas não podem virar memória",
+      "selected": [
+        "mem_leakage",
+        "mem_bad_recipe",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "isolamento entre experiência e teste",
+      "selected": [
+        "mem_leakage",
+        "mem_context",
+        "mem_bad_recipe"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "arquivo ausente durante execução",
+      "selected": [
+        "mem_recovery",
+        "mem_bad_recipe",
+        "mem_leakage"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "alternativa segura para recurso ausente",
+      "selected": [
+        "mem_recovery",
+        "mem_timeout",
+        "mem_json"
+      ],
+      "precision_at_k": 0.666667,
+      "harmful_selected": []
+    },
+    {
+      "query": "confirmar caminho antes de retry",
+      "selected": [
+        "mem_recovery",
+        "mem_skill",
+        "mem_context"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": []
+    },
+    {
+      "query": "formato JSON e validação",
+      "selected": [
+        "mem_json",
+        "mem_bad_recipe",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "proteção de device paths",
+      "selected": [
+        "mem_policy",
+        "mem_bad_recipe",
+        "mem_recovery"
+      ],
+      "precision_at_k": 0.333333,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    },
+    {
+      "query": "não poluir contexto de agente",
+      "selected": [
+        "mem_leakage",
+        "mem_context",
+        "mem_bad_recipe"
+      ],
+      "precision_at_k": 0.666667,
+      "harmful_selected": [
+        "mem_bad_recipe"
+      ]
+    }
+  ],
+  "precision_at_k": {
+    "count": 30,
+    "mean": 0.422222,
+    "median": 0.333333,
+    "min": 0.0,
+    "max": 0.666667,
+    "stddev": 0.17361,
+    "ci95_low": 0.360096,
+    "ci95_high": 0.484348
+  },
+  "harmful_memories": [
+    "mem_bad_recipe"
+  ]
+}

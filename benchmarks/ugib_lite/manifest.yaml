@@ -1,0 +1,18 @@
+name: UGIB-Lite
+slug: ugib-lite
+version: 0.2.0
+seed: 42
+categories:
+  reasoning: 10
+  coding: 15
+  tool_use: 15
+  recovery: 10
+total_tasks: 50
+network_required: false
+private_evaluators_dir: benchmark_private
+report_root: data/artifacts/benchmarks
+modes:
+  - baseline
+  - tools
+  - ultron-fresh
+  - ultron-experienced

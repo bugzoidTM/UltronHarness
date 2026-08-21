@@ -1,0 +1,1 @@
+A fixture local não contém respostas privadas do benchmark. Ela existe para validar o isolamento de workspaces e o contexto de ferramentas.

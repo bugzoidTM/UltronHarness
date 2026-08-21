@@ -1,0 +1,187 @@
+{
+  "benchmark": "transfer100",
+  "benchmark_version": "transfer100-v2-batched",
+  "model": "ollama_research",
+  "requested_seeds": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51
+  ],
+  "completed_seeds": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51
+  ],
+  "status": "completed",
+  "timeout_seconds": 300,
+  "execution_mode": "batched_by_family",
+  "batch_size": 20,
+  "results": [
+    {
+      "run_id": "da24825b-48ab-4cc7-a32e-46dd6d845bae",
+      "seed": 42,
+      "fresh": 0.15,
+      "experienced": 0.1,
+      "transfer_gain": -0.05,
+      "by_family": {
+        "configuration_repair": 0.0,
+        "dependency_recovery": 0.0,
+        "planning": 0.5,
+        "state_recovery": 0.0,
+        "structured_validation": -0.75
+      }
+    },
+    {
+      "run_id": "6cc2bff4-a8c2-4cae-9639-46b3fd44508a",
+      "seed": 43,
+      "fresh": 0.15,
+      "experienced": 0.1,
+      "transfer_gain": -0.05,
+      "by_family": {
+        "configuration_repair": 0.0,
+        "dependency_recovery": 0.0,
+        "planning": 0.5,
+        "state_recovery": 0.0,
+        "structured_validation": -0.75
+      }
+    },
+    {
+      "run_id": "70b7c4ed-795b-4eb6-912b-cd239cab3ffe",
+      "seed": 44,
+      "fresh": 0.15,
+      "experienced": 0.1,
+      "transfer_gain": -0.05,
+      "by_family": {
+        "configuration_repair": 0.0,
+        "dependency_recovery": 0.0,
+        "planning": 0.5,
+        "state_recovery": 0.0,
+        "structured_validation": -0.75
+      }
+    },
+    {
+      "run_id": "afd4ee91-8cce-4a03-9614-1304e2ed6708",
+      "seed": 45,
+      "fresh": 0.15,
+      "experienced": 0.1,
+      "transfer_gain": -0.05,
+      "by_family": {
+        "configuration_repair": 0.0,
+        "dependency_recovery": 0.0,
+        "planning": 0.5,
+        "state_recovery": 0.0,
+        "structured_validation": -0.75
+      }
+    },
+    {
+      "run_id": "a07ac245-3ed6-4501-80cf-fbdadce5280c",
+      "seed": 46,
+      "fresh": 0.15,
+      "experienced": 0.1,
+      "transfer_gain": -0.05,
+      "by_family": {
+        "configuration_repair": 0.0,
+        "dependency_recovery": 0.0,
+        "planning": 0.5,
+        "state_recovery": 0.0,
+        "structured_validation": -0.75
+      }
+    },
+    {
+      "run_id": "a0e4a22a-5016-453f-9cd7-9c4a6ed95dca",
+      "seed": 47,
+      "fresh": 0.15,
+      "experienced": 0.1,
+      "transfer_gain": -0.05,
+      "by_family": {
+        "configuration_repair": 0.0,
+        "dependency_recovery": 0.0,
+        "planning": 0.5,
+        "state_recovery": 0.0,
+        "structured_validation": -0.75
+      }
+    },
+    {
+      "run_id": "c3de69da-e31c-432b-9ad1-78596664fa8a",
+      "seed": 48,
+      "fresh": 0.15,
+      "experienced": 0.1,
+      "transfer_gain": -0.05,
+      "by_family": {
+        "configuration_repair": 0.0,
+        "dependency_recovery": 0.0,
+        "planning": 0.5,
+        "state_recovery": 0.0,
+        "structured_validation": -0.75
+      }
+    },
+    {
+      "run_id": "130c73bd-9f6f-4bf9-a3bf-2717f3262ee1",
+      "seed": 49,
+      "fresh": 0.15,
+      "experienced": 0.1,
+      "transfer_gain": -0.05,
+      "by_family": {
+        "configuration_repair": 0.0,
+        "dependency_recovery": 0.0,
+        "planning": 0.5,
+        "state_recovery": 0.0,
+        "structured_validation": -0.75
+      }
+    },
+    {
+      "run_id": "fb17c446-4bd0-4c71-8914-7f1b5dafaf2e",
+      "seed": 50,
+      "fresh": 0.15,
+      "experienced": 0.1,
+      "transfer_gain": -0.05,
+      "by_family": {
+        "configuration_repair": 0.0,
+        "dependency_recovery": 0.0,
+        "planning": 0.5,
+        "state_recovery": 0.0,
+        "structured_validation": -0.75
+      }
+    },
+    {
+      "run_id": "1eacb3a2-dbfa-4f37-9794-d7b530f03be2",
+      "seed": 51,
+      "fresh": 0.15,
+      "experienced": 0.1,
+      "transfer_gain": -0.05,
+      "by_family": {
+        "configuration_repair": 0.0,
+        "dependency_recovery": 0.0,
+        "planning": 0.5,
+        "state_recovery": 0.0,
+        "structured_validation": -0.75
+      }
+    }
+  ],
+  "statistics": {
+    "transfer_gain": {
+      "count": 10,
+      "mean": -0.05,
+      "median": -0.05,
+      "min": -0.05,
+      "max": -0.05,
+      "stddev": 0.0,
+      "ci95_low": -0.05,
+      "ci95_high": -0.05
+    }
+  }
+}

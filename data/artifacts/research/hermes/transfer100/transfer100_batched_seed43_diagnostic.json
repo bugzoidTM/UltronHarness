@@ -1,0 +1,38 @@
+{
+  "benchmark": "transfer100",
+  "benchmark_version": "transfer100-v2-batched",
+  "model": "ollama_research",
+  "seeds": [
+    43
+  ],
+  "timeout_seconds": 300,
+  "execution_mode": "batched_by_family",
+  "results": [
+    {
+      "run_id": "bfdaf76e-19f7-4265-885c-c0cd725da4fc",
+      "seed": 43,
+      "fresh": 0.0,
+      "experienced": 0.0,
+      "transfer_gain": 0.0,
+      "by_family": {
+        "configuration_repair": 0.0,
+        "dependency_recovery": 0.0,
+        "planning": 0.0,
+        "state_recovery": 0.0,
+        "structured_validation": 0.0
+      }
+    }
+  ],
+  "statistics": {
+    "transfer_gain": {
+      "count": 1,
+      "mean": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "stddev": 0.0,
+      "ci95_low": 0.0,
+      "ci95_high": 0.0
+    }
+  }
+}

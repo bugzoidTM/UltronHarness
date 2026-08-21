@@ -1,0 +1,44 @@
+{
+  "configuration": {
+    "variants": [
+      "TOOLS_DIRECT",
+      "ORCH_MINIMAL",
+      "ORCH_STANDARD",
+      "ORCH_FULL"
+    ]
+  },
+  "results": [
+    {
+      "variant": "TOOLS_DIRECT",
+      "run_id": "b68691d0-1255-4fac-8719-fbb56d28e18f",
+      "score": 0.55,
+      "average_steps": 1.0,
+      "average_latency_ms": 849.05,
+      "orchestrator_delta": 0.0
+    },
+    {
+      "variant": "ORCH_MINIMAL",
+      "run_id": "ddfef9a8-1263-4208-91ad-413a1a3890d8",
+      "score": 0.45,
+      "average_steps": 1.0,
+      "average_latency_ms": 936.0,
+      "orchestrator_delta": -0.1
+    },
+    {
+      "variant": "ORCH_STANDARD",
+      "run_id": "a04a2304-a423-4f2e-b75b-e72c6e718831",
+      "score": 0.55,
+      "average_steps": 1.0,
+      "average_latency_ms": 1048.15,
+      "orchestrator_delta": 0.0
+    },
+    {
+      "variant": "ORCH_FULL",
+      "run_id": "be6822b4-8b20-4289-81b7-9191fe5ff9b9",
+      "score": 0.25,
+      "average_steps": 1.0,
+      "average_latency_ms": 1100.35,
+      "orchestrator_delta": -0.3
+    }
+  ]
+}

@@ -1,0 +1,302 @@
+{
+  "structured_validation_01": {
+    "expected_sequence": "P>R"
+  },
+  "structured_validation_02": {
+    "expected_sequence": "P>C>R"
+  },
+  "structured_validation_03": {
+    "expected_sequence": "P>C>R"
+  },
+  "structured_validation_04": {
+    "expected_sequence": "P>C>A"
+  },
+  "structured_validation_05": {
+    "expected_sequence": "P>R"
+  },
+  "structured_validation_06": {
+    "expected_sequence": "P>C>R"
+  },
+  "structured_validation_07": {
+    "expected_sequence": "P>C>R"
+  },
+  "structured_validation_08": {
+    "expected_sequence": "P>C>A"
+  },
+  "structured_validation_09": {
+    "expected_sequence": "P>R"
+  },
+  "structured_validation_10": {
+    "expected_sequence": "P>C>R"
+  },
+  "structured_validation_11": {
+    "expected_sequence": "P>C>R"
+  },
+  "structured_validation_12": {
+    "expected_sequence": "P>C>A"
+  },
+  "structured_validation_13": {
+    "expected_sequence": "P>R"
+  },
+  "structured_validation_14": {
+    "expected_sequence": "P>C>R"
+  },
+  "structured_validation_15": {
+    "expected_sequence": "P>C>R"
+  },
+  "structured_validation_16": {
+    "expected_sequence": "P>C>A"
+  },
+  "structured_validation_17": {
+    "expected_sequence": "P>R"
+  },
+  "structured_validation_18": {
+    "expected_sequence": "P>C>R"
+  },
+  "structured_validation_19": {
+    "expected_sequence": "P>C>R"
+  },
+  "structured_validation_20": {
+    "expected_sequence": "P>C>A"
+  },
+  "dependency_recovery_01": {
+    "expected_sequence": "M>I>V"
+  },
+  "dependency_recovery_02": {
+    "expected_sequence": "M>L>V"
+  },
+  "dependency_recovery_03": {
+    "expected_sequence": "M>L>V"
+  },
+  "dependency_recovery_04": {
+    "expected_sequence": "M>E"
+  },
+  "dependency_recovery_05": {
+    "expected_sequence": "M>I>V"
+  },
+  "dependency_recovery_06": {
+    "expected_sequence": "M>L>V"
+  },
+  "dependency_recovery_07": {
+    "expected_sequence": "M>L>V"
+  },
+  "dependency_recovery_08": {
+    "expected_sequence": "M>E"
+  },
+  "dependency_recovery_09": {
+    "expected_sequence": "M>I>V"
+  },
+  "dependency_recovery_10": {
+    "expected_sequence": "M>L>V"
+  },
+  "dependency_recovery_11": {
+    "expected_sequence": "M>L>V"
+  },
+  "dependency_recovery_12": {
+    "expected_sequence": "M>E"
+  },
+  "dependency_recovery_13": {
+    "expected_sequence": "M>I>V"
+  },
+  "dependency_recovery_14": {
+    "expected_sequence": "M>L>V"
+  },
+  "dependency_recovery_15": {
+    "expected_sequence": "M>L>V"
+  },
+  "dependency_recovery_16": {
+    "expected_sequence": "M>E"
+  },
+  "dependency_recovery_17": {
+    "expected_sequence": "M>I>V"
+  },
+  "dependency_recovery_18": {
+    "expected_sequence": "M>L>V"
+  },
+  "dependency_recovery_19": {
+    "expected_sequence": "M>L>V"
+  },
+  "dependency_recovery_20": {
+    "expected_sequence": "M>E"
+  },
+  "state_recovery_01": {
+    "expected_sequence": "S>R>V"
+  },
+  "state_recovery_02": {
+    "expected_sequence": "S>N"
+  },
+  "state_recovery_03": {
+    "expected_sequence": "S>R>F"
+  },
+  "state_recovery_04": {
+    "expected_sequence": "S>R>V"
+  },
+  "state_recovery_05": {
+    "expected_sequence": "S>R>V"
+  },
+  "state_recovery_06": {
+    "expected_sequence": "S>N"
+  },
+  "state_recovery_07": {
+    "expected_sequence": "S>R>F"
+  },
+  "state_recovery_08": {
+    "expected_sequence": "S>R>V"
+  },
+  "state_recovery_09": {
+    "expected_sequence": "S>R>V"
+  },
+  "state_recovery_10": {
+    "expected_sequence": "S>N"
+  },
+  "state_recovery_11": {
+    "expected_sequence": "S>R>F"
+  },
+  "state_recovery_12": {
+    "expected_sequence": "S>R>V"
+  },
+  "state_recovery_13": {
+    "expected_sequence": "S>R>V"
+  },
+  "state_recovery_14": {
+    "expected_sequence": "S>N"
+  },
+  "state_recovery_15": {
+    "expected_sequence": "S>R>F"
+  },
+  "state_recovery_16": {
+    "expected_sequence": "S>R>V"
+  },
+  "state_recovery_17": {
+    "expected_sequence": "S>R>V"
+  },
+  "state_recovery_18": {
+    "expected_sequence": "S>N"
+  },
+  "state_recovery_19": {
+    "expected_sequence": "S>R>F"
+  },
+  "state_recovery_20": {
+    "expected_sequence": "S>R>V"
+  },
+  "planning_01": {
+    "expected_sequence": "C>K"
+  },
+  "planning_02": {
+    "expected_sequence": "C>K"
+  },
+  "planning_03": {
+    "expected_sequence": "C>E>V"
+  },
+  "planning_04": {
+    "expected_sequence": "E>V"
+  },
+  "planning_05": {
+    "expected_sequence": "C>K"
+  },
+  "planning_06": {
+    "expected_sequence": "C>K"
+  },
+  "planning_07": {
+    "expected_sequence": "C>E>V"
+  },
+  "planning_08": {
+    "expected_sequence": "E>V"
+  },
+  "planning_09": {
+    "expected_sequence": "C>K"
+  },
+  "planning_10": {
+    "expected_sequence": "C>K"
+  },
+  "planning_11": {
+    "expected_sequence": "C>E>V"
+  },
+  "planning_12": {
+    "expected_sequence": "E>V"
+  },
+  "planning_13": {
+    "expected_sequence": "C>K"
+  },
+  "planning_14": {
+    "expected_sequence": "C>K"
+  },
+  "planning_15": {
+    "expected_sequence": "C>E>V"
+  },
+  "planning_16": {
+    "expected_sequence": "E>V"
+  },
+  "planning_17": {
+    "expected_sequence": "C>K"
+  },
+  "planning_18": {
+    "expected_sequence": "C>K"
+  },
+  "planning_19": {
+    "expected_sequence": "C>E>V"
+  },
+  "planning_20": {
+    "expected_sequence": "E>V"
+  },
+  "configuration_repair_01": {
+    "expected_sequence": "I>R>V"
+  },
+  "configuration_repair_02": {
+    "expected_sequence": "I>R>V"
+  },
+  "configuration_repair_03": {
+    "expected_sequence": "I>H"
+  },
+  "configuration_repair_04": {
+    "expected_sequence": "I>V"
+  },
+  "configuration_repair_05": {
+    "expected_sequence": "I>R>V"
+  },
+  "configuration_repair_06": {
+    "expected_sequence": "I>R>V"
+  },
+  "configuration_repair_07": {
+    "expected_sequence": "I>H"
+  },
+  "configuration_repair_08": {
+    "expected_sequence": "I>V"
+  },
+  "configuration_repair_09": {
+    "expected_sequence": "I>R>V"
+  },
+  "configuration_repair_10": {
+    "expected_sequence": "I>R>V"
+  },
+  "configuration_repair_11": {
+    "expected_sequence": "I>H"
+  },
+  "configuration_repair_12": {
+    "expected_sequence": "I>V"
+  },
+  "configuration_repair_13": {
+    "expected_sequence": "I>R>V"
+  },
+  "configuration_repair_14": {
+    "expected_sequence": "I>R>V"
+  },
+  "configuration_repair_15": {
+    "expected_sequence": "I>H"
+  },
+  "configuration_repair_16": {
+    "expected_sequence": "I>V"
+  },
+  "configuration_repair_17": {
+    "expected_sequence": "I>R>V"
+  },
+  "configuration_repair_18": {
+    "expected_sequence": "I>R>V"
+  },
+  "configuration_repair_19": {
+    "expected_sequence": "I>H"
+  },
+  "configuration_repair_20": {
+    "expected_sequence": "I>V"
+  }
+}

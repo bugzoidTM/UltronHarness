@@ -1,0 +1,22 @@
+{
+  "yaml_parse_then_required": {"expected_sequence": "P>R"},
+  "yaml_missing_service": {"expected_sequence": "P>R"},
+  "yaml_type_mismatch": {"expected_sequence": "P>R"},
+  "yaml_valid_contract": {"expected_sequence": "P>C>A"},
+  "yaml_parse_failure": {"expected_sequence": "P>R"},
+  "node_manifest_missing": {"expected_sequence": "M>I>V"},
+  "node_lock_stale": {"expected_sequence": "M>L>V"},
+  "node_declared_version": {"expected_sequence": "M>I>V"},
+  "node_missing_transitive": {"expected_sequence": "M>L>V"},
+  "node_manifest_clean": {"expected_sequence": "M>E"},
+  "git_modified_file": {"expected_sequence": "S>R>V"},
+  "git_untracked_file": {"expected_sequence": "S>R>V"},
+  "git_staged_scope": {"expected_sequence": "S>R>V"},
+  "git_clean_noop": {"expected_sequence": "S>N"},
+  "git_verify_failure": {"expected_sequence": "S>R>F"},
+  "workflow_chain": {"expected_sequence": "P>B>U"},
+  "workflow_blocked": {"expected_sequence": "C>K"},
+  "workflow_parallel_join": {"expected_sequence": "C>R>V"},
+  "workflow_failed_dependency": {"expected_sequence": "C>K"},
+  "workflow_single_step": {"expected_sequence": "A>V"}
+}

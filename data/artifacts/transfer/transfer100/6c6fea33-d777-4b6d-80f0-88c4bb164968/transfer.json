@@ -1,0 +1,1824 @@
+{
+  "run_id": "6c6fea33-d777-4b6d-80f0-88c4bb164968",
+  "benchmark_version": "transfer100-v2-batched",
+  "benchmark": "transfer100",
+  "execution_mode": "batched_by_family",
+  "fresh": 0.0,
+  "experienced": 0.0,
+  "transfer_gain": 0.0,
+  "by_family": {
+    "configuration_repair": 0.0,
+    "dependency_recovery": 0.0,
+    "planning": 0.0,
+    "state_recovery": 0.0,
+    "structured_validation": 0.0
+  },
+  "seed": 42,
+  "model": "ollama_research",
+  "traces": {
+    "fresh": [
+      {
+        "task_id": "configuration_repair_01",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_02",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_03",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_04",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_05",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_06",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_07",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_08",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_09",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_10",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_11",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_12",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_13",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_14",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_15",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_16",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_17",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_18",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_19",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_20",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_01",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_02",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_03",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_04",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_05",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_06",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_07",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_08",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_09",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_10",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_11",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_12",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_13",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_14",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_15",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_16",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_17",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_18",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_19",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_20",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_01",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_02",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_03",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_04",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_05",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_06",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_07",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_08",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_09",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_10",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_11",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_12",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_13",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_14",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_15",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_16",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_17",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_18",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_19",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_20",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_01",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_02",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_03",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_04",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_05",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_06",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_07",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_08",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_09",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_10",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_11",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_12",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_13",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_14",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_15",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_16",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_17",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_18",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_19",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_20",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_01",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_02",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_03",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_04",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_05",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_06",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_07",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_08",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_09",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_10",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_11",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_12",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_13",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_14",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_15",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_16",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_17",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_18",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_19",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_20",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "fresh",
+        "execution": "batched_by_family"
+      }
+    ],
+    "experienced": [
+      {
+        "task_id": "configuration_repair_01",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_02",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_03",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_04",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_05",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_06",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_07",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_08",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_09",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_10",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_11",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_12",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_13",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_14",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_15",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_16",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_17",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_18",
+        "family": "configuration_repair",
+        "expected": "I>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_19",
+        "family": "configuration_repair",
+        "expected": "I>H",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "configuration_repair_20",
+        "family": "configuration_repair",
+        "expected": "I>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_01",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_02",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_03",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_04",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_05",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_06",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_07",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_08",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_09",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_10",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_11",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_12",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_13",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_14",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_15",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_16",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_17",
+        "family": "dependency_recovery",
+        "expected": "M>I>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_18",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_19",
+        "family": "dependency_recovery",
+        "expected": "M>L>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "dependency_recovery_20",
+        "family": "dependency_recovery",
+        "expected": "M>E",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_01",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_02",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_03",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_04",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_05",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_06",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_07",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_08",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_09",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_10",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_11",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_12",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_13",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_14",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_15",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_16",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_17",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_18",
+        "family": "planning",
+        "expected": "C>K",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_19",
+        "family": "planning",
+        "expected": "C>E>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "planning_20",
+        "family": "planning",
+        "expected": "E>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_01",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_02",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_03",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_04",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_05",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_06",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_07",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_08",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_09",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_10",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_11",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_12",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_13",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_14",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_15",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_16",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_17",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_18",
+        "family": "state_recovery",
+        "expected": "S>N",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_19",
+        "family": "state_recovery",
+        "expected": "S>R>F",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "state_recovery_20",
+        "family": "state_recovery",
+        "expected": "S>R>V",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_01",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_02",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_03",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_04",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_05",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_06",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_07",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_08",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_09",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_10",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_11",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_12",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_13",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_14",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_15",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_16",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_17",
+        "family": "structured_validation",
+        "expected": "P>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_18",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_19",
+        "family": "structured_validation",
+        "expected": "P>C>R",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      },
+      {
+        "task_id": "structured_validation_20",
+        "family": "structured_validation",
+        "expected": "P>C>A",
+        "actual": "",
+        "success": false,
+        "mode": "experienced",
+        "execution": "batched_by_family"
+      }
+    ]
+  }
+}
