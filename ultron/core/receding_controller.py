@@ -18,6 +18,7 @@ from ultron.schemas import (
     CognitiveStateSnapshot,
     MissionOutline,
     NextAction,
+    OrientationSnapshot,
     PlanStep,
     ShortHorizonDecision,
     ToolCall,
@@ -142,10 +143,50 @@ class RecedingHorizonController:
             ),
         )
 
-    async def ensure_initial_observation(self, task: dict[str, Any]) -> CognitiveStateSnapshot:
+    async def ensure_initial_observation(
+        self,
+        task: dict[str, Any],
+        *,
+        orientation: OrientationSnapshot | None = None,
+    ) -> CognitiveStateSnapshot:
         snapshot = self.latest_snapshot(task)
-        if snapshot.iteration or "initial_environment_observation" in snapshot.evidence_refs:
+        if snapshot.iteration or "initial_environment_observation" in snapshot.evidence_refs or "frozen_orientation_snapshot" in snapshot.evidence_refs:
             return snapshot
+
+        if orientation is not None:
+            obs_list = list(orientation.observations)
+            evidence_refs = list(orientation.evidence_refs) if orientation.evidence_refs else ["frozen_orientation_snapshot"]
+            updated = CognitiveStateSnapshot(
+                task_id=str(task["id"]),
+                objective=str(task["objective"]),
+                current_subgoal_id=snapshot.current_subgoal_id,
+                completed_subgoals=list(snapshot.completed_subgoals),
+                known_facts=obs_list[-self._limit("max_known_facts") :] if obs_list else [],
+                open_questions=list(snapshot.open_questions),
+                recent_observations=obs_list[-self._limit("recent_observations") :] if obs_list else [],
+                failed_strategies=list(snapshot.failed_strategies),
+                evidence_refs=evidence_refs,
+                tool_calls_used=int(task.get("tool_call_count") or 0),
+                remaining_action_budget=self.contract.remaining_budget(task),
+                replan_count=int(task.get("replan_count") or 0),
+                iteration=0,
+            )
+            self.persist_snapshot(updated)
+            if obs_list:
+                await self.events.emit(
+                    "cognition.observation.received",
+                    {
+                        "tool": "orientation",
+                        "ok": True,
+                        "output_summary": obs_list[0],
+                        "verification_passed": True,
+                        "evidence_refs": evidence_refs,
+                    },
+                    str(task["id"]),
+                )
+            await self.events.emit("cognition.state.updated", {"iteration": updated.iteration}, str(task["id"]))
+            return updated
+
         allowed = task.get("allowed_tools")
         if allowed is not None and "file.list" not in allowed:
             self.persist_snapshot(snapshot)

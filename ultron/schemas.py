@@ -183,8 +183,13 @@ class ShortHorizonDecision(BaseModel):
 
 
 class OrientationSnapshot(BaseModel):
+    mission_id: str
+    seed: int | None = None
     observations: list[str] = Field(default_factory=list)
     evidence_refs: list[str] = Field(default_factory=list)
+    allowed_tools: list[str] = Field(default_factory=list)
+    action_budget: tuple[int, int] | None = None
+    orientation_hash: str = ""
 
 
 class ProgressSignal(BaseModel):

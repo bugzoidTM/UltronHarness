@@ -25,6 +25,7 @@ from ultron.policy.engine import PolicyEngine
 from ultron.research.cycle import ExperienceCycle, SkillService
 from ultron.schemas import (
     CognitiveState,
+    OrientationSnapshot,
     OutcomeResult,
     Plan,
     PlanStep,
@@ -75,6 +76,11 @@ class Orchestrator:
         self.cancel_events: dict[str, asyncio.Event] = {}
         self.suspended: dict[str, dict[str, Any]] = {}  # Compatibilidade temporária; a fonte de verdade é SQLite.
         self.plan_sources: dict[str, str] = {}
+        self.task_orientations: dict[str, OrientationSnapshot] = {}
+
+    def inject_orientation(self, task_id: str, orientation: OrientationSnapshot) -> None:
+        """Injeta uma OrientationSnapshot congelada para a tarefa especificada."""
+        self.task_orientations[str(task_id)] = orientation
 
     @staticmethod
     def _serialize_context(context: ContextBuild) -> dict[str, Any]:
@@ -493,10 +499,17 @@ class Orchestrator:
                     "experience_injected": routed_context.injected,
                 },
             )
+            orientation = self.task_orientations.get(str(task_id))
             if self.settings.controller_mode in {"next_action", "short_horizon"}:
-                await self._run_receding_horizon(task, memories, routed_context.routed_procedures)
+                if orientation is not None:
+                    await self._run_receding_horizon(task, memories, routed_context.routed_procedures, orientation=orientation)
+                else:
+                    await self._run_receding_horizon(task, memories, routed_context.routed_procedures)
                 return
-            plan = await self._make_plan(task, memories, routed_context.routed_procedures)
+            if orientation is not None:
+                plan = await self._make_plan(task, memories, routed_context.routed_procedures, orientation=orientation)
+            else:
+                plan = await self._make_plan(task, memories, routed_context.routed_procedures)
             revision = self._save_plan(task_id, plan)
             await self._transition(
                 task_id,
@@ -553,10 +566,12 @@ class Orchestrator:
         task: dict[str, Any],
         memories: list[dict[str, Any]],
         routed_procedures: list[str],
+        *,
+        orientation: OrientationSnapshot | None = None,
     ) -> None:
         task_id = str(task["id"])
         await self.events.emit("cognition.iteration.started", {"mode": self.settings.controller_mode}, task_id)
-        snapshot = await self.horizon.ensure_initial_observation(task)
+        snapshot = await self.horizon.ensure_initial_observation(task, orientation=orientation)
         outline = await self.horizon.create_outline(task)
         if outline:
             self._trace(task_id, "mission_outline.created", payload=outline.model_dump(mode="json"))
@@ -869,6 +884,8 @@ class Orchestrator:
         task: dict[str, Any],
         memories: list[dict[str, Any]],
         routed_procedures: list[str] | None = None,
+        *,
+        orientation: OrientationSnapshot | None = None,
     ) -> Plan:
         allowed_tools = task.get("allowed_tools")
         planner_tools = allowed_tools if allowed_tools is not None else [m["name"] for m in self.tools.list_manifests()]
@@ -879,6 +896,7 @@ class Orchestrator:
             if action_budget is not None
             else f"Ferramentas disponíveis: {planner_tools}."
         )
+        obs_text = "\n".join(orientation.observations) if (orientation and orientation.observations) else "nenhuma"
         prompt = [
             {
                 "role": "system",
@@ -888,6 +906,7 @@ class Orchestrator:
                 "role": "user",
                 "content": (
                     f"Objetivo: {task['objective']}\nWorkspace: {task['workspace']}\n"
+                    f"Observação inicial do ambiente:\n{obs_text}\n"
                     f"Memórias relevantes: {[m['summary'] for m in memories]}\n"
                     f"Experiências procedurais roteadas: {routed_procedures or []}\n"
                     f"{contract_text}"
