@@ -1,0 +1,42 @@
+name: Forge CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+      - name: Unit, integration and leakage gate
+        env:
+          ULTRON_MODEL_PRIMARY: local-fallback
+          ULTRON_VECTOR_ENABLED: 'false'
+        run: |
+          python -m pytest tests/test_forge_privacy.py tests/test_forge_pairs.py tests/test_forge_router.py tests/test_tasksig200.py tests/test_forge_replay.py -q
+          python -m pytest tests -q --cov=ultron --cov-branch
+      - name: Security tests
+        env:
+          ULTRON_MODEL_PRIMARY: local-fallback
+          ULTRON_VECTOR_ENABLED: 'false'
+        run: python -m pytest tests_security_windows -q
+      - name: Lint
+        run: python -m ruff check ultron tests tests_security_windows apps/api scripts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build UI
+        run: |
+          cd apps/ui
+          npm ci
+          npm run build

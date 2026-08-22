@@ -940,13 +940,45 @@ class Orchestrator:
                 prompt,
                 model_name=self.models.primary_name,
                 seed=self.planning_seed,
+                repair_attempts=int(self.settings.cognition.get("structured_repair_attempts", 2)),
                 on_response=record_response,
+                on_decision=lambda initial, final, repairs, error: self._record_decision(
+                    task, "plan", 1, initial, final, repairs, error
+                ),
             )
             self.plan_sources[str(task["id"])] = "model_structured"
             return plan
         except Exception:
             self.plan_sources[str(task["id"])] = "fallback_after_model_error"
             return self._fallback_plan(task)
+
+    async def _record_decision(
+        self,
+        task: dict[str, Any],
+        kind: str,
+        iteration: int,
+        initial: bool,
+        final: bool,
+        repairs: int,
+        error: str | None,
+    ) -> None:
+        self.db.execute(
+            "INSERT INTO structured_decisions (id,task_id,controller_mode,decision_kind,iteration,initial_valid,final_valid,repair_attempts,validation_error_class,model,seed,created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                str(uuid4()),
+                task["id"],
+                self.settings.controller_mode,
+                kind,
+                iteration,
+                int(initial),
+                int(final),
+                repairs,
+                error,
+                self.models.primary_name,
+                self.planning_seed,
+                utcnow(),
+            ),
+        )
 
     def _fallback_plan(self, task: dict[str, Any]) -> Plan:
         objective = task["objective"].lower()

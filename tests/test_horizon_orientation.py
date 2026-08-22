@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
-import json
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
@@ -18,7 +16,6 @@ from ultron.cognition.orientation import (
     compute_fixture_hash,
     normalize_observations,
 )
-from ultron.cognition.outcome_authority import OutcomeAuthority
 from ultron.configuration import Settings, load_settings
 from ultron.core.events import EventBus
 from ultron.core.orchestrator import Orchestrator
@@ -28,16 +25,9 @@ from ultron.db import Database
 from ultron.memory.service import MemoryService
 from ultron.models.gateway import ModelGateway, ModelResponse, Usage
 from ultron.policy.engine import PolicyEngine
-from ultron.research.horizon_control import HorizonControlRunner
 from ultron.schemas import (
-    CognitiveStateSnapshot,
-    NextAction,
     OrientationSnapshot,
-    Plan,
-    PlanStep,
-    ShortHorizonDecision,
     TaskCreate,
-    VerificationSpec,
 )
 from ultron.tools.registry import ToolRegistry
 
@@ -50,7 +40,6 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_orientation_snapshot_canonical_hash_is_stable() -> None:
-    service = EnvironmentOrientationService()
     payload_a = {
         "mission_id": "forge_01",
         "seed": 53,
@@ -450,7 +439,6 @@ async def test_e2e_behavioral_contract_same_perception_before_first_decision(tmp
     snapshots_by_mode: dict[str, OrientationSnapshot] = {}
     fixture_hashes_by_mode: dict[str, str] = {}
     tool_calls_before_decision: dict[str, int] = {}
-    prompts_by_mode: dict[str, str] = {}
     first_llm_requests: dict[str, list[dict[str, Any]]] = {}
 
     for mode in ("full_plan", "short_horizon", "next_action"):

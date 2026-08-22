@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -237,17 +238,23 @@ class ModelGateway:
                 **kwargs,
             )
             if on_response:
-                await on_response(response, attempt > 0)
+                res = on_response(response, attempt > 0)
+                if inspect.isawaitable(res):
+                    await res
             try:
                 parsed = schema.model_validate_json(response.content)
                 if on_decision:
-                    await on_decision(attempt == 0, True, attempt, None)
+                    res = on_decision(attempt == 0, True, attempt, None)
+                    if inspect.isawaitable(res):
+                        await res
                 return parsed
             except (ValidationError, ValueError) as exc:
                 validation_error = exc
                 if attempt >= attempts:
                     if on_decision:
-                        await on_decision(False, False, attempt, type(exc).__name__)
+                        res = on_decision(False, False, attempt, type(exc).__name__)
+                        if inspect.isawaitable(res):
+                            await res
                     raise
                 error_summary = self._validation_summary(exc)
                 compact_schema = json.dumps(schema_json, ensure_ascii=False, separators=(",", ":"))[:4000]

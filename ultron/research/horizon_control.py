@@ -277,7 +277,7 @@ class HorizonControlRunner:
                     "repair_eligible": sum(1 for row in decisions if not row["initial_valid"] and int(row["repair_attempts"]) > 0),
                     "tool_calls": agent_tool_calls,
                     "llm_calls": int(task.get("llm_call_count") or 0),
-                    "invalid_structured_outputs": int(not actions and mode != "full_plan"),
+                    "invalid_structured_outputs": sum(1 for row in decisions if not row["final_valid"]) if decisions else int(not actions and mode != "full_plan"),
                     "repair_attempts": sum(1 for call in model_calls if call["purpose"].endswith("_repair")),
                     "false_stops": len([row for row in db.all("SELECT event_type FROM execution_traces WHERE task_id=?", (created["id"],)) if row["event_type"] == "cognition.false_stop"]),
                     "stagnation_events": len([row for row in db.all("SELECT event_type FROM execution_traces WHERE task_id=?", (created["id"],)) if row["event_type"] == "cognition.stagnation"]),

@@ -288,6 +288,7 @@ class RecedingHorizonController:
             seed=self.planning_seed,
             repair_attempts=int(self.settings.cognition.get("structured_repair_attempts", 2)),
             on_response=lambda response, repaired: self._record_model_response(task, response, repaired, "horizon_short_block"),
+            on_decision=lambda initial, final, repairs, error: self._record_decision(task, "short_horizon", snapshot.iteration + 1, initial, final, repairs, error),
         )
 
     async def execute_iteration(
