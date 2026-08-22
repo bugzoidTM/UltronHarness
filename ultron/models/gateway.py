@@ -219,6 +219,7 @@ class ModelGateway:
         model_name: str | None = None,
         *,
         on_response: Callable[[ModelResponse, bool], Awaitable[None]] | None = None,
+        on_decision: Callable[[bool, bool, int, str | None], Awaitable[None]] | None = None,
         repair_attempts: int | None = None,
         **kwargs: Any,
     ) -> T:
@@ -238,10 +239,15 @@ class ModelGateway:
             if on_response:
                 await on_response(response, attempt > 0)
             try:
-                return schema.model_validate_json(response.content)
+                parsed = schema.model_validate_json(response.content)
+                if on_decision:
+                    await on_decision(attempt == 0, True, attempt, None)
+                return parsed
             except (ValidationError, ValueError) as exc:
                 validation_error = exc
                 if attempt >= attempts:
+                    if on_decision:
+                        await on_decision(False, False, attempt, type(exc).__name__)
                     raise
                 error_summary = self._validation_summary(exc)
                 compact_schema = json.dumps(schema_json, ensure_ascii=False, separators=(",", ":"))[:4000]

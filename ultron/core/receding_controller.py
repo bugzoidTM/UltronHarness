@@ -212,6 +212,7 @@ class RecedingHorizonController:
             seed=self.planning_seed,
             repair_attempts=int(self.settings.cognition.get("structured_repair_attempts", 2)),
             on_response=lambda response, repaired: self._record_model_response(task, response, repaired, "horizon_next_action"),
+            on_decision=lambda initial, final, repairs, error: self._record_decision(task, "next_action", snapshot.iteration + 1, initial, final, repairs, error),
         )
         await self.events.emit("cognition.next_action.proposed", action.model_dump(mode="json"), str(task["id"]))
         return action
@@ -279,6 +280,12 @@ class RecedingHorizonController:
         if verification.accepted and action.subgoal_id is not None:
             await self.events.emit("cognition.subgoal.completed", {"subgoal_id": action.subgoal_id}, str(task["id"]))
         return observation, updated, validation
+
+    async def _record_decision(self, task: dict[str, Any], kind: str, iteration: int, initial: bool, final: bool, repairs: int, error: str | None) -> None:
+        self.db.execute(
+            "INSERT INTO structured_decisions (id,task_id,controller_mode,decision_kind,iteration,initial_valid,final_valid,repair_attempts,validation_error_class,model,seed,created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (str(uuid4()), task["id"], self.settings.controller_mode, kind, iteration, int(initial), int(final), repairs, error, self.models.primary_name, self.planning_seed, utcnow()),
+        )
 
     async def _record_model_response(self, task: dict[str, Any], response: Any, repaired: bool, purpose: str) -> None:
         self.db.execute(
