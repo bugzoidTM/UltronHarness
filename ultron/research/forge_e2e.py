@@ -135,6 +135,8 @@ class ForgeE2ERunner:
                     ),
                     workspace=workspace,
                     autonomy_mode=4,
+                    allowed_tools=[str(name) for name in mission["allowed_tools"]],
+                    action_budget=(int(mission["action_budget"][0]), int(mission["action_budget"][1])),
                 )
             )
             started = monotonic()
@@ -151,6 +153,12 @@ class ForgeE2ERunner:
                 (created["id"],),
             )
             model_call = next((call for call in planning_calls if call["purpose"] == "planning"), None)
+            mission_tools = [str(name) for name in mission["allowed_tools"]]
+            mission_budget = [int(mission["action_budget"][0]), int(mission["action_budget"][1])]
+            requested_tools = self.db.all(
+                "SELECT tool_name,status FROM tool_executions WHERE task_id=? ORDER BY created_at, rowid",
+                (created["id"],),
+            )
             approvals = self.db.one("SELECT COUNT(*) AS count FROM approvals WHERE task_id=?", (created["id"],)) or {"count": 0}
             taxonomy = self._failure_taxonomy(self.db, str(created["id"]))
             if task.get("status") == "waiting_approval":
@@ -160,6 +168,15 @@ class ForgeE2ERunner:
                     "mission_id": task_id,
                     "private_evaluator_passed": bool(evaluation.get("passed")),
                     "private_evidence": evaluation.get("evidence", []),
+                    "mission_allowed_tools": mission_tools,
+                    "mission_action_budget": mission_budget,
+                    "task_allowed_tools": task.get("allowed_tools"),
+                    "task_action_budget": task.get("action_budget"),
+                    "mission_contract_verified": task.get("allowed_tools") == mission_tools and task.get("action_budget") == mission_budget,
+                    "requested_tools": requested_tools,
+                    "tool_contract_respected": all(item["tool_name"] in mission_tools for item in requested_tools),
+                    "action_budget_cap_respected": int(task.get("tool_call_count") or 0) <= mission_budget[1],
+                    "action_budget_minimum_reached": int(task.get("tool_call_count") or 0) >= mission_budget[0],
                     "requested_model_alias": self.model_name,
                     "configured_model": self.configured_model,
                     "effective_model": model_call.get("model") if model_call else None,
@@ -189,6 +206,12 @@ class ForgeE2ERunner:
             invalidation_reasons.append("model_attribution_unverified")
         if not all(trace["seed_attribution_verified"] for trace in traces):
             invalidation_reasons.append("seed_attribution_unverified")
+        if not all(trace["mission_contract_verified"] for trace in traces):
+            invalidation_reasons.append("mission_contract_unverified")
+        if not all(trace["tool_contract_respected"] for trace in traces):
+            invalidation_reasons.append("allowed_tool_contract_violated")
+        if not all(trace["action_budget_cap_respected"] for trace in traces):
+            invalidation_reasons.append("action_budget_cap_exceeded")
         if not all(trace["planner_source"] == "model_structured" for trace in traces):
             invalidation_reasons.append("planner_not_structured_model_output")
         measurement_valid = not invalidation_reasons

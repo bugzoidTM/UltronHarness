@@ -114,9 +114,10 @@ class Orchestrator:
     async def create_task(self, payload: TaskCreate) -> dict[str, Any]:
         task_id, timestamp = str(uuid4()), utcnow()
         self.tools.workspace_for(payload.workspace)
+        action_budget = payload.action_budget
         self.db.execute(
-            """INSERT INTO tasks (id,goal_id,title,objective,status,priority,workspace,autonomy_mode,created_at,updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO tasks (id,goal_id,title,objective,status,priority,workspace,autonomy_mode,allowed_tools_json,action_budget_min,action_budget_max,created_at,updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 task_id,
                 payload.goal_id,
@@ -126,6 +127,9 @@ class Orchestrator:
                 payload.priority,
                 payload.workspace,
                 payload.autonomy_mode,
+                self.db.json(payload.allowed_tools) if payload.allowed_tools is not None else None,
+                action_budget[0] if action_budget else None,
+                action_budget[1] if action_budget else None,
                 timestamp,
                 timestamp,
             ),
@@ -134,23 +138,33 @@ class Orchestrator:
             "INSERT INTO task_state (task_id,state,context_json,updated_at) VALUES (?, ?, ?, ?)",
             (task_id, CognitiveState.IDLE.value, "{}", timestamp),
         )
+        contract = {"allowed_tools": payload.allowed_tools, "action_budget": list(action_budget) if action_budget else None}
         await self.events.emit(
-            "task.created", {"title": payload.title, "objective": payload.objective}, task_id
+            "task.created", {"title": payload.title, "objective": payload.objective, "mission_contract": contract}, task_id
         )
+        self._trace(task_id, "mission_contract.bound", payload=contract)
         return self.get_task(task_id) or {}
+
+    def _hydrate_task_contract(self, task: dict[str, Any]) -> dict[str, Any]:
+        raw_tools = task.pop("allowed_tools_json", None)
+        task["allowed_tools"] = self.db.parse_json(raw_tools, None) if raw_tools is not None else None
+        minimum, maximum = task.pop("action_budget_min", None), task.pop("action_budget_max", None)
+        task["action_budget"] = [int(minimum), int(maximum)] if minimum is not None and maximum is not None else None
+        return task
 
     def get_task(self, task_id: str) -> dict[str, Any] | None:
         row = self.db.one(
             "SELECT t.*, s.state AS cognitive_state FROM tasks t LEFT JOIN task_state s ON t.id=s.task_id WHERE t.id=?",
             (task_id,),
         )
-        return row
+        return self._hydrate_task_contract(row) if row else None
 
     def list_tasks(self, limit: int = 100) -> list[dict[str, Any]]:
-        return self.db.all(
+        rows = self.db.all(
             "SELECT t.*, s.state AS cognitive_state FROM tasks t LEFT JOIN task_state s ON t.id=s.task_id ORDER BY t.updated_at DESC LIMIT ?",
             (limit,),
         )
+        return [self._hydrate_task_contract(row) for row in rows]
 
     async def run(self, task_id: str) -> dict[str, Any]:
         task = self.get_task(task_id)
@@ -289,6 +303,8 @@ class Orchestrator:
         manifest = self.tools.get_manifest(call.tool_name)
         if not manifest:
             raise ValueError("Ferramenta desconhecida.")
+        allowed_tools = task.get("allowed_tools")
+        contract_allows_tool = allowed_tools is None or call.tool_name in allowed_tools
         decision = self.policy.evaluate(
             call.tool_name, call.arguments, manifest.risk, int(task["autonomy_mode"])
         )
@@ -315,6 +331,23 @@ class Orchestrator:
             },
             task_id,
         )
+        if not contract_allows_tool:
+            reason = "Ferramenta bloqueada pelo contrato da missão."
+            self.db.execute(
+                "UPDATE tool_executions SET status='blocked', error=?, completed_at=? WHERE id=?",
+                (reason, utcnow(), execution_id),
+            )
+            self._trace(
+                task_id,
+                "mission_contract.tool_blocked",
+                payload={"tool": call.tool_name, "allowed_tools": allowed_tools},
+            )
+            await self.events.emit(
+                "tool.blocked",
+                {"execution_id": execution_id, "reason": reason},
+                task_id,
+            )
+            return {"status": "blocked", "execution_id": execution_id, "error": reason}
         if not decision.allowed:
             self.db.execute(
                 "UPDATE tool_executions SET status='blocked', error=?, completed_at=? WHERE id=?",
@@ -681,6 +714,15 @@ class Orchestrator:
         memories: list[dict[str, Any]],
         routed_procedures: list[str] | None = None,
     ) -> Plan:
+        allowed_tools = task.get("allowed_tools")
+        planner_tools = allowed_tools if allowed_tools is not None else [m["name"] for m in self.tools.list_manifests()]
+        action_budget = task.get("action_budget")
+        contract_text = (
+            f"Contrato da missão — ferramentas autorizadas: {planner_tools}; orçamento de ações: {action_budget}. "
+            "Não proponha ferramenta fora da lista autorizada e não ultrapasse o teto do orçamento."
+            if action_budget is not None
+            else f"Ferramentas disponíveis: {planner_tools}."
+        )
         prompt = [
             {
                 "role": "system",
@@ -688,13 +730,12 @@ class Orchestrator:
             },
             {
                 "role": "user",
-                                    "content": (
-                        f"Objetivo: {task['objective']}\nWorkspace: {task['workspace']}\n"
-                        f"Memórias relevantes: {[m['summary'] for m in memories]}\n"
-                        f"Experiências procedurais roteadas: {routed_procedures or []}\n"
-                        f"Ferramentas: {[m['name'] for m in self.tools.list_manifests()]}."
-                    ),
-
+                "content": (
+                    f"Objetivo: {task['objective']}\nWorkspace: {task['workspace']}\n"
+                    f"Memórias relevantes: {[m['summary'] for m in memories]}\n"
+                    f"Experiências procedurais roteadas: {routed_procedures or []}\n"
+                    f"{contract_text}"
+                ),
             },
         ]
         async def record_response(response: Any, is_repair: bool) -> None:
@@ -912,8 +953,11 @@ class Orchestrator:
             raise RuntimeError("Tempo máximo da tarefa excedido.")
         if int(task["step_count"]) >= self.settings.limits["max_steps"]:
             raise RuntimeError("Limite de etapas excedido.")
-        if int(task["tool_call_count"]) >= self.settings.limits["max_tool_calls"]:
-            raise RuntimeError("Limite de chamadas de ferramenta excedido.")
+        action_budget = task.get("action_budget")
+        mission_tool_limit = int(action_budget[1]) if action_budget is not None else self.settings.limits["max_tool_calls"]
+        tool_limit = min(self.settings.limits["max_tool_calls"], mission_tool_limit)
+        if int(task["tool_call_count"]) >= tool_limit:
+            raise RuntimeError("Limite de chamadas de ferramenta excedido pelo contrato da missão.")
         if int(task["llm_call_count"]) >= self.settings.limits["max_llm_calls"]:
             raise RuntimeError("Limite de chamadas ao modelo excedido.")
 

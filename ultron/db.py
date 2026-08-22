@@ -34,6 +34,9 @@ CREATE TABLE IF NOT EXISTS tasks (
     priority REAL NOT NULL DEFAULT 0.5,
     workspace TEXT NOT NULL,
     autonomy_mode INTEGER NOT NULL DEFAULT 2,
+    allowed_tools_json TEXT,
+    action_budget_min INTEGER,
+    action_budget_max INTEGER,
     step_count INTEGER NOT NULL DEFAULT 0,
     replan_count INTEGER NOT NULL DEFAULT 0,
     tool_call_count INTEGER NOT NULL DEFAULT 0,
@@ -558,6 +561,12 @@ MODEL_CALL_MIGRATIONS = {
     "seed": "INTEGER",
 }
 
+TASK_CONTRACT_MIGRATIONS = {
+    "allowed_tools_json": "TEXT",
+    "action_budget_min": "INTEGER",
+    "action_budget_max": "INTEGER",
+}
+
 
 PAIR_UTILITY_MIGRATIONS = {
     "task_id": "TEXT",
@@ -597,6 +606,10 @@ class Database:
             for name, definition in MODEL_CALL_MIGRATIONS.items():
                 if name not in model_call_columns:
                     connection.execute(f"ALTER TABLE model_calls ADD COLUMN {name} {definition}")
+            task_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(tasks)")}
+            for name, definition in TASK_CONTRACT_MIGRATIONS.items():
+                if name not in task_columns:
+                    connection.execute(f"ALTER TABLE tasks ADD COLUMN {name} {definition}")
             pair_utility_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(experience_pair_utility)")}
             for name, definition in PAIR_UTILITY_MIGRATIONS.items():
                 if name not in pair_utility_columns:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from copy import deepcopy
 from pathlib import Path
+from time import monotonic
 
 import pytest
 
@@ -14,7 +15,7 @@ from ultron.db import Database
 from ultron.memory.service import MemoryService
 from ultron.models.gateway import ModelGateway, ModelResponse, Usage
 from ultron.policy.engine import PolicyEngine
-from ultron.schemas import Plan, PlanStep, TaskCreate
+from ultron.schemas import Plan, PlanStep, TaskCreate, ToolCall
 from ultron.tools.registry import ToolRegistry
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -114,6 +115,69 @@ def test_fallback_preserves_supervision_and_respects_e2e_allowlist(tmp_path: Pat
     benchmark_step = next(step for step in e2e_restricted._fallback_plan(task).steps if step.tool is not None)
     assert benchmark_step.tool == "python.execute"
     assert benchmark_step.risk.value == "R1"
+
+
+@pytest.mark.asyncio
+async def test_mission_contract_reaches_planner_and_blocks_unlisted_tool(tmp_path: Path) -> None:
+    orchestrator = _orchestrator(tmp_path)
+    captured: dict[str, object] = {}
+
+    async def structured(schema, messages, model_name=None, **kwargs):
+        captured["prompt"] = messages[-1]["content"]
+        return Plan(
+            objective="Plano contratado",
+            steps=[PlanStep(id=1, action="Analisar contexto", success_condition="task_context")],
+        )
+
+    orchestrator.models.structured = structured  # type: ignore[method-assign]
+    created = await orchestrator.create_task(
+        TaskCreate(
+            title="Missão contratada",
+            objective="Analisar o workspace sem escrever fora do escopo.",
+            workspace="mission_contract",
+            autonomy_mode=4,
+            allowed_tools=["file.list", "python.execute"],
+            action_budget=(2, 3),
+        )
+    )
+    task = orchestrator.get_task(created["id"])
+    assert task is not None
+    assert task["allowed_tools"] == ["file.list", "python.execute"]
+    assert task["action_budget"] == [2, 3]
+
+    await orchestrator._make_plan(task, [])
+    assert "ferramentas autorizadas: ['file.list', 'python.execute']" in str(captured["prompt"])
+    assert "orçamento de ações: [2, 3]" in str(captured["prompt"])
+
+    blocked = await orchestrator.execute_tool(
+        created["id"], ToolCall(tool_name="file.write", arguments={"path": "x.txt", "content": "x"})
+    )
+    assert blocked["status"] == "blocked"
+    assert "contrato da missão" in blocked["error"]
+    trace = orchestrator.db.one(
+        "SELECT event_type FROM execution_traces WHERE task_id=? AND event_type='mission_contract.tool_blocked'",
+        (created["id"],),
+    )
+    assert trace is not None
+
+
+def test_mission_action_budget_caps_tool_calls_without_raising_global_limits(tmp_path: Path) -> None:
+    orchestrator = _orchestrator(tmp_path)
+
+    async def create() -> dict:
+        return await orchestrator.create_task(
+            TaskCreate(
+                title="Orçamento estrito",
+                objective="Validar o teto de chamadas permitido pela missão.",
+                workspace="mission_budget",
+                action_budget=(1, 1),
+            )
+        )
+
+    created = asyncio.run(create())
+    orchestrator.db.execute("UPDATE tasks SET tool_call_count=1 WHERE id=?", (created["id"],))
+    with pytest.raises(RuntimeError, match="contrato da missão"):
+        orchestrator._assert_limits(created["id"], monotonic())
 
 
 def test_step_success_verifier_requires_deterministic_predicate(tmp_path: Path) -> None:

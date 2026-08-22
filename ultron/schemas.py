@@ -72,6 +72,29 @@ class TaskCreate(BaseModel):
     priority: float = Field(default=0.5, ge=0, le=1)
     workspace: str = Field(default="default", pattern=r"^[a-zA-Z0-9_-]+$")
     autonomy_mode: int = Field(default=2, ge=0, le=4)
+    allowed_tools: list[str] | None = Field(default=None, max_length=50)
+    action_budget: tuple[int, int] | None = None
+
+    @field_validator("allowed_tools")
+    @classmethod
+    def validate_allowed_tools(cls, tools: list[str] | None) -> list[str] | None:
+        if tools is None:
+            return None
+        if any(not name or len(name) > 120 for name in tools):
+            raise ValueError("Ferramentas autorizadas devem ter nomes não vazios de até 120 caracteres.")
+        if len(set(tools)) != len(tools):
+            raise ValueError("Ferramentas autorizadas não podem conter duplicatas.")
+        return tools
+
+    @field_validator("action_budget")
+    @classmethod
+    def validate_action_budget(cls, budget: tuple[int, int] | None) -> tuple[int, int] | None:
+        if budget is None:
+            return None
+        minimum, maximum = budget
+        if minimum < 0 or maximum < 1 or minimum > maximum:
+            raise ValueError("action_budget deve obedecer 0 <= mínimo <= máximo e máximo >= 1.")
+        return budget
 
 
 class TaskRead(TaskCreate):
