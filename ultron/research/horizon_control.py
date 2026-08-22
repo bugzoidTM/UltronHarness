@@ -134,6 +134,10 @@ class HorizonControlRunner:
                 separators=(",", ":"),
             )
             orientation_hash = sha256(orientation_payload.encode("utf-8")).hexdigest()
+            db.execute(
+                "INSERT INTO horizon_orientations (id,run_id,mission_id,seed,orientation_hash,observations_json,evidence_refs_json,created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+                (str(uuid4()), run_id, task_id, self.seed, orientation_hash, orientation_payload, "[]"),
+            )
             for mode in modes:
                 workspace = f"horizon_{run_id[:8]}_{mode}_{task_id}"
                 orchestrator = self._orchestrator(db, mode, [str(name) for name in mission["allowed_tools"]])
@@ -171,6 +175,10 @@ class HorizonControlRunner:
                 )
                 tool_rows = db.all("SELECT tool_name,status FROM tool_executions WHERE task_id=? ORDER BY created_at,rowid", (created["id"],))
                 actions = db.all("SELECT status FROM cognitive_actions WHERE task_id=? ORDER BY created_at,rowid", (created["id"],))
+                decisions = db.all(
+                    "SELECT initial_valid,final_valid,repair_attempts,validation_error_class FROM structured_decisions WHERE task_id=? ORDER BY created_at,rowid",
+                    (created["id"],),
+                )
                 planner_source = orchestrator.plan_sources.get(created["id"], "model_structured" if actions else "fallback_control")
                 if mode != "full_plan" and actions:
                     planner_source = "model_repaired" if any(call["purpose"].endswith("_repair") for call in model_calls) else "model_structured"
@@ -188,6 +196,7 @@ class HorizonControlRunner:
                     "task_action_budget": task.get("action_budget"),
                     "mission_contract_verified": task.get("allowed_tools") == mission_tools and task.get("action_budget") == mission_budget,
                     "orientation_hash": orientation_hash,
+                    "orientation_shared_verified": bool(db.one("SELECT 1 FROM horizon_orientations WHERE run_id=? AND mission_id=? AND seed=? AND orientation_hash=?", (run_id, task_id, self.seed, orientation_hash))),
                     "effective_models": [call["model"] for call in model_calls],
                     "effective_seeds": [call["seed"] for call in model_calls],
                     "model_attribution_verified": bool(model_calls) and all(call["model"] == self.configured_model for call in model_calls),
@@ -201,8 +210,12 @@ class HorizonControlRunner:
                     "outcome_authority_level": outcome.authority_level,
                     "experience_written": False,
                     "experience_verified": False,
-                    "sdv_numerator": sum(1 for call in model_calls if not call["purpose"].endswith("_repair")),
-                    "sdv_denominator": max(1, len(model_calls)),
+                    "structured_decisions": len(decisions),
+                    "sdv_numerator": sum(int(row["final_valid"]) for row in decisions),
+                    "initial_sdv_numerator": sum(int(row["initial_valid"]) for row in decisions),
+                    "sdv_denominator": len(decisions),
+                    "repair_recoveries": sum(1 for row in decisions if not row["initial_valid"] and row["final_valid"]),
+                    "repair_eligible": sum(1 for row in decisions if not row["initial_valid"] and int(row["repair_attempts"]) > 0),
                     "tool_calls": int(task.get("tool_call_count") or 0),
                     "llm_calls": int(task.get("llm_call_count") or 0),
                     "invalid_structured_outputs": int(not actions and mode != "full_plan"),
@@ -222,6 +235,8 @@ class HorizonControlRunner:
                 invalidation_reasons.append("seed_attribution_unverified")
             if not trace["mission_contract_verified"]:
                 invalidation_reasons.append("mission_contract_unverified")
+            if not trace["orientation_shared_verified"]:
+                invalidation_reasons.append("orientation_unverified")
             if not trace["tool_contract_respected"]:
                 invalidation_reasons.append("allowed_tool_contract_violated")
             if not trace["action_budget_cap_respected"]:
@@ -252,12 +267,16 @@ class HorizonControlRunner:
     def _summarize(traces: list[dict]) -> dict:
         total = len(traces)
         passes = sum(bool(trace["model_cognitive_success"]) for trace in traces)
-        structured = [trace for trace in traces if trace["planner_source"] in {"model_structured", "model_repaired"}]
+        decision_total = sum(int(trace.get("sdv_denominator", 0)) for trace in traces)
+        repair_total = sum(int(trace.get("repair_eligible", 0)) for trace in traces)
+        legacy_structured = sum(trace.get("planner_source") in {"model_structured", "model_repaired"} for trace in traces)
         return {
             "total": total,
             "passed": passes,
             "atc": round(passes / total, 6) if total else 0.0,
-            "sdv": round(len(structured) / total, 6) if total else 0.0,
+            "sdv": round(sum(int(trace.get("sdv_numerator", 0)) for trace in traces) / decision_total, 6) if decision_total else round(legacy_structured / total, 6) if total else 0.0,
+            "initial_sdv": round(sum(int(trace.get("initial_sdv_numerator", 0)) for trace in traces) / decision_total, 6) if decision_total else 0.0,
+            "repair_recovery_rate": round(sum(int(trace.get("repair_recoveries", 0)) for trace in traces) / repair_total, 6) if repair_total else 0.0,
             "mean_tool_calls": round(sum(trace["tool_calls"] for trace in traces) / total, 3) if total else 0.0,
             "mean_llm_calls": round(sum(trace["llm_calls"] for trace in traces) / total, 3) if total else 0.0,
         }
