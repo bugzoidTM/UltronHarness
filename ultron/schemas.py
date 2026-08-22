@@ -6,7 +6,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class TaskStatus(str, Enum):
@@ -180,6 +180,12 @@ class NextAction(BaseModel):
 
 class ShortHorizonDecision(BaseModel):
     actions: list[NextAction] = Field(min_length=1, max_length=3)
+
+    @model_validator(mode="after")
+    def stop_must_be_last_action(self) -> ShortHorizonDecision:
+        if any(action.stop for action in self.actions[:-1]):
+            raise ValueError("Em ShortHorizonDecision, stop=true só é permitido na última ação do bloco.")
+        return self
 
 
 class BlockValidityResult(BaseModel):

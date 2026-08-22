@@ -276,3 +276,46 @@ async def test_short_horizon_never_requests_next_action_schema(tmp_path: Path) -
     assert executed == ["a1", "a2"]
     assert schemas == [ShortHorizonDecision, ShortHorizonDecision]
     assert NextAction not in schemas
+
+
+
+def test_short_horizon_rejects_stop_before_last_action() -> None:
+    with pytest.raises(ValueError, match="stop=true só é permitido na última ação"):
+        _block(_action("a1"), _action("stop", stop=True), _action("a3"))
+
+
+@pytest.mark.asyncio
+async def test_short_horizon_stop_last_completes_block_accounting(tmp_path: Path) -> None:
+    orchestrator = _orchestrator(tmp_path)
+    schemas: list[type] = []
+    _install_structured_blocks(orchestrator, [_block(_action("stop", stop=True))], schemas)
+    task = await orchestrator.create_task(
+        TaskCreate(
+            title="Stop terminal",
+            objective="Auditar uma proposta de stop terminal.",
+            workspace="block_stop_terminal",
+            autonomy_mode=4,
+            allowed_tools=["python.execute"],
+            requires_external_outcome=True,
+        )
+    )
+
+    await _run(orchestrator, task)
+
+    trace_rows = orchestrator.db.all(
+        "SELECT event_type,payload_json FROM execution_traces WHERE task_id=? AND event_type LIKE 'cognition.short_horizon_block.%' ORDER BY created_at,rowid",
+        (task["id"],),
+    )
+    events = [row["event_type"] for row in trace_rows]
+    payloads = [orchestrator.db.parse_json(row["payload_json"], {}) for row in trace_rows]
+    assert schemas == [ShortHorizonDecision]
+    assert events == [
+        "cognition.short_horizon_block.created",
+        "cognition.short_horizon_block.action_executed",
+        "cognition.short_horizon_block.completed",
+    ]
+    assert payloads[0]["actions"] == 1
+    assert payloads[1]["action_index"] == 0
+    assert payloads[2]["actions"] == 1
+    assert not _invalidation_payloads(orchestrator, task["id"])
+    assert orchestrator.get_task(task["id"])["status"] == "waiting_outcome"
