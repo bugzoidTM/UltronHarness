@@ -15,6 +15,7 @@ from ultron.db import Database
 from ultron.models.gateway import ModelGateway
 from ultron.schemas import (
     ActionObservation,
+    BlockValidityResult,
     CognitiveStateSnapshot,
     MissionOutline,
     NextAction,
@@ -293,6 +294,46 @@ class RecedingHorizonController:
             on_response=lambda response, repaired: self._record_model_response(task, response, repaired, "horizon_short_block"),
             on_decision=lambda initial, final, repairs, error, category: self._record_decision(task, "short_horizon", snapshot.iteration + 1, initial, final, repairs, error, category),
         )
+
+    def assess_block_validity(
+        self,
+        task: dict[str, Any],
+        action: NextAction,
+        observation: ActionObservation | None,
+        snapshot: CognitiveStateSnapshot,
+        remaining_actions: list[NextAction],
+        *,
+        feedback_count_at_creation: int,
+    ) -> BlockValidityResult:
+        """Revalida determinísticamente as premissas antes da próxima ação do bloco."""
+        if task.get("status") == "waiting_approval":
+            return BlockValidityResult(valid=False, reason="WAITING_APPROVAL", invalidated_from_index=0)
+        if task.get("status") != "running":
+            return BlockValidityResult(valid=False, reason="TASK_NOT_RUNNING", invalidated_from_index=0)
+        if observation is None:
+            return BlockValidityResult(valid=False, reason="NO_OBSERVATION", invalidated_from_index=0)
+        if not observation.ok:
+            return BlockValidityResult(valid=False, reason="TOOL_OR_ACTION_FAILURE", invalidated_from_index=0)
+        if not observation.verification_passed:
+            return BlockValidityResult(valid=False, reason="VERIFICATION_FAILED", invalidated_from_index=0)
+        if len(snapshot.external_feedback) != feedback_count_at_creation:
+            return BlockValidityResult(valid=False, reason="EXTERNAL_FEEDBACK_CHANGED", invalidated_from_index=0)
+        if not remaining_actions:
+            return BlockValidityResult(valid=True, reason="BLOCK_COMPLETE")
+
+        next_action = remaining_actions[0]
+        if self.contract.remaining_budget(task) <= 0 and not next_action.stop:
+            return BlockValidityResult(valid=False, reason="INSUFFICIENT_REMAINING_BUDGET", invalidated_from_index=0)
+        validation = self.contract.validate(task, next_action)
+        if not validation.accepted:
+            return BlockValidityResult(valid=False, reason=f"MISSION_CONTRACT_REJECTED:{validation.reason}", invalidated_from_index=0)
+        if (
+            action.subgoal_id is not None
+            and action.subgoal_id in snapshot.completed_subgoals
+            and all(candidate.subgoal_id == action.subgoal_id for candidate in remaining_actions)
+        ):
+            return BlockValidityResult(valid=False, reason="SUBGOAL_COMPLETED", invalidated_from_index=0)
+        return BlockValidityResult(valid=True, reason="VALID")
 
     async def execute_iteration(
         self,

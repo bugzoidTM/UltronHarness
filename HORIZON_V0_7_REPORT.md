@@ -94,3 +94,17 @@ Todos os três controllers (`full_plan`, `short_horizon` e `next_action`) passam
 Após `FAIL` closed-loop, o runtime cria uma identidade pública por tentativa — `external_feedback_attempt:<N>` — e persiste no `CognitiveStateSnapshot` somente uma instrução genérica de recuperação. O próximo prompt de decisão inclui explicitamente esse feedback. Evidência, segredo, fixture, resposta esperada, patch ouro e implementação do evaluator privado não são copiados para snapshots, events, traces públicos ou prompts.
 
 O E2E adversarial cobre a sequência `STOP → FAIL → feedback consumido → ação diferente → workspace mudou → STOP → PASS`. Ele intercepta o prompt imediatamente posterior ao false-stop e verifica simultaneamente a presença de `external_feedback_attempt:1` e a ausência do segredo privado injetado no payload do evaluator.
+
+
+## Retificação Horizon v0.7.1D — Short-Horizon Block Invalidation
+
+O modo `short_horizon` passou a revalidar deterministicamente um bloco após cada ação observada. Uma ação restante não é mais executada apenas porque pertence ao mesmo `ShortHorizonDecision`. Se a observação anterior revela falha de ferramenta, verificação negativa, rejeição contratual, aprovação pendente, mudança de status, feedback externo novo, orçamento insuficiente, próxima ação fora do contrato ou conclusão do subobjetivo compartilhado, as ações restantes são descartadas e o próximo ciclo solicita um novo `ShortHorizonDecision`.
+
+| Evento auditável | Conteúdo principal |
+|---|---|
+| `cognition.short_horizon_block.created` | Identidade do bloco, ações planejadas e snapshot de origem. |
+| `cognition.short_horizon_block.action_executed` | Bloco, índice da ação e snapshot posterior à observação. |
+| `cognition.short_horizon_block.invalidated` | Bloco, índice executado, ações descartadas, razão determinística e snapshot. |
+| `cognition.short_horizon_block.completed` | Bloco inteiramente observado e validado. |
+
+O runner inclui por trace as métricas `short_horizon_blocks`, `short_horizon_blocks_invalidated`, `short_horizon_actions_planned`, `short_horizon_actions_executed` e `short_horizon_actions_discarded`. O modo mantém pureza experimental: todas as decisões de `short_horizon` usam o schema `ShortHorizonDecision`; um bloco unitário é encerrado e seguido por uma nova inferência do mesmo schema, sem fallback para `NextAction`.

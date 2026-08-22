@@ -501,6 +501,8 @@ class Orchestrator:
             )
             orientation = self.task_orientations.get(str(task_id))
             if self.settings.controller_mode in {"next_action", "short_horizon"}:
+                self._update_task(task_id, status=TaskStatus.RUNNING, error=None)
+                task = self.get_task(task_id) or task
                 if orientation is not None:
                     await self._run_receding_horizon(task, memories, routed_context.routed_procedures, orientation=orientation)
                 else:
@@ -631,85 +633,237 @@ class Orchestrator:
         false_stops = 0
         progress = ProgressTracker()
         max_iterations = min(int(self.settings.cognition.get("max_iterations", 30)), int(self.settings.limits["max_steps"]))
-        per_cycle = 3 if self.settings.controller_mode == "short_horizon" else 1
         for _ in range(max_iterations):
             current = self.get_task(task_id)
             if not current:
                 return
+            if current.get("status") != TaskStatus.RUNNING.value:
+                return
             if self.horizon.contract.remaining_budget(current) <= 0:
                 await self._fail(task_id, "HORIZON_ACTION_BUDGET_EXHAUSTED")
                 return
-            block_actions = None
+
             if self.settings.controller_mode == "short_horizon":
                 try:
-                    block_actions = (await self.horizon.decide_short_horizon(current, snapshot, outline=outline)).actions
-                    self._trace(task_id, "cognition.short_horizon_block", payload={"actions": len(block_actions)})
+                    block = await self.horizon.decide_short_horizon(current, snapshot, outline=outline)
                 except Exception as exc:
                     invalid_decisions += 1
                     self._trace(task_id, "cognition.structured_failure", payload={"error": str(exc)[:1000], "count": invalid_decisions})
                     continue
-            for _block_index in range(per_cycle):
-                current = self.get_task(task_id)
-                if not current or self.horizon.contract.remaining_budget(current) <= 0:
-                    break
-                try:
-                    action = (
-                        block_actions[_block_index]
-                        if block_actions is not None and _block_index < len(block_actions)
-                        else await self.horizon.decide_next_action(
-                            current,
-                            snapshot,
-                            outline=outline,
-                            routed_procedures=routed_procedures,
-                            memory_summaries=[str(item["summary"]) for item in memories],
+                block_id = str(uuid4())
+                feedback_count_at_creation = len(snapshot.external_feedback)
+                self._trace(
+                    task_id,
+                    "cognition.short_horizon_block.created",
+                    payload={"block_id": block_id, "actions": len(block.actions), "snapshot_iteration": snapshot.iteration},
+                )
+                invalidated = False
+                for action_index, action in enumerate(block.actions):
+                    current = self.get_task(task_id)
+                    remaining_actions = block.actions[action_index + 1 :]
+                    if not current:
+                        return
+                    precheck = self.horizon.contract.validate(current, action)
+                    if not precheck.accepted:
+                        self._trace(
+                            task_id,
+                            "cognition.short_horizon_block.invalidated",
+                            payload={
+                                "block_id": block_id,
+                                "executed_action_index": action_index - 1,
+                                "remaining_actions_discarded": len(block.actions) - action_index,
+                                "reason": f"MISSION_CONTRACT_REJECTED:{precheck.reason}",
+                                "snapshot_iteration": snapshot.iteration,
+                            },
                         )
+                        invalidated = True
+                        break
+                    if current.get("status") != TaskStatus.RUNNING.value:
+                        self._trace(
+                            task_id,
+                            "cognition.short_horizon_block.invalidated",
+                            payload={
+                                "block_id": block_id,
+                                "executed_action_index": action_index - 1,
+                                "remaining_actions_discarded": len(block.actions) - action_index,
+                                "reason": "TASK_NOT_RUNNING",
+                                "snapshot_iteration": snapshot.iteration,
+                            },
+                        )
+                        invalidated = True
+                        break
+                    if len(snapshot.external_feedback) != feedback_count_at_creation:
+                        self._trace(
+                            task_id,
+                            "cognition.short_horizon_block.invalidated",
+                            payload={
+                                "block_id": block_id,
+                                "executed_action_index": action_index - 1,
+                                "remaining_actions_discarded": len(block.actions) - action_index,
+                                "reason": "EXTERNAL_FEEDBACK_CHANGED",
+                                "snapshot_iteration": snapshot.iteration,
+                            },
+                        )
+                        invalidated = True
+                        break
+
+                    observation, snapshot, validation = await self.horizon.execute_iteration(current, action, snapshot)
+                    if not validation.accepted:
+                        self._trace(
+                            task_id,
+                            "cognition.short_horizon_block.invalidated",
+                            payload={
+                                "block_id": block_id,
+                                "executed_action_index": action_index - 1,
+                                "remaining_actions_discarded": len(block.actions) - action_index,
+                                "reason": f"MISSION_CONTRACT_REJECTED:{validation.reason}",
+                                "snapshot_iteration": snapshot.iteration,
+                            },
+                        )
+                        invalidated = True
+                        break
+                    self._trace(
+                        task_id,
+                        "cognition.short_horizon_block.action_executed",
+                        payload={"block_id": block_id, "action_index": action_index, "snapshot_iteration": snapshot.iteration},
                     )
-                except Exception as exc:
-                    invalid_decisions += 1
-                    self._trace(task_id, "cognition.structured_failure", payload={"error": str(exc)[:1000], "count": invalid_decisions})
-                    if invalid_decisions >= 3:
-                        await self._fail(task_id, "COGNITIVE_ACTION_SELECTION_FAILURE")
+                    if action.stop:
+                        self._trace(task_id, "cognition.stop_proposed", payload={"reason": action.stop_reason})
+                        if not remaining_actions:
+                            self._trace(
+                                task_id,
+                                "cognition.short_horizon_block.completed",
+                                payload={"block_id": block_id, "actions": len(block.actions), "snapshot_iteration": snapshot.iteration},
+                            )
+                        if current.get("requires_external_outcome"):
+                            self._update_task(task_id, status=TaskStatus.WAITING_OUTCOME, error=None)
+                            await self.events.emit("cognition.waiting_outcome", {"reason": action.stop_reason}, task_id)
+                            return
+                        false_stops += 1
+                        self._trace(task_id, "cognition.false_stop", payload={"reason": action.stop_reason, "count": false_stops})
+                        if false_stops >= int(self.settings.cognition.get("max_false_stops", 2)):
+                            await self._fail(task_id, "FALSE_STOP_LIMIT")
+                            return
+                        if remaining_actions:
+                            self._trace(
+                                task_id,
+                                "cognition.short_horizon_block.invalidated",
+                                payload={
+                                    "block_id": block_id,
+                                    "executed_action_index": action_index,
+                                    "remaining_actions_discarded": len(remaining_actions),
+                                    "reason": "STOP_PROPOSED",
+                                    "snapshot_iteration": snapshot.iteration,
+                                },
+                            )
+                        invalidated = True
+                        break
+
+                    current_after = self.get_task(task_id)
+                    if not current_after:
                         return
-                    continue
-                observation, snapshot, validation = await self.horizon.execute_iteration(current, action, snapshot)
-                if not validation.accepted:
-                    invalid_decisions += 1
-                    if invalid_decisions >= 3:
-                        await self._fail(task_id, "COGNITIVE_ACTION_SELECTION_FAILURE")
-                        return
-                    continue
-                invalid_decisions = 0
-                if action.stop:
-                    self._trace(task_id, "cognition.stop_proposed", payload={"reason": action.stop_reason})
-                    if current.get("requires_external_outcome"):
-                        self._update_task(task_id, status=TaskStatus.WAITING_OUTCOME, error=None)
-                        await self.events.emit("cognition.waiting_outcome", {"reason": action.stop_reason}, task_id)
-                        return
-                    false_stops += 1
-                    self._trace(task_id, "cognition.false_stop", payload={"reason": action.stop_reason, "count": false_stops})
-                    if false_stops >= 2:
-                        await self._fail(task_id, "FALSE_STOP_LIMIT")
-                        return
-                    continue
-                if observation:
-                    action_loop, stagnation, progress_signal = progress.assess(
-                        tool=action.tool,
-                        arguments=action.arguments,
-                        observations=snapshot.recent_observations,
-                        output=observation.output_summary,
-                        verification_passed=observation.verification_passed,
-                        subgoal_completed=observation.verification_passed and action.subgoal_id is not None,
+                    latest_snapshot = self.horizon.latest_snapshot(current_after)
+                    if latest_snapshot.iteration >= snapshot.iteration:
+                        snapshot = latest_snapshot
+                    validity = self.horizon.assess_block_validity(
+                        current_after,
+                        action,
+                        observation,
+                        snapshot,
+                        remaining_actions,
+                        feedback_count_at_creation=feedback_count_at_creation,
                     )
-                    self._trace(task_id, "cognition.progress", payload=progress_signal.model_dump(mode="json"))
-                    if not observation.ok:
-                        self._trace(task_id, "cognition.observation.failed", payload=observation.model_dump(mode="json"))
-                    if action_loop:
-                        self._trace(task_id, "cognition.action_loop", payload={"tool": action.tool, "iteration": snapshot.iteration})
-                        snapshot.failed_strategies.append("ACTION_LOOP")
-                    if stagnation:
-                        self._trace(task_id, "cognition.stagnation", payload={"iteration": snapshot.iteration})
-                        snapshot.failed_strategies.append("STAGNATION")
-                        self.horizon.persist_snapshot(snapshot)
+                    if observation:
+                        action_loop, stagnation, progress_signal = progress.assess(
+                            tool=action.tool,
+                            arguments=action.arguments,
+                            observations=snapshot.recent_observations,
+                            output=observation.output_summary,
+                            verification_passed=observation.verification_passed,
+                            subgoal_completed=observation.verification_passed and action.subgoal_id is not None,
+                        )
+                        self._trace(task_id, "cognition.progress", payload=progress_signal.model_dump(mode="json"))
+                        if not observation.ok:
+                            self._trace(task_id, "cognition.observation.failed", payload=observation.model_dump(mode="json"))
+                    if not validity.valid:
+                        self._trace(
+                            task_id,
+                            "cognition.short_horizon_block.invalidated",
+                            payload={
+                                "block_id": block_id,
+                                "executed_action_index": action_index,
+                                "remaining_actions_discarded": len(remaining_actions),
+                                "reason": validity.reason,
+                                "snapshot_iteration": snapshot.iteration,
+                            },
+                        )
+                        invalidated = True
+                        break
+                    if not remaining_actions:
+                        self._trace(
+                            task_id,
+                            "cognition.short_horizon_block.completed",
+                            payload={"block_id": block_id, "actions": len(block.actions), "snapshot_iteration": snapshot.iteration},
+                        )
+                await self.events.emit("cognition.iteration.started", {"iteration": snapshot.iteration + 1}, task_id)
+                if invalidated:
+                    continue
+                continue
+
+            try:
+                action = await self.horizon.decide_next_action(
+                    current,
+                    snapshot,
+                    outline=outline,
+                    routed_procedures=routed_procedures,
+                    memory_summaries=[str(item["summary"]) for item in memories],
+                )
+            except Exception as exc:
+                invalid_decisions += 1
+                self._trace(task_id, "cognition.structured_failure", payload={"error": str(exc)[:1000], "count": invalid_decisions})
+                if invalid_decisions >= 3:
+                    await self._fail(task_id, "COGNITIVE_ACTION_SELECTION_FAILURE")
+                    return
+                continue
+            observation, snapshot, validation = await self.horizon.execute_iteration(current, action, snapshot)
+            if not validation.accepted:
+                invalid_decisions += 1
+                if invalid_decisions >= 3:
+                    await self._fail(task_id, "COGNITIVE_ACTION_SELECTION_FAILURE")
+                    return
+                continue
+            invalid_decisions = 0
+            if action.stop:
+                self._trace(task_id, "cognition.stop_proposed", payload={"reason": action.stop_reason})
+                if current.get("requires_external_outcome"):
+                    self._update_task(task_id, status=TaskStatus.WAITING_OUTCOME, error=None)
+                    await self.events.emit("cognition.waiting_outcome", {"reason": action.stop_reason}, task_id)
+                    return
+                false_stops += 1
+                self._trace(task_id, "cognition.false_stop", payload={"reason": action.stop_reason, "count": false_stops})
+                if false_stops >= int(self.settings.cognition.get("max_false_stops", 2)):
+                    await self._fail(task_id, "FALSE_STOP_LIMIT")
+                    return
+                continue
+            if observation:
+                action_loop, stagnation, progress_signal = progress.assess(
+                    tool=action.tool,
+                    arguments=action.arguments,
+                    observations=snapshot.recent_observations,
+                    output=observation.output_summary,
+                    verification_passed=observation.verification_passed,
+                    subgoal_completed=observation.verification_passed and action.subgoal_id is not None,
+                )
+                self._trace(task_id, "cognition.progress", payload=progress_signal.model_dump(mode="json"))
+                if not observation.ok:
+                    self._trace(task_id, "cognition.observation.failed", payload=observation.model_dump(mode="json"))
+                if action_loop:
+                    self._trace(task_id, "cognition.action_loop", payload={"tool": action.tool, "iteration": snapshot.iteration})
+                    snapshot.failed_strategies.append("ACTION_LOOP")
+                if stagnation:
+                    self._trace(task_id, "cognition.stagnation", payload={"iteration": snapshot.iteration})
+                    snapshot.failed_strategies.append("STAGNATION")
+                    self.horizon.persist_snapshot(snapshot)
             await self.events.emit("cognition.iteration.started", {"iteration": snapshot.iteration + 1}, task_id)
         await self._fail(task_id, "HORIZON_ITERATION_LIMIT")
 

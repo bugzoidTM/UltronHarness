@@ -247,6 +247,12 @@ class HorizonControlRunner:
                 )
                 tool_rows = db.all("SELECT tool_name,status FROM tool_executions WHERE task_id=? ORDER BY created_at,rowid", (created["id"],))
                 actions = db.all("SELECT status FROM cognitive_actions WHERE task_id=? ORDER BY created_at,rowid", (created["id"],))
+                horizon_trace_rows = db.all("SELECT event_type,payload_json FROM execution_traces WHERE task_id=? ORDER BY created_at,rowid", (created["id"],))
+                short_horizon_blocks = [row for row in horizon_trace_rows if row["event_type"] == "cognition.short_horizon_block.created"]
+                short_horizon_invalidations = [row for row in horizon_trace_rows if row["event_type"] == "cognition.short_horizon_block.invalidated"]
+                short_horizon_executions = [row for row in horizon_trace_rows if row["event_type"] == "cognition.short_horizon_block.action_executed"]
+                short_horizon_actions_planned = sum(int(db.parse_json(row["payload_json"], {}).get("actions", 0)) for row in short_horizon_blocks)
+                short_horizon_actions_discarded = sum(int(db.parse_json(row["payload_json"], {}).get("remaining_actions_discarded", 0)) for row in short_horizon_invalidations)
                 decisions = db.all(
                     "SELECT initial_valid,final_valid,repair_attempts,validation_error_class FROM structured_decisions WHERE task_id=? ORDER BY created_at,rowid",
                     (created["id"],),
@@ -313,9 +319,14 @@ class HorizonControlRunner:
                     "llm_calls": int(task.get("llm_call_count") or 0),
                     "invalid_structured_outputs": sum(1 for row in decisions if not row["final_valid"]) if decisions else int(not actions and mode != "full_plan"),
                     "repair_attempts": sum(1 for call in model_calls if call["purpose"].endswith("_repair")),
-                    "false_stops": len([row for row in db.all("SELECT event_type FROM execution_traces WHERE task_id=?", (created["id"],)) if row["event_type"] == "cognition.false_stop"]),
-                    "stagnation_events": len([row for row in db.all("SELECT event_type FROM execution_traces WHERE task_id=?", (created["id"],)) if row["event_type"] == "cognition.stagnation"]),
-                    "action_loops": len([row for row in db.all("SELECT event_type FROM execution_traces WHERE task_id=?", (created["id"],)) if row["event_type"] == "cognition.action_loop"]),
+                    "false_stops": len([row for row in horizon_trace_rows if row["event_type"] == "cognition.false_stop"]),
+                    "short_horizon_blocks": len(short_horizon_blocks),
+                    "short_horizon_blocks_invalidated": len(short_horizon_invalidations),
+                    "short_horizon_actions_planned": short_horizon_actions_planned,
+                    "short_horizon_actions_executed": len(short_horizon_executions),
+                    "short_horizon_actions_discarded": short_horizon_actions_discarded,
+                    "stagnation_events": len([row for row in horizon_trace_rows if row["event_type"] == "cognition.stagnation"]),
+                    "action_loops": len([row for row in horizon_trace_rows if row["event_type"] == "cognition.action_loop"]),
                     "duration_ms": int((monotonic() - started) * 1000),
                 }
                 traces.append(trace)

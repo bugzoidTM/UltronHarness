@@ -182,6 +182,12 @@ class ShortHorizonDecision(BaseModel):
     actions: list[NextAction] = Field(min_length=1, max_length=3)
 
 
+class BlockValidityResult(BaseModel):
+    valid: bool
+    reason: str
+    invalidated_from_index: int | None = Field(default=None, ge=0)
+
+
 class OrientationSnapshot(BaseModel):
     mission_id: str
     seed: int | None = None
