@@ -451,6 +451,7 @@ async def test_e2e_behavioral_contract_same_perception_before_first_decision(tmp
     fixture_hashes_by_mode: dict[str, str] = {}
     tool_calls_before_decision: dict[str, int] = {}
     prompts_by_mode: dict[str, str] = {}
+    first_llm_requests: dict[str, list[dict[str, Any]]] = {}
 
     for mode in ("full_plan", "short_horizon", "next_action"):
         # Prepara workspace isolado com fixture equivalente
@@ -492,8 +493,7 @@ async def test_e2e_behavioral_contract_same_perception_before_first_decision(tmp
         tool_calls_before_decision[mode] = tool_count
 
         if captured_prompts:
-            user_msg = next((m["content"] for m in captured_prompts[0]["messages"] if m["role"] == "user"), "")
-            prompts_by_mode[mode] = user_msg
+            first_llm_requests[mode] = captured_prompts[0]["messages"]
 
     # Validações do Contrato Comportamental:
     # 1. Hashes de fixture são estritamente iguais
@@ -514,6 +514,34 @@ async def test_e2e_behavioral_contract_same_perception_before_first_decision(tmp
     assert all(count == 0 for count in tool_calls_before_decision.values()), (
         f"Controladores executaram ferramentas antes da decisão: {tool_calls_before_decision}"
     )
+
+    # 5. O que efetivamente chegou ao modelo na PRIMEIRA chamada LLM de cada modo deve ser canonicamente idêntico
+    def extract_initial_environment_information(messages: list[dict[str, Any]]) -> str:
+        for msg in messages:
+            content = str(msg.get("content", ""))
+            if "Observação inicial do ambiente:" in content:
+                parts = content.split("Observação inicial do ambiente:", 1)[1]
+                lines = []
+                for line in parts.split("\n"):
+                    if line.strip().startswith(("Memórias", "Ferramentas autorizadas", "Ferramentas", "Subobjetivo", "Contrato", "Orçamento", "Fatos conhecidos", "Outline:", "Contexto:")):
+                        break
+                    lines.append(line)
+                extracted = "\n".join(lines).strip()
+                if extracted:
+                    return extracted
+        return ""
+
+    info_a = extract_initial_environment_information(first_llm_requests["full_plan"])
+    info_b = extract_initial_environment_information(first_llm_requests["short_horizon"])
+    info_c = extract_initial_environment_information(first_llm_requests["next_action"])
+
+    assert info_a != "", "full_plan não continha observação inicial do ambiente na 1ª chamada LLM"
+    assert info_b != "", "short_horizon não continha observação inicial do ambiente na 1ª chamada LLM"
+    assert info_c != "", "next_action não continha observação inicial do ambiente na 1ª chamada LLM"
+    assert canonical_json(info_a) == canonical_json(info_b) == canonical_json(info_c), (
+        f"Percepção ambiental da 1ª chamada LLM divergiu!\nA: {info_a}\nB: {info_b}\nC: {info_c}"
+    )
+
 
 
 # ---------------------------------------------------------------------------
@@ -680,3 +708,67 @@ async def test_closed_loop_cannot_gain_extra_initial_observation(tmp_path: Path)
     assert len(executed_tools) == 0, f"Tools executadas inesperadamente: {executed_tools}"
     assert snap.recent_observations == ["file1.py\nfile2.py"]
     assert snap.iteration == 0
+
+
+@pytest.mark.asyncio
+async def test_orientation_service_uses_real_tool_registry_handler(tmp_path: Path) -> None:
+    workspace = tmp_path / "ws_real_tools"
+    workspace.mkdir(parents=True)
+    (workspace / "a.py").write_text("print('a')", encoding="utf-8")
+    (workspace / "b.txt").write_text("content", encoding="utf-8")
+
+    settings = Settings(raw=deepcopy(load_settings(ROOT).raw), root_dir=tmp_path)
+    tools = ToolRegistry(settings)
+
+    task = {
+        "id": "forge_handler_test",
+        "allowed_tools": ["file.list", "python.execute"],
+        "action_budget": [5, 10],
+    }
+
+    service = EnvironmentOrientationService(tools)
+    snapshot = await service.build(task, seed=53, workspace_path=workspace, tools=tools)
+
+    assert len(snapshot.observations) == 1
+    assert "a.py" in snapshot.observations[0]
+    assert "b.txt" in snapshot.observations[0]
+    assert snapshot.allowed_tools == ["file.list", "python.execute"]
+
+
+def test_ref_fixture_mismatch_invalidates_measurement() -> None:
+    runner_traces = [
+        {
+            "mission_id": "forge_01",
+            "controller_mode": "full_plan",
+            "orientation_observation_hash": "hash_aaa",
+            "ref_fixture_hash": "ref_fix_000",
+            "initial_fixture_hash": "ref_fix_000",
+        },
+        {
+            "mission_id": "forge_01",
+            "controller_mode": "short_horizon",
+            "orientation_observation_hash": "hash_aaa",
+            "ref_fixture_hash": "ref_fix_000",
+            "initial_fixture_hash": "corrupted_mode_fixture_hash",
+        },
+        {
+            "mission_id": "forge_01",
+            "controller_mode": "next_action",
+            "orientation_observation_hash": "hash_aaa",
+            "ref_fixture_hash": "ref_fix_000",
+            "initial_fixture_hash": "ref_fix_000",
+        },
+    ]
+
+    invalidation_reasons: list[str] = []
+    by_mission: dict[str, list[dict]] = {}
+    for trace in runner_traces:
+        by_mission.setdefault(trace["mission_id"], []).append(trace)
+
+    for mid, m_traces in by_mission.items():
+        fixture_hashes = {t["initial_fixture_hash"] for t in m_traces}
+        ref_f_hash = m_traces[0].get("ref_fixture_hash")
+        if len(fixture_hashes) > 1 or any(h != ref_f_hash for h in fixture_hashes):
+            invalidation_reasons.append("initial_fixture_mismatch")
+
+    assert "initial_fixture_mismatch" in invalidation_reasons

@@ -74,22 +74,32 @@ class EnvironmentOrientationService:
         evidence_refs: list[str] = []
 
         # Regra do PRD: Apenas file.list se expressamente autorizada na missão
+        registry = tools or self.tools
         if "file.list" in allowed_tools and workspace_path is not None and workspace_path.exists():
-            target = workspace_path
-            entries: list[str] = []
-            for item in target.rglob("*"):
-                try:
-                    rel = item.relative_to(target)
-                    if len(rel.parts) <= 4:
-                        entries.append(str(rel).replace("\\", "/") + ("/" if item.is_dir() else ""))
-                except ValueError:
-                    continue
+            if registry is not None and "file.list" in registry.handlers:
+                result = await registry.handlers["file.list"]({"path": "."}, workspace_path)
+                if result.ok and result.output:
+                    raw_observations.append(result.output)
+                    evidence_refs.append("initial_environment_observation")
+            else:
+                target = workspace_path
+                entries: list[str] = []
+                for item in target.rglob("*"):
+                    try:
+                        rel = item.relative_to(target)
+                        if len(rel.parts) <= 4:
+                            entries.append(str(rel).replace("\\", "/") + ("/" if item.is_dir() else ""))
+                    except ValueError:
+                        continue
 
-            sorted_entries = sorted(entries)[:1000]
-            if sorted_entries:
-                listing_str = "\n".join(sorted_entries)
-                raw_observations.append(listing_str)
-                evidence_refs.append("initial_environment_observation")
+                sorted_entries = sorted(entries)[:1000]
+                if sorted_entries:
+                    raw_observations.append("\n".join(sorted_entries))
+                    evidence_refs.append("initial_environment_observation")
+        else:
+            # Sem tool call: ferramenta desautorizada ou workspace não fornecido
+            raw_observations = []
+            evidence_refs = []
 
         normalized_obs = normalize_observations(raw_observations)
 

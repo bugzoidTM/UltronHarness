@@ -572,7 +572,7 @@ class Orchestrator:
         task_id = str(task["id"])
         await self.events.emit("cognition.iteration.started", {"mode": self.settings.controller_mode}, task_id)
         snapshot = await self.horizon.ensure_initial_observation(task, orientation=orientation)
-        outline = await self.horizon.create_outline(task)
+        outline = await self.horizon.create_outline(task, snapshot=snapshot, orientation=orientation)
         if outline:
             self._trace(task_id, "mission_outline.created", payload=outline.model_dump(mode="json"))
         invalid_decisions = 0

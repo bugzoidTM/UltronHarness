@@ -199,10 +199,21 @@ class RecedingHorizonController:
         await self.events.emit("cognition.state.updated", {"iteration": updated.iteration}, str(task["id"]))
         return updated
 
-    async def create_outline(self, task: dict[str, Any]) -> MissionOutline | None:
+    async def create_outline(
+        self,
+        task: dict[str, Any],
+        *,
+        snapshot: CognitiveStateSnapshot | None = None,
+        orientation: OrientationSnapshot | None = None,
+    ) -> MissionOutline | None:
+        obs_text = "nenhuma"
+        if orientation and orientation.observations:
+            obs_text = "\n".join(orientation.observations)
+        elif snapshot and snapshot.recent_observations:
+            obs_text = "\n".join(snapshot.recent_observations)
         prompt = [
             {"role": "system", "content": "Crie apenas subobjetivos amplos. Não invente caminhos, argumentos ou resultados futuros. Responda no schema MissionOutline."},
-            {"role": "user", "content": f"Objetivo: {task['objective']}\nFerramentas autorizadas: {task.get('allowed_tools')}"},
+            {"role": "user", "content": f"Objetivo: {task['objective']}\nObservação inicial do ambiente:\n{obs_text}\nFerramentas autorizadas: {task.get('allowed_tools')}"},
         ]
         try:
             return await self.models.structured(
@@ -228,6 +239,7 @@ class RecedingHorizonController:
         if self._has_unobserved_action(str(task["id"])):
             raise RuntimeError("OBSERVATION_REQUIRED_BEFORE_NEXT_DECISION")
         current_subgoal = self._subgoal(outline, snapshot.current_subgoal_id)
+        obs_text = "\n".join(snapshot.recent_observations) if snapshot.recent_observations else "nenhuma"
         prompt = [
             {
                 "role": "system",
@@ -237,6 +249,7 @@ class RecedingHorizonController:
                 "role": "user",
                 "content": (
                     f"Objetivo: {task['objective']}\nSubobjetivo atual: {current_subgoal}\n"
+                    f"Observação inicial do ambiente:\n{obs_text}\n"
                     f"Outline: {[item.description for item in outline.subgoals] if outline else []}\n"
                     f"Ferramentas autorizadas: {task.get('allowed_tools')}\nOrçamento restante: {snapshot.remaining_action_budget}\n"
                     f"Fatos conhecidos: {snapshot.known_facts[-self._limit('max_known_facts') :]}\n"
@@ -263,9 +276,10 @@ class RecedingHorizonController:
     ) -> ShortHorizonDecision:
         if self._has_unobserved_action(str(task["id"])):
             raise RuntimeError("OBSERVATION_REQUIRED_BEFORE_NEXT_DECISION")
+        obs_text = "\n".join(snapshot.recent_observations) if snapshot.recent_observations else "nenhuma"
         prompt = [
             {"role": "system", "content": "Escolha um bloco de uma a três ações locais. Cada ação deve ser executável com as ferramentas autorizadas. O bloco será invalidado se a observação tornar as próximas ações inadequadas. Responda somente no schema ShortHorizonDecision."},
-            {"role": "user", "content": f"Objetivo: {task['objective']}\nFerramentas: {task.get('allowed_tools')}\nOrçamento: {snapshot.remaining_action_budget}\nObservações: {snapshot.recent_observations[-self._limit('recent_observations') :]}\nOutline: {[item.description for item in outline.subgoals] if outline else []}"},
+            {"role": "user", "content": f"Objetivo: {task['objective']}\nObservação inicial do ambiente:\n{obs_text}\nFerramentas: {task.get('allowed_tools')}\nOrçamento: {snapshot.remaining_action_budget}\nObservações: {snapshot.recent_observations[-self._limit('recent_observations') :]}\nOutline: {[item.description for item in outline.subgoals] if outline else []}"},
         ]
         return await self.models.structured(
             ShortHorizonDecision,

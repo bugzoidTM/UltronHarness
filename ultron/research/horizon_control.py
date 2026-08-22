@@ -152,6 +152,7 @@ class HorizonControlRunner:
             ref_tools = ToolRegistry(self.settings)
             ref_workspace_path = ref_tools.workspace_for(ref_workspace)
             evaluator.prepare(ref_workspace_path, task_id, contracts[task_id])
+            ref_fixture_hash = compute_fixture_hash(ref_workspace_path)
 
             orientation_snapshot = await orientation_service.build(
                 mission,
@@ -249,6 +250,7 @@ class HorizonControlRunner:
                     "orientation_observation_hash": orientation_observation_hash,
                     "orientation_hash": orientation_observation_hash,
                     "orientation_shared_verified": bool(db.one("SELECT 1 FROM horizon_orientations WHERE run_id=? AND mission_id=? AND seed=? AND orientation_hash=?", (run_id, task_id, self.seed, orientation_observation_hash))),
+                    "ref_fixture_hash": ref_fixture_hash,
                     "initial_fixture_hash": initial_fixture_hash,
                     "orientation_tool_calls": orientation_tool_calls,
                     "agent_tool_calls": agent_tool_calls,
@@ -311,7 +313,8 @@ class HorizonControlRunner:
             if len(orient_hashes) > 1:
                 invalidation_reasons.append("orientation_observation_mismatch")
             fixture_hashes = {t["initial_fixture_hash"] for t in m_traces}
-            if len(fixture_hashes) > 1:
+            ref_f_hash = m_traces[0].get("ref_fixture_hash")
+            if len(fixture_hashes) > 1 or any(h != ref_f_hash for h in fixture_hashes):
                 invalidation_reasons.append("initial_fixture_mismatch")
 
         summaries = {mode: self._summarize([trace for trace in traces if trace["controller_mode"] == mode]) for mode in modes}
