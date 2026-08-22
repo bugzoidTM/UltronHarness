@@ -26,8 +26,15 @@ class ProgressTracker:
         normalized = [_UUID.sub("<id>", item) for item in observations[-8:]]
         return hashlib.sha256("\n".join(normalized).encode("utf-8")).hexdigest()
 
+    @staticmethod
+    def action_signature(tool: str | None, arguments: dict[str, Any]) -> str:
+        """Identidade de uma ação repetida, independente do histórico acumulado de observações."""
+        payload = json.dumps({"tool": tool, "arguments": arguments}, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
     @classmethod
     def signature(cls, tool: str | None, arguments: dict[str, Any], observations: list[str]) -> str:
+        """Identidade de ação no estado observável atual, usada pela guarda pós-reorientação."""
         payload = json.dumps({"tool": tool, "arguments": arguments, "observable_state": cls.stable_digest(observations)}, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
@@ -44,11 +51,11 @@ class ProgressTracker:
         progressed = novel or subgoal_completed
         reasons = (["new_observation"] if novel else []) + (["subgoal_verified"] if subgoal_completed else [])
         signal = ProgressSignal(progressed=progressed, reasons=reasons, evidence_refs=[])
-        signature = self.signature(tool, arguments, observations)
+        action_signature = self.action_signature(tool, arguments)
         if progressed:
             self.stagnant_iterations = 0
-            self.action_counts[signature] = 0
+            self.action_counts[action_signature] = 0
             return False, False, signal
         self.stagnant_iterations += 1
-        self.action_counts[signature] = self.action_counts.get(signature, 0) + 1
-        return self.action_counts[signature] >= self.action_loop_limit, self.stagnant_iterations >= self.stagnation_limit, signal
+        self.action_counts[action_signature] = self.action_counts.get(action_signature, 0) + 1
+        return self.action_counts[action_signature] >= self.action_loop_limit, self.stagnant_iterations >= self.stagnation_limit, signal

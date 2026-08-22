@@ -17,7 +17,6 @@ from ultron.schemas import (
     CognitiveStateSnapshot,
     MissionOutline,
     NextAction,
-    ProgressSignal,
     ReorientationDecision,
     ShortHorizonDecision,
     TaskCreate,
@@ -95,9 +94,11 @@ def _install_tool_executor(
     executed: list[str],
     *,
     status_by_code: dict[str, str] | None = None,
+    output_by_code: dict[str, str] | None = None,
     on_execute=None,
 ) -> None:
     status_by_code = status_by_code or {}
+    output_by_code = output_by_code or {}
 
     async def execute(task_id: str, call: ToolCall) -> dict[str, Any]:
         code = str(call.arguments.get("code"))
@@ -106,7 +107,7 @@ def _install_tool_executor(
         if on_execute is not None:
             await on_execute(task_id, code)
         status = status_by_code.get(code, "completed")
-        return {"status": status, "output": code, "error": f"{code} failed" if status == "failed" else None}
+        return {"status": status, "output": output_by_code.get(code, code), "error": f"{code} failed" if status == "failed" else None}
 
     orchestrator.horizon.execute_tool = execute
 
@@ -332,10 +333,10 @@ async def test_stagnation_triggers_structured_reorientation_and_changes_next_sho
     executed: list[str] = []
     blocks = [
         _block(_action("a1")),
-        _block(_action("a1")),
-        _block(_action("a1")),
-        _block(_action("a1")),
-        _block(_action("a1")),
+        _block(_action("a2")),
+        _block(_action("a3")),
+        _block(_action("a4")),
+        _block(_action("a5")),
         _block(_action("b1")),
         _block(_action("stop", stop=True)),
     ]
@@ -357,7 +358,11 @@ async def test_stagnation_triggers_structured_reorientation_and_changes_next_sho
         return blocks.pop(0)
 
     orchestrator.models.structured = structured  # type: ignore[method-assign]
-    _install_tool_executor(orchestrator, executed)
+    _install_tool_executor(
+        orchestrator,
+        executed,
+        output_by_code={"a1": "sem mudança", "a2": "sem mudança", "a3": "sem mudança", "a4": "sem mudança", "a5": "sem mudança"},
+    )
     task = await orchestrator.create_task(
         TaskCreate(
             title="Reorientar após estagnação",
@@ -372,7 +377,7 @@ async def test_stagnation_triggers_structured_reorientation_and_changes_next_sho
 
     await _run(orchestrator, task)
 
-    assert executed == ["a1", "a1", "a1", "a1", "a1", "b1"]
+    assert executed == ["a1", "a2", "a3", "a4", "a5", "b1"]
     assert schemas.count(ReorientationDecision) == 1
     assert schemas.count(ShortHorizonDecision) == 7
     assert new_strategy in short_prompts[5]
@@ -394,33 +399,21 @@ async def test_stagnation_triggers_structured_reorientation_and_changes_next_sho
 
 
 @pytest.mark.asyncio
-async def test_action_loop_triggers_structured_reorientation_and_changes_next_short_horizon_strategy(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    class ImmediateActionLoop:
-        def __init__(self) -> None:
-            self.calls = 0
-
-        @staticmethod
-        def signature(tool, arguments, observations) -> str:
-            return repr((tool, arguments, observations[-8:]))
-
-        def assess(self, **_kwargs):
-            self.calls += 1
-            if self.calls == 1:
-                return True, False, ProgressSignal(progressed=False, reasons=["repeated_action"], evidence_refs=[])
-            return False, False, ProgressSignal(progressed=True, reasons=["new_action"], evidence_refs=[])
-
-        def reset_for_reorientation(self) -> None:
-            return None
-
-    monkeypatch.setattr("ultron.core.orchestrator.ProgressTracker", ImmediateActionLoop)
+async def test_real_action_loop_triggers_structured_reorientation_and_changes_next_short_horizon_strategy(tmp_path: Path) -> None:
     orchestrator = _orchestrator(tmp_path)
     schemas: list[type] = []
     short_prompts: list[str] = []
     executed: list[str] = []
     new_strategy = "Trocar a ação repetida por uma inspeção b1 verificável."
-    blocks = [_block(_action("a1")), _block(_action("a1")), _block(_action("b1")), _block(_action("stop", stop=True))]
+    blocks = [
+        _block(_action("a1")),
+        _block(_action("a1")),
+        _block(_action("a1")),
+        _block(_action("a1")),
+        _block(_action("a1")),
+        _block(_action("b1")),
+        _block(_action("stop", stop=True)),
+    ]
 
     async def structured(schema, messages, **_kwargs):
         if schema is MissionOutline:
@@ -431,7 +424,7 @@ async def test_action_loop_triggers_structured_reorientation_and_changes_next_sh
                 trigger="action_loop",
                 abandon_strategy="Repetir a mesma ação python.execute sem evidência nova.",
                 new_strategy=new_strategy,
-                rationale="A assinatura da ação permaneceu repetida no mesmo estado observável.",
+                rationale="A mesma ação falhou repetidamente sem evidência nova.",
             )
         assert schema is ShortHorizonDecision
         short_prompts.append(messages[-1]["content"])
@@ -441,34 +434,33 @@ async def test_action_loop_triggers_structured_reorientation_and_changes_next_sh
     _install_tool_executor(orchestrator, executed)
     task = await orchestrator.create_task(
         TaskCreate(
-            title="Reorientar após loop",
-            objective="Trocar de ação após loop detectado.",
-            workspace="reorientation_loop",
+            title="Reorientar após loop real",
+            objective="Trocar de ação após repetição real detectada.",
+            workspace="reorientation_real_loop",
             autonomy_mode=4,
             allowed_tools=["python.execute"],
-            action_budget=(1, 4),
+            action_budget=(1, 8),
             requires_external_outcome=True,
         )
     )
 
     await _run(orchestrator, task)
 
-    assert executed == ["a1", "b1"]
+    assert executed == ["a1", "a1", "a1", "a1", "b1"]
     assert schemas.count(ReorientationDecision) == 1
-    assert schemas.count(ShortHorizonDecision) == 4
-    assert new_strategy in short_prompts[1]
-    trace = orchestrator.db.one(
-        "SELECT payload_json FROM execution_traces WHERE task_id=? AND event_type='cognition.reorientation'",
+    assert schemas.count(ShortHorizonDecision) == 7
+    assert new_strategy in short_prompts[5]
+    traces = orchestrator.db.all(
+        "SELECT event_type,payload_json FROM execution_traces WHERE task_id=? ORDER BY created_at,rowid",
         (task["id"],),
     )
-    assert trace is not None
-    assert orchestrator.db.parse_json(trace["payload_json"], {})["trigger"] == "action_loop"
-    rejected = orchestrator.db.one(
-        "SELECT payload_json FROM execution_traces WHERE task_id=? AND event_type='cognition.reorientation.action_rejected'",
-        (task["id"],),
-    )
-    assert rejected is not None
-    assert orchestrator.db.parse_json(rejected["payload_json"], {})["reason"] == "REPEATS_TRIGGER_ACTION_IN_SAME_STATE"
+    event_types = [row["event_type"] for row in traces]
+    assert "cognition.action_loop" in event_types
+    assert "cognition.stagnation" not in event_types
+    reorientation = next(orchestrator.db.parse_json(row["payload_json"], {}) for row in traces if row["event_type"] == "cognition.reorientation")
+    assert reorientation["trigger"] == "action_loop"
+    rejected = next(orchestrator.db.parse_json(row["payload_json"], {}) for row in traces if row["event_type"] == "cognition.reorientation.action_rejected")
+    assert rejected["reason"] == "REPEATS_TRIGGER_ACTION_IN_SAME_STATE"
     assert orchestrator.get_task(task["id"])["status"] == "waiting_outcome"
 
 
