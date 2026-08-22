@@ -220,7 +220,7 @@ class ModelGateway:
         model_name: str | None = None,
         *,
         on_response: Callable[[ModelResponse, bool], Awaitable[None]] | None = None,
-        on_decision: Callable[[bool, bool, int, str | None], Awaitable[None]] | None = None,
+        on_decision: Callable[[bool, bool, int, str | None, str | None], Awaitable[None]] | None = None,
         repair_attempts: int | None = None,
         **kwargs: Any,
     ) -> T:
@@ -230,13 +230,23 @@ class ModelGateway:
         response: ModelResponse | None = None
         validation_error: ValidationError | ValueError | None = None
         for attempt in range(attempts + 1):
-            response = await self.generate(
-                current_messages,
-                model_name,
-                json_mode=True,
-                json_schema=schema_json,
-                **kwargs,
-            )
+            try:
+                response = await self.generate(
+                    current_messages,
+                    model_name,
+                    json_mode=True,
+                    json_schema=schema_json,
+                    **kwargs,
+                )
+            except (ValidationError, ValueError):
+                raise  # re-raise validation errors from inner layers unchanged
+            except Exception as gen_exc:
+                # Provider / generation failure — record exactly one telemetry row
+                if on_decision:
+                    res = on_decision(False, False, attempt, type(gen_exc).__name__, "GENERATION_ERROR")
+                    if inspect.isawaitable(res):
+                        await res
+                raise
             if on_response:
                 res = on_response(response, attempt > 0)
                 if inspect.isawaitable(res):
@@ -244,7 +254,7 @@ class ModelGateway:
             try:
                 parsed = schema.model_validate_json(response.content)
                 if on_decision:
-                    res = on_decision(attempt == 0, True, attempt, None)
+                    res = on_decision(attempt == 0, True, attempt, None, None)
                     if inspect.isawaitable(res):
                         await res
                 return parsed
@@ -252,7 +262,7 @@ class ModelGateway:
                 validation_error = exc
                 if attempt >= attempts:
                     if on_decision:
-                        res = on_decision(False, False, attempt, type(exc).__name__)
+                        res = on_decision(False, False, attempt, type(exc).__name__, "VALIDATION_ERROR")
                         if inspect.isawaitable(res):
                             await res
                     raise

@@ -59,6 +59,38 @@ class MockSequenceGateway(ModelGateway):
         )
 
 
+class MockFailingGateway(ModelGateway):
+    """Gateway que falha com exceção de provider após N respostas bem-sucedidas.
+
+    fail_after_n_calls=0 → falha na primeira chamada generate().
+    fail_after_n_calls=1 → primeira chamada OK, segunda falha (simula erro durante repair).
+    """
+
+    def __init__(self, responses_before_failure: list[str], error: Exception | None = None) -> None:
+        raw_settings = load_settings(ROOT).raw
+        raw_settings["models"]["primary"] = "mock-fail"
+        super().__init__(Settings(raw=raw_settings, root_dir=ROOT))
+        self._responses = list(responses_before_failure)
+        self._error = error or ConnectionError("provider unavailable")
+        self.call_count = 0
+
+    async def generate(self, messages: list[dict[str, str]], model_name: str | None = None, **kwargs: Any) -> ModelResponse:
+        if self._responses:
+            content = self._responses.pop(0)
+            self.call_count += 1
+            return ModelResponse(
+                content=content,
+                tool_calls=[],
+                usage=Usage(prompt_tokens=10, output_tokens=10),
+                latency_ms=5,
+                model="mock-fail",
+                finish_reason="stop",
+                local=True,
+            )
+        self.call_count += 1
+        raise self._error
+
+
 async def _build_env(tmp_path: Path, mode: str, gateway: ModelGateway) -> tuple[Database, Orchestrator, dict[str, Any]]:
     raw = deepcopy(load_settings(ROOT).raw)
     raw["controller_mode"] = mode
@@ -90,6 +122,7 @@ async def _build_env(tmp_path: Path, mode: str, gateway: ModelGateway) -> tuple[
             autonomy_mode=4,
             allowed_tools=["file.write", "file.read"],
             action_budget=[3, 5],
+            requires_external_outcome=True,
         )
     )
     return db, orchestrator, task
@@ -430,3 +463,179 @@ async def test_triad_universal_structured_telemetry_across_all_modes(tmp_path: P
             assert d["repair_attempts"] == 0
             assert d["validation_error_class"] is None
 
+
+# ===========================================================================
+# 5. Generation / Provider Error Telemetry
+#    Verifica que exceções de provider (timeout, connection error) produzem
+#    exatamente 1 structured_decisions row com error_category=GENERATION_ERROR,
+#    sem confundir com erro de validação Pydantic.
+# ===========================================================================
+
+
+@pytest.mark.asyncio
+async def test_full_plan_generation_error_first_attempt(tmp_path: Path) -> None:
+    """Provider falha na primeira chamada generate() durante _make_plan."""
+    gateway = MockFailingGateway([], error=ConnectionError("ollama crash"))
+    db, orchestrator, task = await _build_env(tmp_path, "full_plan", gateway)
+
+    await _run_task(orchestrator, task["id"])
+
+    rows = db.all("SELECT * FROM structured_decisions WHERE task_id=? AND decision_kind='plan'", (task["id"],))
+    assert len(rows) == 1, f"Esperava exatamente 1 row para generation error, obtido {len(rows)}"
+    row = rows[0]
+    assert row["initial_valid"] == 0
+    assert row["final_valid"] == 0
+    assert row["repair_attempts"] == 0
+    assert row["validation_error_class"] == "ConnectionError"
+    assert row["error_category"] == "GENERATION_ERROR"
+
+
+@pytest.mark.asyncio
+async def test_full_plan_generation_error_during_repair(tmp_path: Path) -> None:
+    """Validação falha na primeira tentativa; provider falha na segunda (durante repair)."""
+    invalid_json = '{"invalido": 1}'
+    gateway = MockFailingGateway([invalid_json], error=TimeoutError("read timeout"))
+    db, orchestrator, task = await _build_env(tmp_path, "full_plan", gateway)
+
+    await _run_task(orchestrator, task["id"])
+
+    rows = db.all("SELECT * FROM structured_decisions WHERE task_id=? AND decision_kind='plan'", (task["id"],))
+    assert len(rows) == 1, f"Esperava exatamente 1 row, obtido {len(rows)}"
+    row = rows[0]
+    assert row["initial_valid"] == 0
+    assert row["final_valid"] == 0
+    assert row["repair_attempts"] == 1
+    assert row["validation_error_class"] == "TimeoutError"
+    assert row["error_category"] == "GENERATION_ERROR"
+
+
+@pytest.mark.asyncio
+async def test_short_horizon_generation_error_first_attempt(tmp_path: Path) -> None:
+    """Provider falha na primeira chamada generate() em decide_short_horizon."""
+    outline = '{"objective": "teste", "subgoals": [{"id": 1, "description": "criar"}]}'
+    gateway = MockFailingGateway([outline], error=ConnectionError("provider down"))
+    db, orchestrator, task = await _build_env(tmp_path, "short_horizon", gateway)
+
+    await _run_task(orchestrator, task["id"])
+
+    rows = db.all("SELECT * FROM structured_decisions WHERE task_id=? AND decision_kind='short_horizon'", (task["id"],))
+    assert len(rows) >= 1, f"Esperava >= 1 row para generation error, obtido {len(rows)}"
+    row = rows[0]
+    assert row["initial_valid"] == 0
+    assert row["final_valid"] == 0
+    assert row["repair_attempts"] == 0
+    assert row["validation_error_class"] == "ConnectionError"
+    assert row["error_category"] == "GENERATION_ERROR"
+    # Todas as rows devem ser GENERATION_ERROR (iterações re-tentadas pelo controller)
+    assert all(r["error_category"] == "GENERATION_ERROR" for r in rows)
+
+
+@pytest.mark.asyncio
+async def test_short_horizon_generation_error_during_repair(tmp_path: Path) -> None:
+    """Validação falha; provider falha na repair attempt."""
+    outline = '{"objective": "teste", "subgoals": [{"id": 1, "description": "criar"}]}'
+    invalid_block = '{"invalido": 1}'
+    gateway = MockFailingGateway([outline, invalid_block], error=TimeoutError("timeout"))
+    db, orchestrator, task = await _build_env(tmp_path, "short_horizon", gateway)
+
+    await _run_task(orchestrator, task["id"])
+
+    rows = db.all("SELECT * FROM structured_decisions WHERE task_id=? AND decision_kind='short_horizon'", (task["id"],))
+    assert len(rows) >= 1, f"Esperava >= 1 row, obtido {len(rows)}"
+    row = rows[0]
+    assert row["initial_valid"] == 0
+    assert row["final_valid"] == 0
+    assert row["validation_error_class"] in ("TimeoutError", "ValidationError")
+    assert row["error_category"] in ("GENERATION_ERROR", "VALIDATION_ERROR")
+    # Pelo menos uma row deve ser GENERATION_ERROR (a que capturou o erro de provider)
+    assert any(r["error_category"] == "GENERATION_ERROR" for r in rows)
+
+
+@pytest.mark.asyncio
+async def test_next_action_generation_error_first_attempt(tmp_path: Path) -> None:
+    """Provider falha na primeira chamada generate() em decide_next_action."""
+    outline = '{"objective": "teste", "subgoals": [{"id": 1, "description": "criar"}]}'
+    gateway = MockFailingGateway([outline], error=OSError("connection reset"))
+    db, orchestrator, task = await _build_env(tmp_path, "next_action", gateway)
+
+    await _run_task(orchestrator, task["id"])
+
+    rows = db.all("SELECT * FROM structured_decisions WHERE task_id=? AND decision_kind='next_action'", (task["id"],))
+    assert len(rows) >= 1, f"Esperava >= 1 row para generation error, obtido {len(rows)}"
+    row = rows[0]
+    assert row["initial_valid"] == 0
+    assert row["final_valid"] == 0
+    assert row["repair_attempts"] == 0
+    assert row["validation_error_class"] == "OSError"
+    assert row["error_category"] == "GENERATION_ERROR"
+    assert all(r["error_category"] == "GENERATION_ERROR" for r in rows)
+
+
+@pytest.mark.asyncio
+async def test_next_action_generation_error_during_repair(tmp_path: Path) -> None:
+    """Validação falha; provider falha na repair attempt."""
+    outline = '{"objective": "teste", "subgoals": [{"id": 1, "description": "criar"}]}'
+    invalid_action = '{"invalido": 1}'
+    gateway = MockFailingGateway([outline, invalid_action], error=TimeoutError("read timeout"))
+    db, orchestrator, task = await _build_env(tmp_path, "next_action", gateway)
+
+    await _run_task(orchestrator, task["id"])
+
+    rows = db.all("SELECT * FROM structured_decisions WHERE task_id=? AND decision_kind='next_action'", (task["id"],))
+    assert len(rows) >= 1, f"Esperava >= 1 row, obtido {len(rows)}"
+    row = rows[0]
+    assert row["initial_valid"] == 0
+    assert row["final_valid"] == 0
+    assert row["validation_error_class"] in ("TimeoutError", "ValidationError")
+    assert row["error_category"] in ("GENERATION_ERROR", "VALIDATION_ERROR")
+    assert any(r["error_category"] == "GENERATION_ERROR" for r in rows)
+
+
+# ===========================================================================
+# 6. Error Category Discrimination
+#    Verifica que validation errors e generation errors coexistem com
+#    error_category distinto, sem confundir as causas.
+# ===========================================================================
+
+
+@pytest.mark.asyncio
+async def test_error_category_distinguishes_validation_from_generation(tmp_path: Path) -> None:
+    """Valida que validation errors recebem VALIDATION_ERROR e generation errors recebem GENERATION_ERROR."""
+    # Todas as tentativas falham com validação → VALIDATION_ERROR
+    invalid_1 = '{"invalido": 1}'
+    invalid_2 = '{"invalido": 2}'
+    invalid_3 = '{"invalido": 3}'
+    gateway_val = MockSequenceGateway([invalid_1, invalid_2, invalid_3])
+    db_val, orch_val, task_val = await _build_env(tmp_path / "val", "full_plan", gateway_val)
+    await _run_task(orch_val, task_val["id"])
+
+    rows_val = db_val.all("SELECT * FROM structured_decisions WHERE task_id=?", (task_val["id"],))
+    assert len(rows_val) == 1
+    assert rows_val[0]["error_category"] == "VALIDATION_ERROR"
+    assert rows_val[0]["validation_error_class"] == "ValidationError"
+
+    # Provider falha na primeira tentativa → GENERATION_ERROR
+    gateway_gen = MockFailingGateway([], error=ConnectionError("boom"))
+    db_gen, orch_gen, task_gen = await _build_env(tmp_path / "gen", "full_plan", gateway_gen)
+    await _run_task(orch_gen, task_gen["id"])
+
+    rows_gen = db_gen.all("SELECT * FROM structured_decisions WHERE task_id=?", (task_gen["id"],))
+    assert len(rows_gen) == 1
+    assert rows_gen[0]["error_category"] == "GENERATION_ERROR"
+    assert rows_gen[0]["validation_error_class"] == "ConnectionError"
+
+    # Sucesso → sem error_category
+    valid_plan = Plan(
+        objective="Criar arquivo output.txt",
+        steps=[PlanStep(id=1, action="Escrever", tool="file.write", arguments={"path": "output.txt", "content": "ok"}, success_condition="file_exists:output.txt")],
+        risks=[],
+        confidence=1.0,
+    ).model_dump_json()
+    gateway_ok = MockSequenceGateway([valid_plan])
+    db_ok, orch_ok, task_ok = await _build_env(tmp_path / "ok", "full_plan", gateway_ok)
+    await _run_task(orch_ok, task_ok["id"])
+
+    rows_ok = db_ok.all("SELECT * FROM structured_decisions WHERE task_id=?", (task_ok["id"],))
+    assert len(rows_ok) == 1
+    assert rows_ok[0]["error_category"] is None
+    assert rows_ok[0]["validation_error_class"] is None

@@ -203,6 +203,7 @@ CREATE TABLE IF NOT EXISTS structured_decisions (
     final_valid INTEGER NOT NULL,
     repair_attempts INTEGER NOT NULL DEFAULT 0,
     validation_error_class TEXT,
+    error_category TEXT,
     model TEXT,
     seed INTEGER,
     created_at TEXT NOT NULL

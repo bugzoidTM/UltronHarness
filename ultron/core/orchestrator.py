@@ -942,8 +942,8 @@ class Orchestrator:
                 seed=self.planning_seed,
                 repair_attempts=int(self.settings.cognition.get("structured_repair_attempts", 2)),
                 on_response=record_response,
-                on_decision=lambda initial, final, repairs, error: self._record_decision(
-                    task, "plan", 1, initial, final, repairs, error
+                on_decision=lambda initial, final, repairs, error, category: self._record_decision(
+                    task, "plan", 1, initial, final, repairs, error, category
                 ),
             )
             self.plan_sources[str(task["id"])] = "model_structured"
@@ -961,9 +961,10 @@ class Orchestrator:
         final: bool,
         repairs: int,
         error: str | None,
+        error_category: str | None = None,
     ) -> None:
         self.db.execute(
-            "INSERT INTO structured_decisions (id,task_id,controller_mode,decision_kind,iteration,initial_valid,final_valid,repair_attempts,validation_error_class,model,seed,created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO structured_decisions (id,task_id,controller_mode,decision_kind,iteration,initial_valid,final_valid,repair_attempts,validation_error_class,error_category,model,seed,created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 str(uuid4()),
                 task["id"],
@@ -974,6 +975,7 @@ class Orchestrator:
                 int(final),
                 repairs,
                 error,
+                error_category,
                 self.models.primary_name,
                 self.planning_seed,
                 utcnow(),
