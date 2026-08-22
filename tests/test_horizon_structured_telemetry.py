@@ -701,3 +701,27 @@ def test_legacy_database_migration_adds_error_category_column(tmp_path: Path) ->
     assert new_row["error_category"] == "GENERATION_ERROR"
     assert new_row["validation_error_class"] == "ConnectionError"
 
+
+# ===========================================================================
+# 8. Generation Stage ValueError Telemetry
+# ===========================================================================
+
+
+@pytest.mark.asyncio
+async def test_generation_value_error_produces_generation_error_telemetry(tmp_path: Path) -> None:
+    """Garante que ValueError vindo de generate() (ex: modelo não registrado, configuração inválida) registra GENERATION_ERROR."""
+    gateway = MockFailingGateway([], error=ValueError("Modelo não registrado: invalid-model"))
+    db, orchestrator, task = await _build_env(tmp_path, "full_plan", gateway)
+
+    await _run_task(orchestrator, task["id"])
+
+    rows = db.all("SELECT * FROM structured_decisions WHERE task_id=? AND decision_kind='plan'", (task["id"],))
+    assert len(rows) == 1, f"Esperava exatamente 1 row para ValueError na geração, obtido {len(rows)}"
+    row = rows[0]
+    assert row["initial_valid"] == 0
+    assert row["final_valid"] == 0
+    assert row["repair_attempts"] == 0
+    assert row["validation_error_class"] == "ValueError"
+    assert row["error_category"] == "GENERATION_ERROR"
+
+

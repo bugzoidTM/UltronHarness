@@ -238,8 +238,6 @@ class ModelGateway:
                     json_schema=schema_json,
                     **kwargs,
                 )
-            except (ValidationError, ValueError):
-                raise  # re-raise validation errors from inner layers unchanged
             except Exception as gen_exc:
                 # Provider / generation failure — record exactly one telemetry row
                 if on_decision:
