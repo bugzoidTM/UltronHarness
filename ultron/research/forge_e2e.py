@@ -6,6 +6,7 @@ import asyncio
 import importlib.util
 import json
 import platform
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from time import monotonic
@@ -52,13 +53,19 @@ class ForgeE2ERunner:
         model_name: str = "ollama_research",
         seed: int = 42,
     ):
-        self.settings = settings
-        self.public_root = public_root or settings.root_dir / "benchmarks" / "forge_e2e_v1"
-        configured = private_root or settings.private_benchmark_root
+        self.settings = Settings(raw=deepcopy(settings.raw), root_dir=settings.root_dir)
+        self.public_root = public_root or self.settings.root_dir / "benchmarks" / "forge_e2e_v1"
+        configured = private_root or self.settings.private_benchmark_root
         if configured is None:
             raise FileNotFoundError("Forge E2E exige raiz privada externa configurada.")
         self.private_root = configured / "forge_e2e_v1" if not (configured / "contracts.json").exists() else configured
+        if model_name not in self.settings.raw["models"]["registry"]:
+            raise ValueError(f"Modelo Forge não registrado: {model_name}")
         self.model_name, self.seed = model_name, seed
+        # O Orchestrator chama ModelGateway.generate() sem model_name. Fixar o
+        # primário nesta cópia é a única forma de tornar --model efetivo.
+        self.settings.raw["models"]["primary"] = self.model_name
+        self.configured_model = str(self.settings.raw["models"]["registry"][self.model_name].get("model", self.model_name))
         self.settings.raw["models"]["timeout_seconds"] = max(300, int(self.settings.raw["models"].get("timeout_seconds", 120)))
         self.db = Database(settings.db_path)
         self.db.initialize()
@@ -69,8 +76,15 @@ class ForgeE2ERunner:
             raise ValueError("Forge E2E v1 exige dez missões públicas")
         return payload
 
-    def _orchestrator(self) -> Orchestrator:
+    def _orchestrator(self, allowed_tools: list[str]) -> Orchestrator:
         models = ModelGateway(self.settings)
+        tools = ToolRegistry(self.settings)
+        allowed = set(allowed_tools)
+        unavailable = allowed.difference(tools.manifests)
+        if unavailable:
+            raise ValueError(f"Ferramentas E2E não registradas: {sorted(unavailable)}")
+        tools.manifests = {name: manifest for name, manifest in tools.manifests.items() if name in allowed}
+        tools.handlers = {name: handler for name, handler in tools.handlers.items() if name in allowed}
         return Orchestrator(
             self.settings,
             self.db,
@@ -78,7 +92,7 @@ class ForgeE2ERunner:
             MemoryService(self.db, self.settings),
             models,
             PolicyEngine(self.settings),
-            ToolRegistry(self.settings),
+            tools,
         )
 
     @staticmethod
@@ -107,7 +121,7 @@ class ForgeE2ERunner:
         for mission in tasks:
             task_id = str(mission["id"])
             workspace = f"forge_{run_id[:8]}_{task_id}"
-            orchestrator = self._orchestrator()
+            orchestrator = self._orchestrator(list(mission["allowed_tools"]))
             workspace_path = orchestrator.tools.workspace_for(workspace)
             evaluator.prepare(workspace_path, task_id, contracts[task_id])
             created = await orchestrator.create_task(
@@ -129,7 +143,10 @@ class ForgeE2ERunner:
                 await active
             task = orchestrator.get_task(created["id"]) or {}
             evaluation = evaluator.evaluate(workspace_path, task_id, contracts[task_id])
-            model_call = self.db.one("SELECT id FROM model_calls WHERE task_id=? AND purpose='planning' ORDER BY created_at DESC LIMIT 1", (created["id"],))
+            model_call = self.db.one(
+                "SELECT id,model,latency_ms,prompt_tokens,output_tokens,finish_reason FROM model_calls WHERE task_id=? AND purpose='planning' ORDER BY created_at DESC LIMIT 1",
+                (created["id"],),
+            )
             approvals = self.db.one("SELECT COUNT(*) AS count FROM approvals WHERE task_id=?", (created["id"],)) or {"count": 0}
             taxonomy = self._failure_taxonomy(self.db, str(created["id"]))
             if task.get("status") == "waiting_approval":
@@ -139,7 +156,11 @@ class ForgeE2ERunner:
                     "mission_id": task_id,
                     "private_evaluator_passed": bool(evaluation.get("passed")),
                     "private_evidence": evaluation.get("evidence", []),
-                    "planner_source": "model" if model_call else "unavailable",
+                    "requested_model_alias": self.model_name,
+                    "configured_model": self.configured_model,
+                    "effective_model": model_call.get("model") if model_call else None,
+                    "model_attribution_verified": bool(model_call and model_call.get("model") == self.configured_model),
+                    "planner_source": orchestrator.plan_sources.get(str(created["id"]), "unavailable"),
                     "internal_task_status": task.get("status"),
                     "steps": int(task.get("step_count") or 0),
                     "replans": int(task.get("replan_count") or 0),
@@ -150,17 +171,26 @@ class ForgeE2ERunner:
                 }
             )
         passed = sum(bool(trace["private_evaluator_passed"]) for trace in traces)
+        invalidation_reasons = []
+        if not all(trace["model_attribution_verified"] for trace in traces):
+            invalidation_reasons.append("model_attribution_unverified")
+        if not all(trace["planner_source"] == "model_structured" for trace in traces):
+            invalidation_reasons.append("planner_not_structured_model_output")
+        measurement_valid = not invalidation_reasons
         payload = {
             "benchmark": "forge_e2e_v1",
             "mode": "generative_real_planner",
-            "model": self.model_name,
+            "requested_model_alias": self.model_name,
+            "configured_model": self.configured_model,
             "seed": self.seed,
             "hardware": platform.platform(),
             "atc": round(passed / len(traces), 6) if traces else 0.0,
             "passed": passed,
             "total": len(traces),
-            "forge_4_passed": passed > 0,
-            "forge_5_candidate": any(trace["replans"] > 0 and trace["private_evaluator_passed"] for trace in traces),
+            "measurement_valid": measurement_valid,
+            "invalidation_reasons": invalidation_reasons,
+            "forge_4_passed": measurement_valid and passed > 0,
+            "forge_5_candidate": measurement_valid and any(trace["replans"] > 0 and trace["private_evaluator_passed"] for trace in traces),
             "traces": traces,
         }
         (artifact_dir / "e2e_generative.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")

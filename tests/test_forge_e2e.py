@@ -25,3 +25,19 @@ def test_e2e_generative_uses_real_planner_and_private_evaluator() -> None:
     assert "planner_source" in source
     assert "._make_plan =" not in source
     assert "._execute_plan =" not in source
+
+
+def test_e2e_runner_fixes_requested_model_on_isolated_gateway_settings(tmp_path: Path) -> None:
+    from copy import deepcopy
+
+    from ultron.configuration import Settings, load_settings
+    from ultron.research.forge_e2e import ForgeE2ERunner
+
+    original = Settings(raw=deepcopy(load_settings(ROOT).raw), root_dir=tmp_path)
+    original_primary = original.raw["models"]["primary"]
+    runner = ForgeE2ERunner(original, private_root=tmp_path, model_name="ollama_research")
+
+    assert original.raw["models"]["primary"] == original_primary
+    assert runner.settings.raw["models"]["primary"] == "ollama_research"
+    assert runner._orchestrator(["file.list", "file.read", "python.execute"]).models.primary_name == "ollama_research"
+    assert runner.configured_model == "qwen2.5:3b"

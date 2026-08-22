@@ -58,6 +58,7 @@ class Orchestrator:
         self.active: dict[str, asyncio.Task[None]] = {}
         self.cancel_events: dict[str, asyncio.Event] = {}
         self.suspended: dict[str, dict[str, Any]] = {}  # Compatibilidade temporária; a fonte de verdade é SQLite.
+        self.plan_sources: dict[str, str] = {}
 
     @staticmethod
     def _serialize_context(context: ContextBuild) -> dict[str, Any]:
@@ -714,8 +715,11 @@ class Orchestrator:
             self.db.execute(
                 "UPDATE tasks SET llm_call_count=llm_call_count+1 WHERE id=?", (task["id"],)
             )
-            return Plan.model_validate_json(response.content)
+            plan = Plan.model_validate_json(response.content)
+            self.plan_sources[str(task["id"])] = "model_structured"
+            return plan
         except Exception:
+            self.plan_sources[str(task["id"])] = "fallback_after_model_error"
             return self._fallback_plan(task)
 
     def _fallback_plan(self, task: dict[str, Any]) -> Plan:
@@ -728,19 +732,34 @@ class Orchestrator:
             )
         ]
         if any(token in objective for token in ("arquivo", "document", "relatório", "relatorio")):
-            steps.append(
-                PlanStep(
-                    id=2,
-                    action="Criar registro inicial no workspace",
-                    tool="file.write",
-                    arguments={
-                        "path": "ultron_task_note.md",
-                        "content": f"# {task['title']}\n\n{task['objective']}\n",
-                    },
-                    success_condition=f"file_contains:ultron_task_note.md::{task['title']}",
-                    risk=RiskLevel.R2,
+            if self.tools.get_manifest("file.write"):
+                steps.append(
+                    PlanStep(
+                        id=2,
+                        action="Criar registro inicial no workspace",
+                        tool="file.write",
+                        arguments={
+                            "path": "ultron_task_note.md",
+                            "content": f"# {task['title']}\n\n{task['objective']}\n",
+                        },
+                        success_condition=f"file_contains:ultron_task_note.md::{task['title']}",
+                        risk=RiskLevel.R2,
+                    )
                 )
-            )
+            elif self.tools.get_manifest("python.execute"):
+                content = repr(f"# {task['title']}\n\n{task['objective']}\n")
+                steps.append(
+                    PlanStep(
+                        id=2,
+                        action="Criar registro inicial via execução isolada",
+                        tool="python.execute",
+                        arguments={
+                            "code": f"from pathlib import Path; Path('ultron_task_note.md').write_text({content}, encoding='utf-8')",
+                        },
+                        success_condition=f"file_contains:ultron_task_note.md::{task['title']}",
+                        risk=RiskLevel.R1,
+                    )
+                )
         steps.append(
             PlanStep(
                 id=len(steps) + 1,

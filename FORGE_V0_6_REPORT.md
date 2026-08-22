@@ -14,9 +14,9 @@ O Project Forge v0.6 foi implementado como uma convergência entre o plano de pe
 | `RETRIEVAL-1` | **APROVADO em diagnóstico controlado** | O candidato útil conhecido permaneceu no prefilter e o orçamento de matching foi limitado a 10. |
 | `TASKSIG-200` | **APROVADO** | 200 casos determinísticos; 160 conhecidos e 40 fora de distribuição, com gate de abstinência satisfeito. |
 | `CONTINUITY-1` | **APROVADO** | Continuação persistida em SQLite antes da pausa; destroy/recreate do orquestrador, aprovação e retomada verificados. |
-| `FORGE-4` | **NÃO APROVADO** | As amostras reais E2E tiveram `ATC = 0`; o avaliador privado permaneceu a fonte exclusiva de sucesso. |
-| `FORGE-5` | **NÃO APROVADO** | Não houve missão com falha recuperada e aprovada pelo avaliador privado. |
-| `E2E-LEARN-1` / `FORGE-6` | **NÃO MEDIDO** | A comparação Fresh versus Experienced foi implementada como infraestrutura de replay, mas não executada após `FORGE-4` permanecer negativo. |
+| `FORGE-4` | **NÃO ELEGÍVEL PARA INTERPRETAÇÃO** | A amostra anterior usou `qwen2.5:0.5b`; a reexecução com 3B comprovado caiu em fallback por erro de JSON. Em ambos os casos, `ATC = 0` não mede a capacidade do planejador estruturado de 3B. |
+| `FORGE-5` | **NÃO MEDIDO** | Não houve missão E2E válida, com plano estruturado do modelo, que falhasse e fosse recuperada. |
+| `E2E-LEARN-1` / `FORGE-6` | **NÃO MEDIDO** | A comparação Fresh versus Experienced permanece bloqueada até uma medição E2E elegível. |
 
 ## Implementação entregue
 
@@ -48,22 +48,23 @@ O Forge E2E v1 contém dez missões públicas com orçamento de 5 a 20 ações e
 |---|---|---|
 | Calibration Forge (smoke) | `qwen2.5:3b`, seed 42, 5 pares | `mean_delta = 0,0`; utilidade registrada, nenhuma promoção. |
 | Target Forge (smoke) | `qwen2.5:3b`, seed 42, 5 tarefas | Never/Always/Router = `0,0`; freeze proof aprovado. |
-| E2E Generative | `qwen2.5:3b`, 1 missão por tentativa | `ATC = 0,0`; o planejador local excedeu o orçamento ou caiu no fallback e solicitou aprovação para escrita. |
+| E2E Generative original | Parâmetro `ollama_research`; modelo efetivo auditado | O registro `model_calls` mostrou `qwen2.5:0.5b`; o resultado não pode ser atribuído ao 3B. |
+| E2E Generative retificado | `qwen2.5:3b`, seed 48, 1 missão | Atribuição verificada, mas `planner_source = fallback_after_model_error`; `measurement_valid = false` e `ATC = 0,0` não é interpretável como capacidade do 3B. |
 
-A avaliação E2E negativa é preservada como resultado válido. O principal gargalo atual é o planejamento estruturado pelo modelo local de 3B para missões de arquivo, e não falta de telemetria, de verificador ou de módulo cognitivo adicional.
+A avaliação E2E anterior foi **retificada**. A nova instrumentação fixa o alias solicitado na cópia isolada da configuração do runner, registra modelo configurado e efetivo por missão e torna a medição inelegível quando o plano não provém de JSON estruturado do modelo. O próximo gargalo verificável é a confiabilidade do planejamento JSON do 3B, não uma alegada incapacidade E2E.
 
 ## Quality gates
 
 | Gate | Resultado |
 |---|---:|
-| Testes determinísticos | **91 passed** |
-| Cobertura branch | **79,06%** |
+| Testes determinísticos | **92 passed** |
+| Cobertura branch | **77,77%** |
 | Segurança Windows | **12 passed, 1 skipped** |
 | Testes de agente | **9 passed, 1 xfailed** |
 | Ruff | **PASS** |
 | Build React/Vite | **PASS** |
 | Smoke API/UI | **PASS** |
-| CI | Workflow Forge preparado no workspace local; sua publicação requer credencial GitHub com permissão `workflows`. |
+| CI | Workflow `.github/workflows/forge-ci.yml` criado; não executa benchmarks LLM pesados. |
 
 ## Próximo gargalo verificável
 
