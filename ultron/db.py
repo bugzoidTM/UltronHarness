@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     allowed_tools_json TEXT,
     action_budget_min INTEGER,
     action_budget_max INTEGER,
+    requires_external_outcome INTEGER NOT NULL DEFAULT 0,
     step_count INTEGER NOT NULL DEFAULT 0,
     replan_count INTEGER NOT NULL DEFAULT 0,
     tool_call_count INTEGER NOT NULL DEFAULT 0,
@@ -95,7 +96,8 @@ CREATE TABLE IF NOT EXISTS memories (
     usefulness REAL NOT NULL DEFAULT 0.5,
     valid_from TEXT,
     valid_until TEXT,
-    superseded_by TEXT
+    superseded_by TEXT,
+    verification_state TEXT NOT NULL DEFAULT 'legacy'
 );
 CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);
 CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(memory_id UNINDEXED, content, summary);
@@ -155,6 +157,41 @@ CREATE TABLE IF NOT EXISTS execution_traces (
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_execution_traces_task ON execution_traces(task_id, created_at);
+
+CREATE TABLE IF NOT EXISTS cognitive_snapshots (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    iteration INTEGER NOT NULL,
+    current_subgoal_id INTEGER,
+    completed_subgoals_json TEXT NOT NULL DEFAULT '[]',
+    known_facts_json TEXT NOT NULL DEFAULT '[]',
+    open_questions_json TEXT NOT NULL DEFAULT '[]',
+    recent_observations_json TEXT NOT NULL DEFAULT '[]',
+    failed_strategies_json TEXT NOT NULL DEFAULT '[]',
+    evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+    tool_calls_used INTEGER NOT NULL DEFAULT 0,
+    remaining_action_budget INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    UNIQUE(task_id, iteration)
+);
+CREATE INDEX IF NOT EXISTS idx_cognitive_snapshots_task_iteration ON cognitive_snapshots(task_id, iteration DESC);
+
+CREATE TABLE IF NOT EXISTS cognitive_actions (
+    id TEXT PRIMARY KEY,
+    action_id TEXT NOT NULL UNIQUE,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    iteration INTEGER NOT NULL,
+    subgoal_id INTEGER,
+    tool TEXT,
+    arguments_json TEXT NOT NULL DEFAULT '{}',
+    expected_evidence_json TEXT NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL,
+    model TEXT,
+    seed INTEGER,
+    created_at TEXT NOT NULL,
+    executed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_cognitive_actions_task_iteration ON cognitive_actions(task_id, iteration, created_at);
 
 CREATE TABLE IF NOT EXISTS skills (
     id TEXT PRIMARY KEY,
@@ -565,6 +602,11 @@ TASK_CONTRACT_MIGRATIONS = {
     "allowed_tools_json": "TEXT",
     "action_budget_min": "INTEGER",
     "action_budget_max": "INTEGER",
+    "requires_external_outcome": "INTEGER NOT NULL DEFAULT 0",
+}
+
+MEMORY_VERIFICATION_MIGRATIONS = {
+    "verification_state": "TEXT NOT NULL DEFAULT 'legacy'",
 }
 
 
@@ -610,6 +652,10 @@ class Database:
             for name, definition in TASK_CONTRACT_MIGRATIONS.items():
                 if name not in task_columns:
                     connection.execute(f"ALTER TABLE tasks ADD COLUMN {name} {definition}")
+            memory_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(memories)")}
+            for name, definition in MEMORY_VERIFICATION_MIGRATIONS.items():
+                if name not in memory_columns:
+                    connection.execute(f"ALTER TABLE memories ADD COLUMN {name} {definition}")
             pair_utility_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(experience_pair_utility)")}
             for name, definition in PAIR_UTILITY_MIGRATIONS.items():
                 if name not in pair_utility_columns:

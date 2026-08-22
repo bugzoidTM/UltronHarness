@@ -51,6 +51,15 @@ context:
     tools: 0.15
     history: 0.10
 
+cognition:
+  controller_mode: full_plan
+  recent_observations: 5
+  max_known_facts: 20
+  max_open_questions: 10
+  max_failed_strategies: 10
+  max_iterations: 30
+  structured_repair_attempts: 2
+
 learning:
   minimum_experience_quality: 0.60
 

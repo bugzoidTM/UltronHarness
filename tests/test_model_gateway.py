@@ -66,3 +66,44 @@ async def test_structured_repair_preserves_model_seed_and_observes_attempts(tmp_
         ("ollama_research", 49, True),
     ]
     assert observed == [("qwen2.5:3b", False), ("qwen2.5:3b", True)]
+
+
+@pytest.mark.asyncio
+async def test_structured_v2_uses_schema_and_second_repair_attempt(tmp_path: Path) -> None:
+    settings = Settings(raw=deepcopy(load_settings(ROOT).raw), root_dir=tmp_path)
+    gateway = ModelGateway(settings)
+    calls: list[dict[str, object]] = []
+    responses = iter(
+        [
+            ModelResponse("not-json", [], Usage(), 1, "qwen2.5:3b", "stop", True),
+            ModelResponse('{"objective":"x","steps":[{"id":0}]}', [], Usage(), 1, "qwen2.5:3b", "stop", True),
+            ModelResponse(
+                '{"objective":"x","steps":[{"id":1,"action":"Analisar",'
+                '"success_condition":"task_context"}]}',
+                [],
+                Usage(),
+                1,
+                "qwen2.5:3b",
+                "stop",
+                True,
+            ),
+        ]
+    )
+
+    async def fake_generate(messages, model_name=None, **kwargs):
+        calls.append({"messages": messages, "model_name": model_name, **kwargs})
+        return next(responses)
+
+    gateway.generate = fake_generate  # type: ignore[method-assign]
+    plan = await gateway.structured(
+        Plan,
+        [{"role": "user", "content": "gere plano"}],
+        model_name="ollama_research",
+        seed=53,
+    )
+
+    assert plan.steps[0].id == 1
+    assert len(calls) == 3
+    assert all(call["json_schema"] for call in calls)
+    assert "Resumo do erro" in calls[1]["messages"][-1]["content"]
+    assert "Schema compacto" in calls[2]["messages"][-1]["content"]

@@ -67,6 +67,14 @@ class Settings:
         return int(self.raw["autonomy"]["mode"])
 
     @property
+    def cognition(self) -> dict[str, Any]:
+        return self.raw.get("cognition", {})
+
+    @property
+    def controller_mode(self) -> str:
+        return str(self.cognition.get("controller_mode", "full_plan"))
+
+    @property
     def private_benchmark_root(self) -> Path | None:
         configured = self.raw.get("research", {}).get("private_benchmark_root")
         return Path(str(configured)).expanduser().resolve() if configured else None

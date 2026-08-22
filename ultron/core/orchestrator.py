@@ -8,10 +8,12 @@ from time import monotonic
 from typing import Any
 from uuid import uuid4
 
+from ultron.cognition.progress import ProgressTracker
 from ultron.cognition.task_signature import TaskSignature
 from ultron.configuration import Settings
 from ultron.core.continuations import ContinuationStore
 from ultron.core.events import EventBus
+from ultron.core.receding_controller import RecedingHorizonController
 from ultron.core.recovery import RecoveryEngine
 from ultron.core.verifier import StepSuccessVerifier
 from ultron.db import Database
@@ -53,6 +55,16 @@ class Orchestrator:
         self.planning_seed = planning_seed
         self.recovery = RecoveryEngine()
         self.verifier = StepSuccessVerifier(tools)
+        self.horizon = RecedingHorizonController(
+            settings,
+            db,
+            events,
+            models,
+            tools,
+            self.verifier,
+            self.execute_tool,
+            planning_seed=planning_seed,
+        )
         self.context_builder = ContextBuilder(db)
         self.continuations = ContinuationStore(db)
         self.skills = SkillService(db)
@@ -116,8 +128,8 @@ class Orchestrator:
         self.tools.workspace_for(payload.workspace)
         action_budget = payload.action_budget
         self.db.execute(
-            """INSERT INTO tasks (id,goal_id,title,objective,status,priority,workspace,autonomy_mode,allowed_tools_json,action_budget_min,action_budget_max,created_at,updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO tasks (id,goal_id,title,objective,status,priority,workspace,autonomy_mode,allowed_tools_json,action_budget_min,action_budget_max,requires_external_outcome,created_at,updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 task_id,
                 payload.goal_id,
@@ -130,6 +142,7 @@ class Orchestrator:
                 self.db.json(payload.allowed_tools) if payload.allowed_tools is not None else None,
                 action_budget[0] if action_budget else None,
                 action_budget[1] if action_budget else None,
+                int(payload.requires_external_outcome),
                 timestamp,
                 timestamp,
             ),
@@ -138,7 +151,11 @@ class Orchestrator:
             "INSERT INTO task_state (task_id,state,context_json,updated_at) VALUES (?, ?, ?, ?)",
             (task_id, CognitiveState.IDLE.value, "{}", timestamp),
         )
-        contract = {"allowed_tools": payload.allowed_tools, "action_budget": list(action_budget) if action_budget else None}
+        contract = {
+            "allowed_tools": payload.allowed_tools,
+            "action_budget": list(action_budget) if action_budget else None,
+            "requires_external_outcome": payload.requires_external_outcome,
+        }
         await self.events.emit(
             "task.created", {"title": payload.title, "objective": payload.objective, "mission_contract": contract}, task_id
         )
@@ -150,6 +167,7 @@ class Orchestrator:
         task["allowed_tools"] = self.db.parse_json(raw_tools, None) if raw_tools is not None else None
         minimum, maximum = task.pop("action_budget_min", None), task.pop("action_budget_max", None)
         task["action_budget"] = [int(minimum), int(maximum)] if minimum is not None and maximum is not None else None
+        task["requires_external_outcome"] = bool(task.pop("requires_external_outcome", 0))
         return task
 
     def get_task(self, task_id: str) -> dict[str, Any] | None:
@@ -473,6 +491,9 @@ class Orchestrator:
                     "experience_injected": routed_context.injected,
                 },
             )
+            if self.settings.controller_mode in {"next_action", "short_horizon"}:
+                await self._run_receding_horizon(task, memories, routed_context.routed_procedures)
+                return
             plan = await self._make_plan(task, memories, routed_context.routed_procedures)
             revision = self._save_plan(task_id, plan)
             await self._transition(
@@ -502,6 +523,83 @@ class Orchestrator:
             await self._fail(task_id, f"Erro não tratado do orquestrador: {exc}")
         finally:
             self.active.pop(task_id, None)
+
+    async def _run_receding_horizon(
+        self,
+        task: dict[str, Any],
+        memories: list[dict[str, Any]],
+        routed_procedures: list[str],
+    ) -> None:
+        task_id = str(task["id"])
+        await self.events.emit("cognition.iteration.started", {"mode": self.settings.controller_mode}, task_id)
+        snapshot = await self.horizon.ensure_initial_observation(task)
+        outline = await self.horizon.create_outline(task)
+        if outline:
+            self._trace(task_id, "mission_outline.created", payload=outline.model_dump(mode="json"))
+        invalid_decisions = 0
+        false_stops = 0
+        progress = ProgressTracker()
+        max_iterations = min(int(self.settings.cognition.get("max_iterations", 30)), int(self.settings.limits["max_steps"]))
+        per_cycle = 3 if self.settings.controller_mode == "short_horizon" else 1
+        for _ in range(max_iterations):
+            current = self.get_task(task_id)
+            if not current:
+                return
+            if self.horizon.contract.remaining_budget(current) <= 0:
+                await self._fail(task_id, "HORIZON_ACTION_BUDGET_EXHAUSTED")
+                return
+            for _block_index in range(per_cycle):
+                current = self.get_task(task_id)
+                if not current or self.horizon.contract.remaining_budget(current) <= 0:
+                    break
+                try:
+                    action = await self.horizon.decide_next_action(
+                        current,
+                        snapshot,
+                        outline=outline,
+                        routed_procedures=routed_procedures,
+                        memory_summaries=[str(item["summary"]) for item in memories],
+                    )
+                except Exception as exc:
+                    invalid_decisions += 1
+                    self._trace(task_id, "cognition.structured_failure", payload={"error": str(exc)[:1000], "count": invalid_decisions})
+                    if invalid_decisions >= 3:
+                        await self._fail(task_id, "COGNITIVE_ACTION_SELECTION_FAILURE")
+                        return
+                    continue
+                observation, snapshot, validation = await self.horizon.execute_iteration(current, action, snapshot)
+                if not validation.accepted:
+                    invalid_decisions += 1
+                    if invalid_decisions >= 3:
+                        await self._fail(task_id, "COGNITIVE_ACTION_SELECTION_FAILURE")
+                        return
+                    continue
+                invalid_decisions = 0
+                if action.stop:
+                    false_stops += 1
+                    self._trace(task_id, "cognition.false_stop", payload={"reason": action.stop_reason, "count": false_stops})
+                    if false_stops >= 2:
+                        await self._fail(task_id, "FALSE_STOP_LIMIT")
+                        return
+                    continue
+                if observation:
+                    action_loop, stagnation = progress.record_action(
+                        action.tool,
+                        action.arguments,
+                        snapshot.evidence_refs,
+                        effective=observation.verification_passed,
+                    )
+                    if not observation.ok:
+                        self._trace(task_id, "cognition.observation.failed", payload=observation.model_dump(mode="json"))
+                    if action_loop:
+                        self._trace(task_id, "cognition.action_loop", payload={"tool": action.tool, "iteration": snapshot.iteration})
+                        snapshot.failed_strategies.append("ACTION_LOOP")
+                    if stagnation:
+                        self._trace(task_id, "cognition.stagnation", payload={"iteration": snapshot.iteration})
+                        snapshot.failed_strategies.append("STAGNATION")
+                        self.horizon.persist_snapshot(snapshot)
+            await self.events.emit("cognition.iteration.started", {"iteration": snapshot.iteration + 1}, task_id)
+        await self._fail(task_id, "HORIZON_ITERATION_LIMIT")
 
     async def _execute_plan(
         self,
@@ -666,32 +764,45 @@ class Orchestrator:
             else f"A execução encontrou: {errors[-1]}"
         ]
         await self._transition(task_id, CognitiveState.LEARN, {"success": success})
-        experience_id = self.memory.store_experience(
-            task_id,
-            "structured-plan",
-            actions,
-            "Tarefa concluída" if success else "Tarefa falhou",
-            success,
-            errors,
-            lessons,
-            0.85 if success else 0.3,
-        )
-        self.context_builder.record_outcome(
-            task_id,
-            routed_context,
-            success=success,
-            experience_id=experience_id,
-        )
-        experience = self.experience.consolidate(
-            task["objective"],
-            "Tarefa concluída" if success else "Tarefa falhou",
-            lessons,
-            success,
-            novel_failure=bool(errors),
-        )
-        await self.events.emit(
-            "memory.created", {"type": "episodic", "success": success, "experience": experience}, task_id
-        )
+        if task.get("requires_external_outcome"):
+            experience = {
+                "stored": False,
+                "verification_state": "pending",
+                "reason": "external_outcome_required",
+            }
+            await self.events.emit(
+                "memory.pending_external_outcome",
+                {"internal_success": success, "experience": experience},
+                task_id,
+            )
+        else:
+            experience_id = self.memory.store_experience(
+                task_id,
+                "structured-plan",
+                actions,
+                "Tarefa concluída" if success else "Tarefa falhou",
+                success,
+                errors,
+                lessons,
+                0.85 if success else 0.3,
+            )
+            self.context_builder.record_outcome(
+                task_id,
+                routed_context,
+                success=success,
+                experience_id=experience_id,
+            )
+            experience = self.experience.consolidate(
+                task["objective"],
+                "Tarefa concluída" if success else "Tarefa falhou",
+                lessons,
+                success,
+                novel_failure=bool(errors),
+            )
+            await self.events.emit(
+                "memory.created", {"type": "episodic", "success": success, "experience": experience}, task_id
+            )
+
         if success:
             self._update_task(task_id, status=TaskStatus.COMPLETED, completed_at=utcnow(), error=None)
             await self._transition(task_id, CognitiveState.COMPLETE, {"success": True})

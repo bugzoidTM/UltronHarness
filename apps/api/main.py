@@ -391,6 +391,10 @@ async def research_dashboard() -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         transfer100 = {}
     forge_root = svc("settings").artifacts_dir / "research" / "forge"
+    horizon_root = svc("settings").artifacts_dir / "research" / "horizon"
+    horizon = {
+        "comparisons": reports(horizon_root / "comparisons", "*/horizon_control.json"),
+    }
     forge = {
         "privacy": reports(forge_root / "privacy", "*.json"),
         "router_calibration": reports(forge_root / "router_calibration", "*/*.json"),
@@ -400,7 +404,7 @@ async def research_dashboard() -> dict[str, Any]:
         "continuity": db.one("SELECT COUNT(*) AS pending_continuations FROM task_continuations WHERE status='waiting_approval'") or {"pending_continuations": 0},
         "execution_traces": db.one("SELECT COUNT(*) AS events,COUNT(DISTINCT execution_trace_id) AS executions FROM execution_traces") or {"events": 0, "executions": 0},
     }
-    return {"runs": runs, "experiments": experiments, "model_comparison": models, "cgfe": cgfe, "ablations": ablations, "diagnostics": diagnostics, "context_metrics": context, "memory_utility": utility, "learn2": learn2, "transfer": transfer, "memory_admission": admission, "skills": skills, "capabilities": capabilities, "world_model": world, "hermes": {"routing": routing, "family_utility": family_utility, "distillation": distillation, "skill_family": skill_family, "utility_calibration": utility_calibration, "transfer100": transfer100}, "forge": forge}
+    return {"runs": runs, "experiments": experiments, "model_comparison": models, "cgfe": cgfe, "ablations": ablations, "diagnostics": diagnostics, "context_metrics": context, "memory_utility": utility, "learn2": learn2, "transfer": transfer, "memory_admission": admission, "skills": skills, "capabilities": capabilities, "world_model": world, "hermes": {"routing": routing, "family_utility": family_utility, "distillation": distillation, "skill_family": skill_family, "utility_calibration": utility_calibration, "transfer100": transfer100}, "forge": forge, "horizon": horizon}
 
 
 @app.get("/api/system/metrics")

@@ -74,6 +74,7 @@ class TaskCreate(BaseModel):
     autonomy_mode: int = Field(default=2, ge=0, le=4)
     allowed_tools: list[str] | None = Field(default=None, max_length=50)
     action_budget: tuple[int, int] | None = None
+    requires_external_outcome: bool = False
 
     @field_validator("allowed_tools")
     @classmethod
@@ -127,6 +128,92 @@ class Plan(BaseModel):
     steps: list[PlanStep] = Field(min_length=1, max_length=30)
     risks: list[str] = Field(default_factory=list)
     confidence: float = Field(default=0.5, ge=0, le=1)
+
+
+class MissionSubgoal(BaseModel):
+    id: int = Field(ge=1)
+    description: str = Field(min_length=3, max_length=500)
+    success_hint: str | None = Field(default=None, max_length=500)
+
+
+class MissionOutline(BaseModel):
+    objective: str = Field(min_length=3, max_length=10000)
+    subgoals: list[MissionSubgoal] = Field(min_length=1, max_length=10)
+    risks: list[str] = Field(default_factory=list)
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+
+
+class VerificationSpec(BaseModel):
+    type: Literal[
+        "tool_success",
+        "file_exists",
+        "file_contains",
+        "json_schema",
+        "registered_command",
+        "prior_step",
+        "task_context",
+        "none",
+    ]
+    path: str | None = Field(default=None, max_length=1000)
+    expected: str | None = Field(default=None, max_length=4000)
+    registry_id: str | None = Field(default=None, max_length=200)
+
+
+class NextAction(BaseModel):
+    subgoal_id: int | None = Field(default=None, ge=1)
+    intent: str = Field(min_length=3, max_length=500)
+    tool: str | None = Field(default=None, max_length=120)
+    arguments: dict[str, Any] = Field(default_factory=dict)
+    expected_evidence: VerificationSpec
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    stop: bool = False
+    stop_reason: str | None = Field(default=None, max_length=500)
+
+    @field_validator("stop_reason")
+    @classmethod
+    def stop_reason_requires_stop(cls, reason: str | None, info: Any) -> str | None:
+        if reason and not info.data.get("stop"):
+            raise ValueError("stop_reason exige stop=true.")
+        return reason
+
+
+class CognitiveStateSnapshot(BaseModel):
+    task_id: str
+    objective: str
+    current_subgoal_id: int | None = Field(default=None, ge=1)
+    completed_subgoals: list[int] = Field(default_factory=list)
+    known_facts: list[str] = Field(default_factory=list)
+    open_questions: list[str] = Field(default_factory=list)
+    recent_observations: list[str] = Field(default_factory=list)
+    failed_strategies: list[str] = Field(default_factory=list)
+    evidence_refs: list[str] = Field(default_factory=list)
+    tool_calls_used: int = Field(default=0, ge=0)
+    remaining_action_budget: int = Field(default=0, ge=0)
+    replan_count: int = Field(default=0, ge=0)
+    iteration: int = Field(default=0, ge=0)
+
+
+class ActionObservation(BaseModel):
+    tool: str
+    ok: bool
+    output_summary: str = Field(max_length=2000)
+    error: str | None = Field(default=None, max_length=2000)
+    verification_passed: bool
+    evidence_refs: list[str] = Field(default_factory=list)
+
+
+class OutcomeResult(BaseModel):
+    success: bool
+    authority_level: str
+    evidence_refs: list[str] = Field(default_factory=list)
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    final: bool
+
+
+class Reorientation(BaseModel):
+    likely_problem: str = Field(min_length=3, max_length=1000)
+    abandon_current_strategy: bool
+    next_subgoal: str = Field(min_length=3, max_length=500)
 
 
 class MemoryCreate(BaseModel):

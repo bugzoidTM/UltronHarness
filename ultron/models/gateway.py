@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from time import perf_counter
@@ -50,7 +51,12 @@ class OpenAICompatibleProvider:
             "messages": messages,
             "temperature": kwargs.get("temperature", 0.2),
         }
-        if kwargs.get("json_mode"):
+        if kwargs.get("json_schema"):
+            payload["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {"name": "structured_response", "strict": True, "schema": kwargs["json_schema"]},
+            }
+        elif kwargs.get("json_mode"):
             payload["response_format"] = {"type": "json_object"}
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(f"{self.endpoint}/chat/completions", json=payload)
@@ -108,7 +114,9 @@ class OllamaProvider:
             "stream": False,
             "options": options,
         }
-        if kwargs.get("json_mode"):
+        if kwargs.get("json_schema"):
+            payload["format"] = kwargs["json_schema"]
+        elif kwargs.get("json_mode"):
             payload["format"] = "json"
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(f"{self.endpoint}/api/chat", json=payload)
@@ -211,25 +219,53 @@ class ModelGateway:
         model_name: str | None = None,
         *,
         on_response: Callable[[ModelResponse, bool], Awaitable[None]] | None = None,
+        repair_attempts: int | None = None,
         **kwargs: Any,
     ) -> T:
-        response = await self.generate(messages, model_name, json_mode=True, **kwargs)
-        if on_response:
-            await on_response(response, False)
-        try:
-            return schema.model_validate_json(response.content)
-        except (ValidationError, ValueError):
-            repair = messages + [
-                {"role": "assistant", "content": response.content},
-                {
-                    "role": "user",
-                    "content": "Responda somente JSON válido conforme o schema solicitado.",
-                },
-            ]
-            second = await self.generate(repair, model_name, json_mode=True, **kwargs)
+        attempts = 2 if repair_attempts is None else max(0, int(repair_attempts))
+        schema_json = schema.model_json_schema()
+        current_messages = list(messages)
+        response: ModelResponse | None = None
+        validation_error: ValidationError | ValueError | None = None
+        for attempt in range(attempts + 1):
+            response = await self.generate(
+                current_messages,
+                model_name,
+                json_mode=True,
+                json_schema=schema_json,
+                **kwargs,
+            )
             if on_response:
-                await on_response(second, True)
-            return schema.model_validate_json(second.content)
+                await on_response(response, attempt > 0)
+            try:
+                return schema.model_validate_json(response.content)
+            except (ValidationError, ValueError) as exc:
+                validation_error = exc
+                if attempt >= attempts:
+                    raise
+                error_summary = self._validation_summary(exc)
+                compact_schema = json.dumps(schema_json, ensure_ascii=False, separators=(",", ":"))[:4000]
+                current_messages = [
+                    *messages,
+                    {"role": "assistant", "content": response.content[:6000]},
+                    {
+                        "role": "user",
+                        "content": (
+                            "A resposta anterior não validou. Retorne somente JSON válido para o schema solicitado. "
+                            f"Resumo do erro: {error_summary}. Schema compacto: {compact_schema}"
+                        ),
+                    },
+                ]
+        if validation_error is not None:
+            raise validation_error
+        raise RuntimeError("Structured output não produziu resposta.")
+
+    @staticmethod
+    def _validation_summary(error: ValidationError | ValueError) -> str:
+        if isinstance(error, ValidationError):
+            issues = [f"{'.'.join(str(part) for part in item['loc'])}: {item['msg']}" for item in error.errors()[:5]]
+            return "; ".join(issues)[:1200]
+        return str(error)[:1200]
 
     async def health(self, name: str | None = None) -> dict[str, Any]:
         if name:

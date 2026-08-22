@@ -5,8 +5,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from uuid import uuid4
 
+from ultron.cognition.outcome_authority import OutcomeAuthority
 from ultron.db import Database
 from ultron.memory.governor import MemoryGovernor
+from ultron.schemas import OutcomeResult
 
 
 def utcnow() -> str:
@@ -51,7 +53,22 @@ class ExperienceCycle:
     def __init__(self, db: Database, skills: SkillService, governor: MemoryGovernor | None = None):
         self.db, self.skills, self.governor = db, skills, governor or MemoryGovernor(db)
 
-    def consolidate(self, objective: str, outcome: str, lessons: list[str], success: bool, novel_failure: bool = False) -> dict:
+    def consolidate(
+        self,
+        objective: str,
+        outcome: str,
+        lessons: list[str],
+        success: bool,
+        novel_failure: bool = False,
+        outcome_result: OutcomeResult | None = None,
+    ) -> dict:
+        if outcome_result is not None and not OutcomeAuthority.allows_verified_writeback(outcome_result):
+            return {
+                "stored": False,
+                "reason": "outcome_authority_insufficient",
+                "verification_state": "rejected" if outcome_result.final else "pending",
+                "outcome_authority": outcome_result.authority_level,
+            }
         category = "recovery" if novel_failure else "general"
         decision = self.governor.decide(category=category, verified_success=success, novel_failure=novel_failure, successful_recovery=success and novel_failure, generalizable_procedure=bool(lessons), confidence=0.8 if success else 0.6, utility_prediction=0.3 if lessons else 0.0, generalizability=0.75 if lessons else 0.35)
         if not decision.should_write:
@@ -63,4 +80,11 @@ class ExperienceCycle:
             procedure=lessons or ["Repetir estratégia validada e verificar artefato."],
             success=success,
         )
-        return {"stored": True, "skill_id": skill.get("id"), "skill_status": self.skills.status(skill["name"]), "admission": self.governor.payload(decision)}
+        return {
+            "stored": True,
+            "skill_id": skill.get("id"),
+            "skill_status": self.skills.status(skill["name"]),
+            "admission": self.governor.payload(decision),
+            "verification_state": "verified_success" if outcome_result else "legacy",
+            "outcome_authority": outcome_result.authority_level if outcome_result else "legacy",
+        }
