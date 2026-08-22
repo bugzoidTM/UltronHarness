@@ -193,6 +193,34 @@ CREATE TABLE IF NOT EXISTS cognitive_actions (
 );
 CREATE INDEX IF NOT EXISTS idx_cognitive_actions_task_iteration ON cognitive_actions(task_id, iteration, created_at);
 
+CREATE TABLE IF NOT EXISTS structured_decisions (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    controller_mode TEXT NOT NULL,
+    decision_kind TEXT NOT NULL,
+    iteration INTEGER NOT NULL,
+    initial_valid INTEGER NOT NULL,
+    final_valid INTEGER NOT NULL,
+    repair_attempts INTEGER NOT NULL DEFAULT 0,
+    validation_error_class TEXT,
+    model TEXT,
+    seed INTEGER,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_structured_decisions_task ON structured_decisions(task_id, created_at);
+
+CREATE TABLE IF NOT EXISTS horizon_orientations (
+    id TEXT PRIMARY KEY,
+    run_id TEXT NOT NULL,
+    mission_id TEXT NOT NULL,
+    seed INTEGER NOT NULL,
+    orientation_hash TEXT NOT NULL,
+    observations_json TEXT NOT NULL DEFAULT '[]',
+    evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL,
+    UNIQUE(run_id, mission_id, seed)
+);
+
 CREATE TABLE IF NOT EXISTS skills (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
