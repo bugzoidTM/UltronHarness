@@ -32,6 +32,19 @@ O gateway encaminha JSON Schema para provedores locais quando disponível. Quand
 
 Uma falha de schema, um repair exaurido, uma ação inadequada, um false stop, loop ou estagnação são **falhas cognitivas mensuráveis**, não confounds metodológicos. Eles não podem gerar sucesso atribuído ao modelo por fallback.
 
+## Retificação Horizon v0.7.1 — integridade experimental
+
+O runner agora persiste uma `horizon_orientation` única por combinação de execução, missão e seed antes de iniciar os modos A/B/C. O hash de orientação contém identidade da missão, seed, allowlist e budget; cada trace comprova a correspondência com a orientação persistida. A ausência dessa prova invalida a medição.
+
+A SDV deixou de usar trajetórias como denominador. Cada decisão estruturada gravada em `structured_decisions` registra validade inicial, validade final, tentativas de reparo e classe de erro. O artefato computa **SDV final**, **Initial SDV** e **Repair Recovery Rate** por decisão; somente traces históricos sem essa telemetria usam a definição legada de compatibilidade.
+
+| Campo v0.7.1 | Definição |
+|---|---|
+| `orientation_shared_verified` | A orientação congelada da missão/seed está persistida e corresponde ao hash do trace. |
+| `sdv` | Decisões com validação final bem-sucedida ÷ decisões estruturadas. |
+| `initial_sdv` | Decisões válidas na primeira resposta ÷ decisões estruturadas. |
+| `repair_recovery_rate` | Decisões inicialmente inválidas recuperadas após reparo ÷ decisões elegíveis a reparo. |
+
 ## Benchmark Horizon Control v1
 
 O runner compara as mesmas missões Forge públicas, fixtures e avaliadores privados. A primeira pipeline é limitada a três missões × três modos × seed 53. A expansão para dez missões × três modos × três seeds depende de uma pipeline metodologicamente válida.
@@ -41,7 +54,7 @@ A medição só é considerada válida quando cada traço demonstra modelo efeti
 | Métrica | Definição |
 |---|---|
 | ATC | Fração de missões com sucesso externo atribuído a decisão estruturada do modelo. |
-| SDV | Fração de trajetórias cuja decisão cognitiva validou no schema. |
+| SDV | Fração de decisões cognitivas com validação final do schema. |
 | CLL | `ATC(next_action) − ATC(full_plan)`. |
 | ShortHorizonLift | `ATC(short_horizon) − ATC(full_plan)`. |
 | Observation Recovery Rate | Falha de ação seguida por nova observação, ação diferente e PASS externo. |
@@ -50,4 +63,4 @@ A medição só é considerada válida quando cada traço demonstra modelo efeti
 
 O default `full_plan` somente pode mudar após HORIZON-1, HORIZON-2 e HORIZON-5. Em particular, HORIZON-2 exige ATC superior em `next_action`, CLL positivo e confirmação multi-seed; HORIZON-5 exige zero casos de falha externa promovida a experiência verificada. Um ATC nulo ou um resultado negativo não autoriza criar outro controlador arbitrariamente: ele restringe a hipótese e deve orientar comparação de capacidade de modelo posterior.
 
-A execução inicial, seus artefatos, a validade metodológica e qualquer resultado negativo ou positivo serão anexados a este relatório após os quality gates e a pipeline controlada.
+A execução inicial, seus artefatos, a validade metodológica e qualquer resultado negativo ou positivo serão anexados a este relatório após os quality gates e a pipeline controlada. Até a execução controlada concluir, não há ATC, CLL ou ganho de capacidade Horizon a interpretar.
