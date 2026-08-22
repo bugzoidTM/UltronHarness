@@ -150,7 +150,14 @@ class HorizonControlRunner:
                     await active
                 task = orchestrator.get_task(created["id"]) or {}
                 external = evaluator.evaluate(workspace_path, task_id, contracts[task_id])
-                outcome = authority.decide(private_evaluation=external)
+                if task.get("status") == "waiting_outcome":
+                    outcome = await orchestrator.resolve_external_outcome(created["id"], external)
+                    active = orchestrator.active.get(created["id"])
+                    if active:
+                        await active
+                    task = orchestrator.get_task(created["id"]) or {}
+                else:
+                    outcome = authority.decide(private_evaluation=external)
                 model_calls = db.all(
                     "SELECT model,seed,purpose,latency_ms,prompt_tokens,output_tokens FROM model_calls WHERE task_id=? ORDER BY created_at,rowid",
                     (created["id"],),
