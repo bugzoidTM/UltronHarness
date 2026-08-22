@@ -12,7 +12,6 @@ from ultron.models.gateway import ModelGateway
 from ultron.policy.engine import PolicyEngine
 from ultron.schemas import RiskLevel
 
-
 pytestmark = [pytest.mark.agent, pytest.mark.slow, pytest.mark.llm]
 
 

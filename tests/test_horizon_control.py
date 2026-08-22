@@ -38,3 +38,27 @@ def test_horizon_runner_records_frozen_controls_in_source() -> None:
     assert "injection_limit = 0" in source
     assert "mission_contract_verified" in source
     assert "model_cognitive_success" in source
+
+
+def test_second_stop_requires_fresh_external_evaluation() -> None:
+    source = __import__("pathlib").Path(__file__).resolve().parents[1].joinpath(
+        "ultron/research/horizon_control.py"
+    ).read_text(encoding="utf-8")
+
+    assert "while True:" in source
+    assert "attempt_number = len(evaluation_attempts) + 1" in source
+    assert "workspace_hash = compute_fixture_hash(workspace_path)" in source
+    assert "external = evaluator.evaluate(workspace_path, task_id, contracts[task_id])" in source
+    assert "outcome = await orchestrator.resolve_external_outcome(created[\"id\"], external)" in source
+    assert "external_evaluation_attempts" in source
+
+
+def test_evaluator_exception_invalidates_measurement_without_reusing_verdict() -> None:
+    source = __import__("pathlib").Path(__file__).resolve().parents[1].joinpath(
+        "ultron/research/horizon_control.py"
+    ).read_text(encoding="utf-8")
+
+    assert "evaluator_error" in source
+    assert 'invalidation_reasons.append("external_evaluator_error")' in source
+    assert '"evaluation_result": "error"' in source
+    assert "evaluation_attempts.append" in source

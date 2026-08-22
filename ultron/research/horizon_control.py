@@ -10,6 +10,7 @@ import platform
 import subprocess
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 from time import monotonic
@@ -196,20 +197,50 @@ class HorizonControlRunner:
                 orchestrator.inject_orientation(created["id"], orientation_snapshot)
 
                 started = monotonic()
-                await orchestrator.run(created["id"])
-                active = orchestrator.active.get(created["id"])
-                if active:
-                    await active
-                task = orchestrator.get_task(created["id"]) or {}
-                external = evaluator.evaluate(workspace_path, task_id, contracts[task_id])
-                if task.get("status") == "waiting_outcome":
-                    outcome = await orchestrator.resolve_external_outcome(created["id"], external)
+                evaluation_attempts: list[dict] = []
+                evaluator_error: str | None = None
+                outcome = authority.decide(model_claim=False)
+                while True:
+                    await orchestrator.run(created["id"])
                     active = orchestrator.active.get(created["id"])
                     if active:
                         await active
                     task = orchestrator.get_task(created["id"]) or {}
-                else:
-                    outcome = authority.decide(private_evaluation=external)
+                    if task.get("status") != "waiting_outcome":
+                        break
+
+                    attempt_number = len(evaluation_attempts) + 1
+                    workspace_hash = compute_fixture_hash(workspace_path)
+                    try:
+                        external = evaluator.evaluate(workspace_path, task_id, contracts[task_id])
+                    except Exception as exc:
+                        evaluator_error = f"{type(exc).__name__}: {str(exc)[:500]}"
+                        evaluation_attempts.append(
+                            {
+                                "evaluation_attempt": attempt_number,
+                                "workspace_hash_before_evaluation": workspace_hash,
+                                "evaluation_result": "error",
+                                "authority_level": None,
+                                "evidence_refs": [],
+                                "timestamp": datetime.now(UTC).isoformat(),
+                            }
+                        )
+                        break
+
+                    outcome = await orchestrator.resolve_external_outcome(created["id"], external)
+                    evaluation_attempts.append(
+                        {
+                            "evaluation_attempt": attempt_number,
+                            "workspace_hash_before_evaluation": workspace_hash,
+                            "evaluation_result": bool(outcome.success),
+                            "authority_level": outcome.authority_level,
+                            "evidence_refs": [str(item) for item in outcome.evidence_refs],
+                            "timestamp": datetime.now(UTC).isoformat(),
+                        }
+                    )
+                    task = orchestrator.get_task(created["id"]) or {}
+                    if outcome.success or task.get("status") == "failed":
+                        break
                 model_calls = db.all(
                     "SELECT model,seed,purpose,latency_ms,prompt_tokens,output_tokens FROM model_calls WHERE task_id=? ORDER BY created_at,rowid",
                     (created["id"],),
@@ -267,6 +298,9 @@ class HorizonControlRunner:
                     "external_success": outcome.success,
                     "model_cognitive_success": outcome.success and planner_source in {"model_structured", "model_repaired"},
                     "outcome_authority_level": outcome.authority_level,
+                    "external_evaluation_attempts": evaluation_attempts,
+                    "external_evaluator_call_count": len(evaluation_attempts),
+                    "external_evaluator_error": evaluator_error,
                     "experience_written": False,
                     "experience_verified": False,
                     "structured_decisions": len(decisions),
@@ -302,6 +336,8 @@ class HorizonControlRunner:
                 invalidation_reasons.append("action_budget_cap_exceeded")
             if trace["pre_decision_tool_call_detected"]:
                 invalidation_reasons.append("pre_decision_tool_call_detected")
+            if trace["external_evaluator_error"]:
+                invalidation_reasons.append("external_evaluator_error")
 
         # Validação cruzada da tríade por missão
         by_mission: dict[str, list[dict]] = {}

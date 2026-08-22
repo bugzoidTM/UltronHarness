@@ -64,3 +64,18 @@ A medição só é considerada válida quando cada traço demonstra modelo efeti
 O default `full_plan` somente pode mudar após HORIZON-1, HORIZON-2 e HORIZON-5. Em particular, HORIZON-2 exige ATC superior em `next_action`, CLL positivo e confirmação multi-seed; HORIZON-5 exige zero casos de falha externa promovida a experiência verificada. Um ATC nulo ou um resultado negativo não autoriza criar outro controlador arbitrariamente: ele restringe a hipótese e deve orientar comparação de capacidade de modelo posterior.
 
 A execução inicial, seus artefatos, a validade metodológica e qualquer resultado negativo ou positivo serão anexados a este relatório após os quality gates e a pipeline controlada. Até a execução controlada concluir, não há ATC, CLL ou ganho de capacidade Horizon a interpretar.
+
+
+## Retificação Horizon v0.7.1C — External Outcome Recovery Loop
+
+Para missões que exigem resultado externo, cada `stop=true` leva a `WAITING_OUTCOME` e abre uma **nova tentativa de avaliação**. O runner calcula o hash do workspace imediatamente antes de cada invocação privada, persiste no trace a identidade ordinal da tentativa, o hash, o verdict, o nível de autoridade, referências de evidência e o timestamp. Após um `FAIL`, somente `OutcomeAuthority` pode registrar o false-stop e reativar a cognição; uma proposta posterior de stop jamais reutiliza o verdict anterior.
+
+| Situação | Comportamento v0.7.1C |
+|---|---|
+| Primeiro `stop=true` | Uma avaliação privada é executada sobre o workspace atual. |
+| `FAIL` externo dentro do limite configurado | O runtime retoma a cognição; o próximo stop gera outra avaliação, com novo hash persistido. |
+| `PASS` externo | `OutcomeAuthority` conclui a tarefa; o runner não completa a missão diretamente. |
+| Limite de false-stops atingido | O runtime falha a tarefa conforme a configuração, sem nova promoção. |
+| Exceção do evaluator | A medição recebe `external_evaluator_error`, torna-se inválida e não é convertida em `PASS` nem false-stop. |
+
+A correção preserva o isolamento do evaluator privado: o trace público mantém apenas referências de evidência retornadas pela autoridade e não contém contrato oculto, resposta esperada, fixture secreta, patch ouro ou implementação do avaliador. O workflow de CI também instala o extra `dev`, disponibilizando explicitamente `pytest`, `pytest-cov` e `ruff` antes dos quality gates.
