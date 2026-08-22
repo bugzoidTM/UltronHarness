@@ -697,8 +697,7 @@ class Orchestrator:
 
             },
         ]
-        try:
-            response = await self.models.generate(prompt, json_mode=True, seed=self.planning_seed)
+        async def record_response(response: Any, is_repair: bool) -> None:
             self.db.execute(
                 "INSERT INTO model_calls (id,task_id,provider,model,purpose,latency_ms,prompt_tokens,output_tokens,finish_reason,seed,created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
@@ -706,7 +705,7 @@ class Orchestrator:
                     task["id"],
                     "local",
                     response.model,
-                    "planning",
+                    "planning_repair" if is_repair else "planning",
                     response.latency_ms,
                     response.usage.prompt_tokens,
                     response.usage.output_tokens,
@@ -718,7 +717,15 @@ class Orchestrator:
             self.db.execute(
                 "UPDATE tasks SET llm_call_count=llm_call_count+1 WHERE id=?", (task["id"],)
             )
-            plan = Plan.model_validate_json(response.content)
+
+        try:
+            plan = await self.models.structured(
+                Plan,
+                prompt,
+                model_name=self.models.primary_name,
+                seed=self.planning_seed,
+                on_response=record_response,
+            )
             self.plan_sources[str(task["id"])] = "model_structured"
             return plan
         except Exception:

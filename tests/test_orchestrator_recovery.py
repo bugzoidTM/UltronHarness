@@ -4,13 +4,15 @@ import asyncio
 from copy import deepcopy
 from pathlib import Path
 
+import pytest
+
 from ultron.configuration import Settings, load_settings
 from ultron.core.events import EventBus
 from ultron.core.orchestrator import Orchestrator
 from ultron.core.verifier import StepSuccessVerifier
 from ultron.db import Database
 from ultron.memory.service import MemoryService
-from ultron.models.gateway import ModelGateway
+from ultron.models.gateway import ModelGateway, ModelResponse, Usage
 from ultron.policy.engine import PolicyEngine
 from ultron.schemas import Plan, PlanStep, TaskCreate
 from ultron.tools.registry import ToolRegistry
@@ -32,6 +34,86 @@ def _orchestrator(tmp_path: Path) -> Orchestrator:
         PolicyEngine(settings),
         ToolRegistry(settings),
     )
+
+
+@pytest.mark.asyncio
+async def test_planner_uses_structured_output_with_seed_and_audits_repair(tmp_path: Path) -> None:
+    orchestrator = _orchestrator(tmp_path)
+    orchestrator.planning_seed = 49
+    captured: dict[str, object] = {}
+
+    async def structured(schema, messages, model_name=None, **kwargs):
+        captured["schema"] = schema
+        captured["messages"] = messages
+        captured["model_name"] = model_name
+        captured["seed"] = kwargs["seed"]
+        observer = kwargs["on_response"]
+        for is_repair, latency_ms in ((False, 1), (True, 2)):
+            await observer(
+                ModelResponse(
+                    content="{}",
+                    tool_calls=[],
+                    usage=Usage(prompt_tokens=3, output_tokens=4),
+                    latency_ms=latency_ms,
+                    model="qwen2.5:3b",
+                    finish_reason="stop",
+                    local=True,
+                ),
+                is_repair,
+            )
+        return Plan(
+            objective="Planejar com reparo",
+            steps=[PlanStep(id=1, action="Analisar contexto", success_condition="task_context")],
+            confidence=0.8,
+        )
+
+    orchestrator.models.structured = structured  # type: ignore[method-assign]
+    created = await orchestrator.create_task(
+        TaskCreate(
+            title="Plano reparado",
+            objective="Criar um arquivo de evidência.",
+            workspace="structured_repair",
+            autonomy_mode=4,
+        )
+    )
+    task = orchestrator.get_task(created["id"])
+    assert task is not None
+
+    plan = await orchestrator._make_plan(task, [])
+
+    assert plan.confidence == 0.8
+    assert captured["schema"] is Plan
+    assert captured["model_name"] == orchestrator.models.primary_name
+    assert captured["seed"] == 49
+    assert orchestrator.plan_sources[created["id"]] == "model_structured"
+    calls = orchestrator.db.all(
+        "SELECT purpose,model,seed FROM model_calls WHERE task_id=? ORDER BY created_at, rowid",
+        (created["id"],),
+    )
+    assert calls == [
+        {"purpose": "planning", "model": "qwen2.5:3b", "seed": 49},
+        {"purpose": "planning_repair", "model": "qwen2.5:3b", "seed": 49},
+    ]
+    assert orchestrator.get_task(created["id"])["llm_call_count"] == 2
+
+
+def test_fallback_preserves_supervision_and_respects_e2e_allowlist(tmp_path: Path) -> None:
+    task = {
+        "title": "Registrar evidência",
+        "objective": "Criar um arquivo de relatório no workspace.",
+    }
+    supervised = _orchestrator(tmp_path)
+    supervised_step = next(step for step in supervised._fallback_plan(task).steps if step.tool is not None)
+    assert supervised_step.tool == "file.write"
+    assert supervised_step.risk.value == "R2"
+
+    e2e_restricted = _orchestrator(tmp_path)
+    e2e_restricted.tools.manifests = {
+        name: manifest for name, manifest in e2e_restricted.tools.manifests.items() if name != "file.write"
+    }
+    benchmark_step = next(step for step in e2e_restricted._fallback_plan(task).steps if step.tool is not None)
+    assert benchmark_step.tool == "python.execute"
+    assert benchmark_step.risk.value == "R1"
 
 
 def test_step_success_verifier_requires_deterministic_predicate(tmp_path: Path) -> None:

@@ -144,10 +144,13 @@ class ForgeE2ERunner:
                 await active
             task = orchestrator.get_task(created["id"]) or {}
             evaluation = evaluator.evaluate(workspace_path, task_id, contracts[task_id])
-            model_call = self.db.one(
-                "SELECT id,model,seed,latency_ms,prompt_tokens,output_tokens,finish_reason FROM model_calls WHERE task_id=? AND purpose='planning' ORDER BY created_at DESC LIMIT 1",
+            planning_calls = self.db.all(
+                "SELECT id,model,seed,latency_ms,prompt_tokens,output_tokens,finish_reason,purpose "
+                "FROM model_calls WHERE task_id=? AND purpose IN ('planning','planning_repair') "
+                "ORDER BY created_at, rowid",
                 (created["id"],),
             )
+            model_call = next((call for call in planning_calls if call["purpose"] == "planning"), None)
             approvals = self.db.one("SELECT COUNT(*) AS count FROM approvals WHERE task_id=?", (created["id"],)) or {"count": 0}
             taxonomy = self._failure_taxonomy(self.db, str(created["id"]))
             if task.get("status") == "waiting_approval":
@@ -161,8 +164,15 @@ class ForgeE2ERunner:
                     "configured_model": self.configured_model,
                     "effective_model": model_call.get("model") if model_call else None,
                     "effective_seed": model_call.get("seed") if model_call else None,
-                    "model_attribution_verified": bool(model_call and model_call.get("model") == self.configured_model),
-                    "seed_attribution_verified": bool(model_call and model_call.get("seed") == self.seed),
+                    "planning_call_count": len(planning_calls),
+                    "planning_repair_attempted": any(call["purpose"] == "planning_repair" for call in planning_calls),
+                    "planning_calls": planning_calls,
+                    "model_attribution_verified": bool(planning_calls) and all(
+                        call.get("model") == self.configured_model for call in planning_calls
+                    ),
+                    "seed_attribution_verified": bool(planning_calls) and all(
+                        call.get("seed") == self.seed for call in planning_calls
+                    ),
                     "planner_source": orchestrator.plan_sources.get(str(created["id"]), "unavailable"),
                     "internal_task_status": task.get("status"),
                     "steps": int(task.get("step_count") or 0),

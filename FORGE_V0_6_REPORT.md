@@ -50,17 +50,18 @@ O Forge E2E v1 contém dez missões públicas com orçamento de 5 a 20 ações e
 | Target Forge (smoke) | `qwen2.5:3b`, seed 42, 5 tarefas | Never/Always/Router = `0,0`; freeze proof aprovado. |
 | E2E Generative original | Parâmetro `ollama_research`; modelo efetivo auditado | O registro `model_calls` mostrou `qwen2.5:0.5b`; o resultado não pode ser atribuído ao 3B. |
 | E2E Generative retificado | `qwen2.5:3b`, seed 48, 1 missão | Atribuição verificada, mas `planner_source = fallback_after_model_error`; `measurement_valid = false` e `ATC = 0,0` não é interpretável como capacidade do 3B. |
+| E2E com reparo estruturado | `qwen2.5:3b`, seed 50, 1 missão | Duas chamadas auditadas (`planning` + `planning_repair`), ambas com modelo e seed verificados; o reparo não validou `Plan`, portanto `measurement_valid = false`. Sem aprovação artificial no protocolo E2E. |
 
 A avaliação E2E anterior foi **retificada**. A nova instrumentação fixa o alias solicitado na cópia isolada da configuração do runner, propaga a seed para planejamento e replanejamento, registra modelo/seed configurados e efetivos por missão e torna a medição inelegível quando o plano não provém de JSON estruturado do modelo. O próximo gargalo verificável é a confiabilidade do planejamento JSON do 3B, não uma alegada incapacidade E2E.
 
-A execução de validação com seed `49` confirmou `effective_seed = 49` e `seed_attribution_verified = true` em `model_calls`. Nenhuma consolidação multi-seed deve ocorrer enquanto uma missão não registrar simultaneamente modelo efetivo correto, seed efetiva correta e `planner_source = model_structured`.
+A execução de validação com seed `49` confirmou `effective_seed = 49` e `seed_attribution_verified = true` em `model_calls`. A validação subsequente com seed `50` confirmou que o mecanismo `structured()` foi efetivamente acionado: houve `planning` e `planning_repair`, ambos registrados com `qwen2.5:3b` e seed `50`. O segundo retorno ainda não satisfez o schema `Plan`; por isso, `planner_source = fallback_after_model_error` e a medida permanece inelegível. Nenhuma consolidação multi-seed deve ocorrer enquanto uma missão não registrar simultaneamente modelo efetivo correto, seed efetiva correta e `planner_source = model_structured`.
 
 ## Quality gates
 
 | Gate | Resultado |
 |---|---:|
-| Testes determinísticos | **92 passed** |
-| Cobertura branch | **77,71%** |
+| Testes determinísticos | **95 passed** |
+| Cobertura branch | **77,97%** |
 | Segurança Windows | **12 passed, 1 skipped** |
 | Testes de agente | **9 passed, 1 xfailed** |
 | Ruff | **PASS** |

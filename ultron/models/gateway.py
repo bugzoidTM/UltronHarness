@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from time import perf_counter
 from typing import Any, Protocol, TypeVar
@@ -204,9 +205,17 @@ class ModelGateway:
         return await self.provider(model_name).generate(messages, **kwargs)
 
     async def structured(
-        self, schema: type[T], messages: list[dict[str, str]], model_name: str | None = None
+        self,
+        schema: type[T],
+        messages: list[dict[str, str]],
+        model_name: str | None = None,
+        *,
+        on_response: Callable[[ModelResponse, bool], Awaitable[None]] | None = None,
+        **kwargs: Any,
     ) -> T:
-        response = await self.generate(messages, model_name, json_mode=True)
+        response = await self.generate(messages, model_name, json_mode=True, **kwargs)
+        if on_response:
+            await on_response(response, False)
         try:
             return schema.model_validate_json(response.content)
         except (ValidationError, ValueError):
@@ -217,7 +226,9 @@ class ModelGateway:
                     "content": "Responda somente JSON válido conforme o schema solicitado.",
                 },
             ]
-            second = await self.generate(repair, model_name, json_mode=True)
+            second = await self.generate(repair, model_name, json_mode=True, **kwargs)
+            if on_response:
+                await on_response(second, True)
             return schema.model_validate_json(second.content)
 
     async def health(self, name: str | None = None) -> dict[str, Any]:
