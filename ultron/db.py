@@ -169,6 +169,7 @@ CREATE TABLE IF NOT EXISTS cognitive_snapshots (
     recent_observations_json TEXT NOT NULL DEFAULT '[]',
     failed_strategies_json TEXT NOT NULL DEFAULT '[]',
     active_strategy TEXT,
+    reorientation_blocked_action_signature TEXT,
     external_feedback_json TEXT NOT NULL DEFAULT '[]',
     evidence_refs_json TEXT NOT NULL DEFAULT '[]',
     tool_calls_used INTEGER NOT NULL DEFAULT 0,
@@ -647,6 +648,7 @@ STRUCTURED_DECISION_MIGRATIONS = {
 
 COGNITIVE_SNAPSHOT_MIGRATIONS = {
     "active_strategy": "TEXT",
+    "reorientation_blocked_action_signature": "TEXT",
     "external_feedback_json": "TEXT NOT NULL DEFAULT '[]'",
 }
 

@@ -14,6 +14,7 @@ from ultron.memory.service import MemoryService
 from ultron.models.gateway import ModelGateway
 from ultron.policy.engine import PolicyEngine
 from ultron.schemas import (
+    CognitiveStateSnapshot,
     MissionOutline,
     NextAction,
     ProgressSignal,
@@ -400,6 +401,10 @@ async def test_action_loop_triggers_structured_reorientation_and_changes_next_sh
         def __init__(self) -> None:
             self.calls = 0
 
+        @staticmethod
+        def signature(tool, arguments, observations) -> str:
+            return repr((tool, arguments, observations[-8:]))
+
         def assess(self, **_kwargs):
             self.calls += 1
             if self.calls == 1:
@@ -415,7 +420,7 @@ async def test_action_loop_triggers_structured_reorientation_and_changes_next_sh
     short_prompts: list[str] = []
     executed: list[str] = []
     new_strategy = "Trocar a ação repetida por uma inspeção b1 verificável."
-    blocks = [_block(_action("a1")), _block(_action("b1")), _block(_action("stop", stop=True))]
+    blocks = [_block(_action("a1")), _block(_action("a1")), _block(_action("b1")), _block(_action("stop", stop=True))]
 
     async def structured(schema, messages, **_kwargs):
         if schema is MissionOutline:
@@ -450,6 +455,7 @@ async def test_action_loop_triggers_structured_reorientation_and_changes_next_sh
 
     assert executed == ["a1", "b1"]
     assert schemas.count(ReorientationDecision) == 1
+    assert schemas.count(ShortHorizonDecision) == 4
     assert new_strategy in short_prompts[1]
     trace = orchestrator.db.one(
         "SELECT payload_json FROM execution_traces WHERE task_id=? AND event_type='cognition.reorientation'",
@@ -457,4 +463,54 @@ async def test_action_loop_triggers_structured_reorientation_and_changes_next_sh
     )
     assert trace is not None
     assert orchestrator.db.parse_json(trace["payload_json"], {})["trigger"] == "action_loop"
+    rejected = orchestrator.db.one(
+        "SELECT payload_json FROM execution_traces WHERE task_id=? AND event_type='cognition.reorientation.action_rejected'",
+        (task["id"],),
+    )
+    assert rejected is not None
+    assert orchestrator.db.parse_json(rejected["payload_json"], {})["reason"] == "REPEATS_TRIGGER_ACTION_IN_SAME_STATE"
     assert orchestrator.get_task(task["id"])["status"] == "waiting_outcome"
+
+
+
+def test_reorientation_rejects_normalized_equivalent_strategies() -> None:
+    with pytest.raises(ValueError, match="new_strategy deve ser diferente de abandon_strategy"):
+        ReorientationDecision(
+            trigger="stagnation",
+            abandon_strategy="Executar  python.execute para verificar o arquivo.",
+            new_strategy=" executar python.execute   para verificar o arquivo. ",
+            rationale="A mudança textual não altera a estratégia observável.",
+        )
+
+
+@pytest.mark.asyncio
+async def test_reorientation_rejects_strategy_equal_to_active_snapshot(tmp_path: Path) -> None:
+    orchestrator = _orchestrator(tmp_path)
+    task = await orchestrator.create_task(
+        TaskCreate(
+            title="Estratégia ativa",
+            objective="Rejeitar reorientação nominal contra a estratégia ativa.",
+            workspace="active_strategy",
+            autonomy_mode=4,
+            allowed_tools=["python.execute"],
+        )
+    )
+    snapshot = CognitiveStateSnapshot(
+        task_id=task["id"],
+        objective=task["objective"],
+        active_strategy="Inspecionar o estado por meio da ação b1 verificável.",
+        remaining_action_budget=3,
+    )
+
+    async def structured(schema, _messages, **_kwargs):
+        assert schema is ReorientationDecision
+        return ReorientationDecision(
+            trigger="stagnation",
+            abandon_strategy="Repetir a ação a1 que não gerou evidência nova.",
+            new_strategy="inspecionar o estado por meio da ação b1 verificável.",
+            rationale="A escolha apenas reformula a estratégia que já estava ativa.",
+        )
+
+    orchestrator.models.structured = structured  # type: ignore[method-assign]
+    with pytest.raises(ValueError, match="new_strategy deve ser diferente da active_strategy anterior"):
+        await orchestrator.horizon.decide_reorientation(task, snapshot, trigger="stagnation")

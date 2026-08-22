@@ -664,6 +664,20 @@ class Orchestrator:
                     remaining_actions = block.actions[action_index + 1 :]
                     if not current:
                         return
+                    candidate_signature = ProgressTracker.signature(action.tool, action.arguments, snapshot.recent_observations)
+                    if snapshot.reorientation_blocked_action_signature == candidate_signature:
+                        self._trace(
+                            task_id,
+                            "cognition.reorientation.action_rejected",
+                            payload={"block_id": block_id, "action_index": action_index, "reason": "REPEATS_TRIGGER_ACTION_IN_SAME_STATE", "signature": candidate_signature},
+                        )
+                        self._trace(
+                            task_id,
+                            "cognition.short_horizon_block.invalidated",
+                            payload={"block_id": block_id, "executed_action_index": action_index - 1, "remaining_actions_discarded": len(block.actions) - action_index, "reason": "REORIENTATION_ACTION_REPEATED", "snapshot_iteration": snapshot.iteration},
+                        )
+                        invalidated = True
+                        break
                     precheck = self.horizon.contract.validate(current, action)
                     if not precheck.accepted:
                         self._trace(
@@ -794,7 +808,13 @@ class Orchestrator:
                             reorientation_trigger = "stagnation"
                             self._trace(task_id, "cognition.stagnation", payload={"iteration": snapshot.iteration})
                     if reorientation_trigger:
-                        snapshot = await self._reorient_after_progress_failure(current_after, snapshot, progress, reorientation_trigger)
+                        snapshot = await self._reorient_after_progress_failure(
+                            current_after,
+                            snapshot,
+                            progress,
+                            reorientation_trigger,
+                            ProgressTracker.signature(action.tool, action.arguments, snapshot.recent_observations),
+                        )
                         self._trace(
                             task_id,
                             "cognition.short_horizon_block.invalidated",
@@ -848,6 +868,18 @@ class Orchestrator:
                     await self._fail(task_id, "COGNITIVE_ACTION_SELECTION_FAILURE")
                     return
                 continue
+            candidate_signature = ProgressTracker.signature(action.tool, action.arguments, snapshot.recent_observations)
+            if snapshot.reorientation_blocked_action_signature == candidate_signature:
+                self._trace(
+                    task_id,
+                    "cognition.reorientation.action_rejected",
+                    payload={"reason": "REPEATS_TRIGGER_ACTION_IN_SAME_STATE", "signature": candidate_signature},
+                )
+                invalid_decisions += 1
+                if invalid_decisions >= 3:
+                    await self._fail(task_id, "REORIENTATION_ACTION_SELECTION_FAILURE")
+                    return
+                continue
             observation, snapshot, validation = await self.horizon.execute_iteration(current, action, snapshot)
             if not validation.accepted:
                 invalid_decisions += 1
@@ -887,7 +919,13 @@ class Orchestrator:
                         f"cognition.{reorientation_trigger}",
                         payload={"tool": action.tool, "iteration": snapshot.iteration},
                     )
-                    snapshot = await self._reorient_after_progress_failure(current, snapshot, progress, reorientation_trigger)
+                    snapshot = await self._reorient_after_progress_failure(
+                        current,
+                        snapshot,
+                        progress,
+                        reorientation_trigger,
+                        ProgressTracker.signature(action.tool, action.arguments, snapshot.recent_observations),
+                    )
             await self.events.emit("cognition.iteration.started", {"iteration": snapshot.iteration + 1}, task_id)
         await self._fail(task_id, "HORIZON_ITERATION_LIMIT")
 
@@ -897,6 +935,7 @@ class Orchestrator:
         snapshot: CognitiveStateSnapshot,
         progress: ProgressTracker,
         trigger: str,
+        blocked_action_signature: str,
     ) -> CognitiveStateSnapshot:
         task_id = str(task["id"])
         try:
@@ -904,7 +943,7 @@ class Orchestrator:
         except Exception as exc:
             self._trace(task_id, "cognition.reorientation_failed", payload={"trigger": trigger, "error": str(exc)[:1000]})
             return snapshot
-        updated = self.horizon.persist_reorientation(task, snapshot, decision)
+        updated = self.horizon.persist_reorientation(task, snapshot, decision, blocked_action_signature=blocked_action_signature)
         progress.reset_for_reorientation()
         payload = {
             "trigger": trigger,
@@ -913,6 +952,7 @@ class Orchestrator:
             "rationale": decision.rationale,
             "snapshot_iteration": updated.iteration,
             "evidence_ref": updated.evidence_refs[-1],
+            "blocked_action_signature": blocked_action_signature,
         }
         self._trace(task_id, "cognition.reorientation", payload=payload)
         await self.events.emit("cognition.reorientation", payload, task_id)

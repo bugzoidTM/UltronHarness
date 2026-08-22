@@ -25,6 +25,7 @@ from ultron.schemas import (
     ShortHorizonDecision,
     ToolCall,
     VerificationSpec,
+    normalize_strategy,
 )
 from ultron.tools.registry import ToolRegistry
 
@@ -117,6 +118,7 @@ class RecedingHorizonController:
             recent_observations=self.db.parse_json(row["recent_observations_json"], []),
             failed_strategies=self.db.parse_json(row["failed_strategies_json"], []),
             active_strategy=row["active_strategy"],
+            reorientation_blocked_action_signature=row["reorientation_blocked_action_signature"],
             external_feedback=self.db.parse_json(row["external_feedback_json"], []),
             evidence_refs=self.db.parse_json(row["evidence_refs_json"], []),
             tool_calls_used=int(row["tool_calls_used"]),
@@ -128,8 +130,8 @@ class RecedingHorizonController:
     def persist_snapshot(self, snapshot: CognitiveStateSnapshot) -> None:
         self.db.execute(
             """INSERT OR IGNORE INTO cognitive_snapshots
-               (id,task_id,iteration,current_subgoal_id,completed_subgoals_json,known_facts_json,open_questions_json,recent_observations_json,failed_strategies_json,active_strategy,external_feedback_json,evidence_refs_json,tool_calls_used,remaining_action_budget,created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               (id,task_id,iteration,current_subgoal_id,completed_subgoals_json,known_facts_json,open_questions_json,recent_observations_json,failed_strategies_json,active_strategy,reorientation_blocked_action_signature,external_feedback_json,evidence_refs_json,tool_calls_used,remaining_action_budget,created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 str(uuid4()),
                 snapshot.task_id,
@@ -141,6 +143,7 @@ class RecedingHorizonController:
                 self.db.json(snapshot.recent_observations),
                 self.db.json(snapshot.failed_strategies),
                 snapshot.active_strategy,
+                snapshot.reorientation_blocked_action_signature,
                 self.db.json(snapshot.external_feedback),
                 self.db.json(snapshot.evidence_refs),
                 snapshot.tool_calls_used,
@@ -172,6 +175,7 @@ class RecedingHorizonController:
                 recent_observations=obs_list[-self._limit("recent_observations") :] if obs_list else [],
                 failed_strategies=list(snapshot.failed_strategies),
                 active_strategy=snapshot.active_strategy,
+                reorientation_blocked_action_signature=snapshot.reorientation_blocked_action_signature,
                 evidence_refs=evidence_refs,
                 tool_calls_used=int(task.get("tool_call_count") or 0),
                 remaining_action_budget=self.contract.remaining_budget(task),
@@ -323,7 +327,7 @@ class RecedingHorizonController:
                 ),
             },
         ]
-        return await self.models.structured(
+        decision = await self.models.structured(
             ReorientationDecision,
             prompt,
             model_name=self.models.primary_name,
@@ -332,12 +336,17 @@ class RecedingHorizonController:
             on_response=lambda response, repaired: self._record_model_response(task, response, repaired, "horizon_reorientation"),
             on_decision=lambda initial, final, repairs, error, category: self._record_decision(task, "reorientation", snapshot.iteration + 1, initial, final, repairs, error, category),
         )
+        if snapshot.active_strategy and normalize_strategy(decision.new_strategy) == normalize_strategy(snapshot.active_strategy):
+            raise ValueError("new_strategy deve ser diferente da active_strategy anterior após normalização.")
+        return decision
 
     def persist_reorientation(
         self,
         task: dict[str, Any],
         previous: CognitiveStateSnapshot,
         decision: ReorientationDecision,
+        *,
+        blocked_action_signature: str,
     ) -> CognitiveStateSnapshot:
         evidence_ref = f"reorientation:{uuid4()}"
         updated = CognitiveStateSnapshot(
@@ -350,6 +359,7 @@ class RecedingHorizonController:
             recent_observations=list(previous.recent_observations),
             failed_strategies=[*previous.failed_strategies, f"ABANDONED:{decision.abandon_strategy}"][-self._limit("max_failed_strategies") :],
             active_strategy=decision.new_strategy,
+            reorientation_blocked_action_signature=blocked_action_signature,
             external_feedback=list(previous.external_feedback),
             evidence_refs=[*previous.evidence_refs, evidence_ref][-20:],
             tool_calls_used=int(task.get("tool_call_count") or 0),
@@ -484,6 +494,7 @@ class RecedingHorizonController:
             recent_observations=list(previous.recent_observations),
             failed_strategies=[*previous.failed_strategies, "EXTERNAL_OUTCOME_REJECTED"][-self._limit("max_failed_strategies") :],
             active_strategy=previous.active_strategy,
+            reorientation_blocked_action_signature=previous.reorientation_blocked_action_signature,
             external_feedback=[*previous.external_feedback, f"{feedback_identity}: {feedback}"][-3:],
             evidence_refs=[*previous.evidence_refs, feedback_identity][-20:],
             tool_calls_used=int(task.get("tool_call_count") or 0),
@@ -546,6 +557,7 @@ class RecedingHorizonController:
             recent_observations=[*previous.recent_observations, observation.output_summary][-self._limit("recent_observations") :],
             failed_strategies=failures[-self._limit("max_failed_strategies") :],
             active_strategy=previous.active_strategy,
+            reorientation_blocked_action_signature=None,
             external_feedback=previous.external_feedback[-3:],
             evidence_refs=[*previous.evidence_refs, evidence_ref][-20:],
             tool_calls_used=int(task.get("tool_call_count") or 0) + 1,

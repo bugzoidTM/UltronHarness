@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
@@ -194,11 +195,21 @@ class BlockValidityResult(BaseModel):
     invalidated_from_index: int | None = Field(default=None, ge=0)
 
 
+def normalize_strategy(value: str) -> str:
+    return re.sub(r"\s+", " ", value).strip().casefold()
+
+
 class ReorientationDecision(BaseModel):
     trigger: Literal["stagnation", "action_loop"]
     abandon_strategy: str = Field(min_length=8, max_length=1000)
     new_strategy: str = Field(min_length=8, max_length=1000)
     rationale: str = Field(min_length=8, max_length=2000)
+
+    @model_validator(mode="after")
+    def requires_material_strategy_change(self) -> ReorientationDecision:
+        if normalize_strategy(self.new_strategy) == normalize_strategy(self.abandon_strategy):
+            raise ValueError("new_strategy deve ser diferente de abandon_strategy após normalização.")
+        return self
 
 
 class OrientationSnapshot(BaseModel):
@@ -227,6 +238,7 @@ class CognitiveStateSnapshot(BaseModel):
     recent_observations: list[str] = Field(default_factory=list)
     failed_strategies: list[str] = Field(default_factory=list)
     active_strategy: str | None = Field(default=None, max_length=1000)
+    reorientation_blocked_action_signature: str | None = Field(default=None, max_length=128)
     external_feedback: list[str] = Field(default_factory=list)
     evidence_refs: list[str] = Field(default_factory=list)
     tool_calls_used: int = Field(default=0, ge=0)
