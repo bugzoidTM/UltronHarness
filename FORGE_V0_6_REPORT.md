@@ -51,14 +51,16 @@ O Forge E2E v1 contém dez missões públicas com orçamento de 5 a 20 ações e
 | E2E Generative original | Parâmetro `ollama_research`; modelo efetivo auditado | O registro `model_calls` mostrou `qwen2.5:0.5b`; o resultado não pode ser atribuído ao 3B. |
 | E2E Generative retificado | `qwen2.5:3b`, seed 48, 1 missão | Atribuição verificada, mas `planner_source = fallback_after_model_error`; `measurement_valid = false` e `ATC = 0,0` não é interpretável como capacidade do 3B. |
 
-A avaliação E2E anterior foi **retificada**. A nova instrumentação fixa o alias solicitado na cópia isolada da configuração do runner, registra modelo configurado e efetivo por missão e torna a medição inelegível quando o plano não provém de JSON estruturado do modelo. O próximo gargalo verificável é a confiabilidade do planejamento JSON do 3B, não uma alegada incapacidade E2E.
+A avaliação E2E anterior foi **retificada**. A nova instrumentação fixa o alias solicitado na cópia isolada da configuração do runner, propaga a seed para planejamento e replanejamento, registra modelo/seed configurados e efetivos por missão e torna a medição inelegível quando o plano não provém de JSON estruturado do modelo. O próximo gargalo verificável é a confiabilidade do planejamento JSON do 3B, não uma alegada incapacidade E2E.
+
+A execução de validação com seed `49` confirmou `effective_seed = 49` e `seed_attribution_verified = true` em `model_calls`. Nenhuma consolidação multi-seed deve ocorrer enquanto uma missão não registrar simultaneamente modelo efetivo correto, seed efetiva correta e `planner_source = model_structured`.
 
 ## Quality gates
 
 | Gate | Resultado |
 |---|---:|
 | Testes determinísticos | **92 passed** |
-| Cobertura branch | **77,77%** |
+| Cobertura branch | **77,71%** |
 | Segurança Windows | **12 passed, 1 skipped** |
 | Testes de agente | **9 passed, 1 xfailed** |
 | Ruff | **PASS** |

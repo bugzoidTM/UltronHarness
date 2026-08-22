@@ -46,9 +46,11 @@ class Orchestrator:
         models: ModelGateway,
         policy: PolicyEngine,
         tools: ToolRegistry,
+        planning_seed: int | None = None,
     ):
         self.settings, self.db, self.events = settings, db, events
         self.memory, self.models, self.policy, self.tools = memory, models, policy, tools
+        self.planning_seed = planning_seed
         self.recovery = RecoveryEngine()
         self.verifier = StepSuccessVerifier(tools)
         self.context_builder = ContextBuilder(db)
@@ -696,9 +698,9 @@ class Orchestrator:
             },
         ]
         try:
-            response = await self.models.generate(prompt, json_mode=True)
+            response = await self.models.generate(prompt, json_mode=True, seed=self.planning_seed)
             self.db.execute(
-                "INSERT INTO model_calls (id,task_id,provider,model,purpose,latency_ms,prompt_tokens,output_tokens,finish_reason,created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO model_calls (id,task_id,provider,model,purpose,latency_ms,prompt_tokens,output_tokens,finish_reason,seed,created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     str(uuid4()),
                     task["id"],
@@ -709,6 +711,7 @@ class Orchestrator:
                     response.usage.prompt_tokens,
                     response.usage.output_tokens,
                     response.finish_reason,
+                    self.planning_seed,
                     utcnow(),
                 ),
             )

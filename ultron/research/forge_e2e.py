@@ -93,6 +93,7 @@ class ForgeE2ERunner:
             models,
             PolicyEngine(self.settings),
             tools,
+            planning_seed=self.seed,
         )
 
     @staticmethod
@@ -144,7 +145,7 @@ class ForgeE2ERunner:
             task = orchestrator.get_task(created["id"]) or {}
             evaluation = evaluator.evaluate(workspace_path, task_id, contracts[task_id])
             model_call = self.db.one(
-                "SELECT id,model,latency_ms,prompt_tokens,output_tokens,finish_reason FROM model_calls WHERE task_id=? AND purpose='planning' ORDER BY created_at DESC LIMIT 1",
+                "SELECT id,model,seed,latency_ms,prompt_tokens,output_tokens,finish_reason FROM model_calls WHERE task_id=? AND purpose='planning' ORDER BY created_at DESC LIMIT 1",
                 (created["id"],),
             )
             approvals = self.db.one("SELECT COUNT(*) AS count FROM approvals WHERE task_id=?", (created["id"],)) or {"count": 0}
@@ -159,7 +160,9 @@ class ForgeE2ERunner:
                     "requested_model_alias": self.model_name,
                     "configured_model": self.configured_model,
                     "effective_model": model_call.get("model") if model_call else None,
+                    "effective_seed": model_call.get("seed") if model_call else None,
                     "model_attribution_verified": bool(model_call and model_call.get("model") == self.configured_model),
+                    "seed_attribution_verified": bool(model_call and model_call.get("seed") == self.seed),
                     "planner_source": orchestrator.plan_sources.get(str(created["id"]), "unavailable"),
                     "internal_task_status": task.get("status"),
                     "steps": int(task.get("step_count") or 0),
@@ -174,6 +177,8 @@ class ForgeE2ERunner:
         invalidation_reasons = []
         if not all(trace["model_attribution_verified"] for trace in traces):
             invalidation_reasons.append("model_attribution_unverified")
+        if not all(trace["seed_attribution_verified"] for trace in traces):
+            invalidation_reasons.append("seed_attribution_unverified")
         if not all(trace["planner_source"] == "model_structured" for trace in traces):
             invalidation_reasons.append("planner_not_structured_model_output")
         measurement_valid = not invalidation_reasons

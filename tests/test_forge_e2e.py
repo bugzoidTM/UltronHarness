@@ -35,9 +35,11 @@ def test_e2e_runner_fixes_requested_model_on_isolated_gateway_settings(tmp_path:
 
     original = Settings(raw=deepcopy(load_settings(ROOT).raw), root_dir=tmp_path)
     original_primary = original.raw["models"]["primary"]
-    runner = ForgeE2ERunner(original, private_root=tmp_path, model_name="ollama_research")
+    runner = ForgeE2ERunner(original, private_root=tmp_path, model_name="ollama_research", seed=123)
 
     assert original.raw["models"]["primary"] == original_primary
     assert runner.settings.raw["models"]["primary"] == "ollama_research"
-    assert runner._orchestrator(["file.list", "file.read", "python.execute"]).models.primary_name == "ollama_research"
+    orchestrator = runner._orchestrator(["file.list", "file.read", "python.execute"])
+    assert orchestrator.models.primary_name == "ollama_research"
+    assert orchestrator.planning_seed == 123
     assert runner.configured_model == "qwen2.5:3b"

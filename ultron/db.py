@@ -228,6 +228,7 @@ CREATE TABLE IF NOT EXISTS model_calls (
     prompt_tokens INTEGER,
     output_tokens INTEGER,
     finish_reason TEXT,
+    seed INTEGER,
     created_at TEXT NOT NULL
 );
 
@@ -553,6 +554,11 @@ CREATE TABLE IF NOT EXISTS assertions (
 """
 
 
+MODEL_CALL_MIGRATIONS = {
+    "seed": "INTEGER",
+}
+
+
 PAIR_UTILITY_MIGRATIONS = {
     "task_id": "TEXT",
     "task_family": "TEXT",
@@ -587,9 +593,13 @@ class Database:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as connection:
             connection.executescript(SCHEMA)
-            present = {str(row[1]) for row in connection.execute("PRAGMA table_info(experience_pair_utility)")}
+            model_call_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(model_calls)")}
+            for name, definition in MODEL_CALL_MIGRATIONS.items():
+                if name not in model_call_columns:
+                    connection.execute(f"ALTER TABLE model_calls ADD COLUMN {name} {definition}")
+            pair_utility_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(experience_pair_utility)")}
             for name, definition in PAIR_UTILITY_MIGRATIONS.items():
-                if name not in present:
+                if name not in pair_utility_columns:
                     connection.execute(f"ALTER TABLE experience_pair_utility ADD COLUMN {name} {definition}")
 
     def execute(self, sql: str, params: tuple[Any, ...] = ()) -> int:
