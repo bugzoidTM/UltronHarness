@@ -168,6 +168,7 @@ CREATE TABLE IF NOT EXISTS cognitive_snapshots (
     open_questions_json TEXT NOT NULL DEFAULT '[]',
     recent_observations_json TEXT NOT NULL DEFAULT '[]',
     failed_strategies_json TEXT NOT NULL DEFAULT '[]',
+    external_feedback_json TEXT NOT NULL DEFAULT '[]',
     evidence_refs_json TEXT NOT NULL DEFAULT '[]',
     tool_calls_used INTEGER NOT NULL DEFAULT 0,
     remaining_action_budget INTEGER NOT NULL DEFAULT 0,
@@ -643,6 +644,10 @@ STRUCTURED_DECISION_MIGRATIONS = {
     "error_category": "TEXT",
 }
 
+COGNITIVE_SNAPSHOT_MIGRATIONS = {
+    "external_feedback_json": "TEXT NOT NULL DEFAULT '[]'",
+}
+
 
 PAIR_UTILITY_MIGRATIONS = {
     "task_id": "TEXT",
@@ -690,6 +695,10 @@ class Database:
             for name, definition in STRUCTURED_DECISION_MIGRATIONS.items():
                 if name not in structured_decision_columns:
                     connection.execute(f"ALTER TABLE structured_decisions ADD COLUMN {name} {definition}")
+            cognitive_snapshot_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(cognitive_snapshots)")}
+            for name, definition in COGNITIVE_SNAPSHOT_MIGRATIONS.items():
+                if name not in cognitive_snapshot_columns:
+                    connection.execute(f"ALTER TABLE cognitive_snapshots ADD COLUMN {name} {definition}")
             memory_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(memories)")}
             for name, definition in MEMORY_VERIFICATION_MIGRATIONS.items():
                 if name not in memory_columns:

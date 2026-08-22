@@ -79,3 +79,18 @@ Para missões que exigem resultado externo, cada `stop=true` leva a `WAITING_OUT
 | Exceção do evaluator | A medição recebe `external_evaluator_error`, torna-se inválida e não é convertida em `PASS` nem false-stop. |
 
 A correção preserva o isolamento do evaluator privado: o trace público mantém apenas referências de evidência retornadas pela autoridade e não contém contrato oculto, resposta esperada, fixture secreta, patch ouro ou implementação do avaliador. O workflow de CI também instala o extra `dev`, disponibilizando explicitamente `pytest`, `pytest-cov` e `ruff` antes dos quality gates.
+
+
+## Retificação Horizon — avaliação final por arquitetura e feedback seguro
+
+Todos os três controllers (`full_plan`, `short_horizon` e `next_action`) passam por `WAITING_OUTCOME` quando a missão exige resultado externo. A avaliação privada continua sendo a autoridade final; o resultado interno jamais encerra uma missão desse tipo por si só.
+
+| Controller | Avaliação externa final | Tratamento de `FAIL` |
+|---|---|---|
+| `full_plan` | Uma única avaliação, ao concluir o plano | A tarefa falha com `EXTERNAL_OUTCOME_REJECTED`; não há reentrada closed-loop nem replanejamento induzido pelo evaluator. |
+| `short_horizon` | Uma avaliação para cada proposta de `stop` | Dentro do limite configurado, o runtime persiste feedback público e volta ao ciclo de decisão. |
+| `next_action` | Uma avaliação para cada proposta de `stop` | Dentro do limite configurado, o runtime persiste feedback público e volta ao ciclo de decisão. |
+
+Após `FAIL` closed-loop, o runtime cria uma identidade pública por tentativa — `external_feedback_attempt:<N>` — e persiste no `CognitiveStateSnapshot` somente uma instrução genérica de recuperação. O próximo prompt de decisão inclui explicitamente esse feedback. Evidência, segredo, fixture, resposta esperada, patch ouro e implementação do evaluator privado não são copiados para snapshots, events, traces públicos ou prompts.
+
+O E2E adversarial cobre a sequência `STOP → FAIL → feedback consumido → ação diferente → workspace mudou → STOP → PASS`. Ele intercepta o prompt imediatamente posterior ao false-stop e verifica simultaneamente a presença de `external_feedback_attempt:1` e a ausência do segredo privado injetado no payload do evaluator.

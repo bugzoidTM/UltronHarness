@@ -545,19 +545,71 @@ class Orchestrator:
             raise KeyError("Tarefa não encontrada.")
         if task.get("status") != TaskStatus.WAITING_OUTCOME.value:
             raise ValueError("A tarefa não aguarda outcome externo.")
-        outcome = OutcomeAuthority().decide(private_evaluation=evaluation)
+
+        attempt = len(
+            [
+                row
+                for row in self.db.all("SELECT event_type FROM execution_traces WHERE task_id=?", (task_id,))
+                if row["event_type"] == "cognition.external_outcome_evaluated"
+            ]
+        ) + 1
+        feedback_identity = f"external_feedback_attempt:{attempt}"
+        private_outcome = OutcomeAuthority().decide(private_evaluation=evaluation)
+        outcome = OutcomeResult(
+            success=private_outcome.success,
+            authority_level=private_outcome.authority_level,
+            evidence_refs=[feedback_identity],
+            confidence=private_outcome.confidence,
+            final=private_outcome.final,
+        )
+        self._trace(
+            task_id,
+            "cognition.external_outcome_evaluated",
+            payload={
+                "attempt": attempt,
+                "passed": outcome.success,
+                "authority": outcome.authority_level,
+                "evidence_refs": outcome.evidence_refs,
+            },
+        )
         if outcome.success:
             self._update_task(task_id, status=TaskStatus.COMPLETED, completed_at=utcnow(), error=None)
-            await self._transition(task_id, CognitiveState.COMPLETE, {"external_outcome": True})
+            await self._transition(task_id, CognitiveState.COMPLETE, {"external_outcome": True, "attempt": attempt})
             await self.events.emit("task.completed", {"authority": outcome.authority_level}, task_id)
             return outcome
-        false_stops = len([row for row in self.db.all("SELECT event_type FROM execution_traces WHERE task_id=?", (task_id,)) if row["event_type"] == "cognition.false_stop"]) + 1
+
+        if self.settings.controller_mode not in {"next_action", "short_horizon"}:
+            await self._fail(task_id, "EXTERNAL_OUTCOME_REJECTED")
+            return outcome
+
+        false_stops = len(
+            [
+                row
+                for row in self.db.all("SELECT event_type FROM execution_traces WHERE task_id=?", (task_id,))
+                if row["event_type"] == "cognition.false_stop"
+            ]
+        ) + 1
         self._trace(task_id, "cognition.false_stop", payload={"count": false_stops, "authority": outcome.authority_level})
         if false_stops >= int(self.settings.cognition.get("max_false_stops", 2)):
             await self._fail(task_id, "FALSE_STOP_LIMIT")
             return outcome
+
         self._update_task(task_id, status=TaskStatus.RUNNING, error=None)
-        await self.events.emit("cognition.outcome_rejected", {"evidence_refs": outcome.evidence_refs[:3]}, task_id)
+        resumed_task = self.get_task(task_id)
+        if not resumed_task:
+            raise KeyError("Tarefa não encontrada após atualização de outcome.")
+        public_feedback = "A avaliação externa não confirmou a conclusão. Revise o workspace e execute uma ação verificável diferente antes de propor novo stop."
+        snapshot = self.horizon.persist_external_feedback(resumed_task, feedback_identity, public_feedback)
+        self._trace(
+            task_id,
+            "cognition.external_feedback_persisted",
+            payload={"feedback_identity": feedback_identity, "snapshot_iteration": snapshot.iteration},
+        )
+        await self.events.emit(
+            "cognition.outcome_rejected",
+            {"feedback_identity": feedback_identity, "evidence_refs": outcome.evidence_refs},
+            task_id,
+        )
         await self.run(task_id)
         return outcome
 
@@ -835,6 +887,9 @@ class Orchestrator:
                 {"internal_success": success, "experience": experience},
                 task_id,
             )
+            self._update_task(task_id, status=TaskStatus.WAITING_OUTCOME, error=None)
+            await self.events.emit("cognition.waiting_outcome", {"source": "full_plan"}, task_id)
+            return
         else:
             experience_id = self.memory.store_experience(
                 task_id,

@@ -15,7 +15,15 @@ from ultron.db import Database
 from ultron.memory.service import MemoryService
 from ultron.models.gateway import ModelGateway, ModelResponse, Usage
 from ultron.policy.engine import PolicyEngine
-from ultron.schemas import Plan, PlanStep, TaskCreate, ToolCall
+from ultron.schemas import (
+    NextAction,
+    Plan,
+    PlanStep,
+    TaskCreate,
+    TaskStatus,
+    ToolCall,
+    VerificationSpec,
+)
 from ultron.tools.registry import ToolRegistry
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -320,6 +328,126 @@ def test_orchestrator_resumes_remaining_steps_after_approval(tmp_path: Path) -> 
     assert "task.resumed" in {event["event_type"] for event in events}
 
 
+@pytest.mark.asyncio
+async def test_closed_loop_false_stop_persists_sanitized_feedback_before_a_different_action(tmp_path: Path) -> None:
+    orchestrator = _orchestrator(tmp_path)
+    orchestrator.settings.raw["cognition"]["controller_mode"] = "next_action"
+    private_secret = "PRIVATE_EVALUATOR_SECRET_MUST_NOT_LEAK"
+    prompts: list[str] = []
+    decisions = [
+        NextAction(
+            intent="Propor conclusão prematura",
+            expected_evidence=VerificationSpec(type="none"),
+            stop=True,
+            stop_reason="parece concluído",
+        ),
+        NextAction(
+            intent="Criar evidência recuperada",
+            tool="python.execute",
+            arguments={"code": "create recovered artifact"},
+            expected_evidence=VerificationSpec(type="tool_success"),
+        ),
+        NextAction(
+            intent="Propor conclusão após evidência",
+            expected_evidence=VerificationSpec(type="none"),
+            stop=True,
+            stop_reason="evidência criada",
+        ),
+    ]
+
+    async def structured(schema, messages, **_kwargs):
+        assert schema is NextAction
+        prompts.append(messages[-1]["content"])
+        return decisions.pop(0)
+
+    async def execute_recovery_action(task_id: str, call: ToolCall) -> dict:
+        assert call.tool_name == "python.execute"
+        task = orchestrator.get_task(task_id)
+        assert task is not None
+        workspace = orchestrator.tools.workspace_for(str(task["workspace"]))
+        workspace.mkdir(parents=True, exist_ok=True)
+        (workspace / "recovered.txt").write_text("recovered", encoding="utf-8")
+        orchestrator.db.execute("UPDATE tasks SET tool_call_count=tool_call_count+1 WHERE id=?", (task_id,))
+        return {"status": "completed", "output": "recovered artifact"}
+
+    orchestrator.models.structured = structured  # type: ignore[method-assign]
+    orchestrator.horizon.execute_tool = execute_recovery_action
+    created = await orchestrator.create_task(
+        TaskCreate(
+            title="False stop sanitizado",
+            objective="Criar recovered.txt após feedback externo.",
+            workspace="closed_loop_feedback",
+            autonomy_mode=4,
+            allowed_tools=["python.execute"],
+            action_budget=(1, 3),
+            requires_external_outcome=True,
+        )
+    )
+
+    await orchestrator.run(created["id"])
+    await orchestrator.active[created["id"]]
+    assert orchestrator.get_task(created["id"])["status"] == "waiting_outcome"
+
+    failed = await orchestrator.resolve_external_outcome(
+        created["id"], {"passed": False, "evidence": [private_secret]}
+    )
+    assert not failed.success
+    await orchestrator.active[created["id"]]
+    assert orchestrator.get_task(created["id"])["status"] == "waiting_outcome"
+    assert len(prompts) == 3
+    assert "external_feedback_attempt:1" in prompts[1]
+    assert private_secret not in prompts[1]
+    assert (orchestrator.tools.workspace_for("closed_loop_feedback") / "recovered.txt").read_text(encoding="utf-8") == "recovered"
+
+    snapshots = orchestrator.db.all(
+        "SELECT external_feedback_json,evidence_refs_json FROM cognitive_snapshots WHERE task_id=? ORDER BY iteration",
+        (created["id"],),
+    )
+    assert any(
+        any("external_feedback_attempt:1" in item for item in orchestrator.db.parse_json(row["external_feedback_json"], []))
+        for row in snapshots
+    )
+    assert all(private_secret not in str(row) for row in snapshots)
+
+    passed = await orchestrator.resolve_external_outcome(created["id"], {"passed": True, "evidence": [private_secret]})
+    assert passed.success
+    assert passed.evidence_refs == ["external_feedback_attempt:2"]
+    assert orchestrator.get_task(created["id"])["status"] == "completed"
+
+
+@pytest.mark.asyncio
+async def test_full_plan_waits_for_one_external_outcome_without_closed_loop_recovery(tmp_path: Path) -> None:
+    orchestrator = _orchestrator(tmp_path)
+
+    async def planned(_task, _memories, _routed=None):
+        return Plan(
+            objective="Concluir uma verificação interna",
+            steps=[PlanStep(id=1, action="Confirmar contexto", success_condition="task_context")],
+            confidence=0.8,
+        )
+
+    orchestrator._make_plan = planned
+    created = await orchestrator.create_task(
+        TaskCreate(
+            title="Full plan com outcome externo",
+            objective="Aguardar avaliação final externa uma única vez.",
+            workspace="full_plan_outcome",
+            autonomy_mode=4,
+            requires_external_outcome=True,
+        )
+    )
+    await orchestrator.run(created["id"])
+    await orchestrator.active[created["id"]]
+    assert orchestrator.get_task(created["id"])["status"] == "waiting_outcome"
+
+    outcome = await orchestrator.resolve_external_outcome(created["id"], {"passed": False, "evidence": ["private"]})
+    assert not outcome.success
+    task = orchestrator.get_task(created["id"])
+    assert task is not None and task["status"] == "failed"
+    assert not orchestrator.active
+    assert orchestrator.db.one("SELECT COUNT(*) AS count FROM plans WHERE task_id=?", (created["id"],)) == {"count": 1}
+
+
 def test_continuation_survives_restart_before_approval(tmp_path: Path) -> None:
     original = _orchestrator(tmp_path)
 
@@ -394,3 +522,68 @@ def test_verifier_registry_rejects_shell_free_conditions_and_checks_task_contrac
         prior_steps_verified=True,
     )
     assert contract.accepted
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("controller_mode", ("full_plan", "short_horizon", "next_action"))
+async def test_all_controller_modes_accept_external_pass_as_the_final_authority(
+    tmp_path: Path, controller_mode: str
+) -> None:
+    orchestrator = _orchestrator(tmp_path)
+    orchestrator.settings.raw["cognition"]["controller_mode"] = controller_mode
+    created = await orchestrator.create_task(
+        TaskCreate(
+            title=f"Outcome final {controller_mode}",
+            objective="Concluir somente com resultado externo.",
+            workspace=f"outcome_final_{controller_mode}",
+            autonomy_mode=4,
+            requires_external_outcome=True,
+        )
+    )
+    orchestrator._update_task(created["id"], status=TaskStatus.WAITING_OUTCOME, error=None)
+
+    outcome = await orchestrator.resolve_external_outcome(
+        created["id"], {"passed": True, "evidence": ["PRIVATE_EVALUATOR_SECRET"]}
+    )
+
+    assert outcome.success
+    assert outcome.evidence_refs == ["external_feedback_attempt:1"]
+    assert orchestrator.get_task(created["id"])["status"] == "completed"
+
+
+@pytest.mark.asyncio
+async def test_short_horizon_false_stop_persists_feedback_and_restarts_closed_loop(tmp_path: Path) -> None:
+    orchestrator = _orchestrator(tmp_path)
+    orchestrator.settings.raw["cognition"]["controller_mode"] = "short_horizon"
+    restarted: list[str] = []
+
+    async def run_again(task_id: str) -> None:
+        restarted.append(task_id)
+
+    orchestrator.run = run_again  # type: ignore[method-assign]
+    created = await orchestrator.create_task(
+        TaskCreate(
+            title="Recuperação short horizon",
+            objective="Retomar somente após feedback público.",
+            workspace="short_feedback",
+            autonomy_mode=4,
+            requires_external_outcome=True,
+        )
+    )
+    orchestrator._update_task(created["id"], status=TaskStatus.WAITING_OUTCOME, error=None)
+
+    outcome = await orchestrator.resolve_external_outcome(
+        created["id"], {"passed": False, "evidence": ["PRIVATE_EVALUATOR_SECRET"]}
+    )
+
+    assert not outcome.success
+    assert restarted == [created["id"]]
+    assert orchestrator.get_task(created["id"])["status"] == "running"
+    snapshot = orchestrator.db.one(
+        "SELECT external_feedback_json FROM cognitive_snapshots WHERE task_id=? ORDER BY iteration DESC LIMIT 1",
+        (created["id"],),
+    )
+    assert snapshot is not None
+    feedback = orchestrator.db.parse_json(snapshot["external_feedback_json"], [])
+    assert any("external_feedback_attempt:1" in item for item in feedback)
+    assert "PRIVATE_EVALUATOR_SECRET" not in str(feedback)

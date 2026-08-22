@@ -207,6 +207,7 @@ class CognitiveStateSnapshot(BaseModel):
     open_questions: list[str] = Field(default_factory=list)
     recent_observations: list[str] = Field(default_factory=list)
     failed_strategies: list[str] = Field(default_factory=list)
+    external_feedback: list[str] = Field(default_factory=list)
     evidence_refs: list[str] = Field(default_factory=list)
     tool_calls_used: int = Field(default=0, ge=0)
     remaining_action_budget: int = Field(default=0, ge=0)

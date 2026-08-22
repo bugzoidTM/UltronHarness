@@ -114,6 +114,7 @@ class RecedingHorizonController:
             open_questions=self.db.parse_json(row["open_questions_json"], []),
             recent_observations=self.db.parse_json(row["recent_observations_json"], []),
             failed_strategies=self.db.parse_json(row["failed_strategies_json"], []),
+            external_feedback=self.db.parse_json(row["external_feedback_json"], []),
             evidence_refs=self.db.parse_json(row["evidence_refs_json"], []),
             tool_calls_used=int(row["tool_calls_used"]),
             remaining_action_budget=int(row["remaining_action_budget"]),
@@ -124,8 +125,8 @@ class RecedingHorizonController:
     def persist_snapshot(self, snapshot: CognitiveStateSnapshot) -> None:
         self.db.execute(
             """INSERT OR IGNORE INTO cognitive_snapshots
-               (id,task_id,iteration,current_subgoal_id,completed_subgoals_json,known_facts_json,open_questions_json,recent_observations_json,failed_strategies_json,evidence_refs_json,tool_calls_used,remaining_action_budget,created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               (id,task_id,iteration,current_subgoal_id,completed_subgoals_json,known_facts_json,open_questions_json,recent_observations_json,failed_strategies_json,external_feedback_json,evidence_refs_json,tool_calls_used,remaining_action_budget,created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 str(uuid4()),
                 snapshot.task_id,
@@ -136,6 +137,7 @@ class RecedingHorizonController:
                 self.db.json(snapshot.open_questions),
                 self.db.json(snapshot.recent_observations),
                 self.db.json(snapshot.failed_strategies),
+                self.db.json(snapshot.external_feedback),
                 self.db.json(snapshot.evidence_refs),
                 snapshot.tool_calls_used,
                 snapshot.remaining_action_budget,
@@ -255,6 +257,7 @@ class RecedingHorizonController:
                     f"Fatos conhecidos: {snapshot.known_facts[-self._limit('max_known_facts') :]}\n"
                     f"Observações recentes: {snapshot.recent_observations[-self._limit('recent_observations') :]}\n"
                     f"Estratégias falhas: {snapshot.failed_strategies[-self._limit('max_failed_strategies') :]}\n"
+                    f"Feedback externo sanitizado: {snapshot.external_feedback[-3:]}\n"
                     f"Procedimentos roteados: {routed_procedures or []}\nMemórias: {memory_summaries or []}"
                 ),
             },
@@ -279,7 +282,7 @@ class RecedingHorizonController:
         obs_text = "\n".join(snapshot.recent_observations) if snapshot.recent_observations else "nenhuma"
         prompt = [
             {"role": "system", "content": "Escolha um bloco de uma a três ações locais. Cada ação deve ser executável com as ferramentas autorizadas. O bloco será invalidado se a observação tornar as próximas ações inadequadas. Responda somente no schema ShortHorizonDecision."},
-            {"role": "user", "content": f"Objetivo: {task['objective']}\nObservação inicial do ambiente:\n{obs_text}\nFerramentas: {task.get('allowed_tools')}\nOrçamento: {snapshot.remaining_action_budget}\nObservações: {snapshot.recent_observations[-self._limit('recent_observations') :]}\nOutline: {[item.description for item in outline.subgoals] if outline else []}"},
+            {"role": "user", "content": f"Objetivo: {task['objective']}\nObservação inicial do ambiente:\n{obs_text}\nFerramentas: {task.get('allowed_tools')}\nOrçamento: {snapshot.remaining_action_budget}\nObservações: {snapshot.recent_observations[-self._limit('recent_observations') :]}\nFeedback externo sanitizado: {snapshot.external_feedback[-3:]}\nOutline: {[item.description for item in outline.subgoals] if outline else []}"},
         ]
         return await self.models.structured(
             ShortHorizonDecision,
@@ -362,6 +365,28 @@ class RecedingHorizonController:
         )
         self.db.execute("UPDATE tasks SET llm_call_count=llm_call_count+1 WHERE id=?", (task["id"],))
 
+    def persist_external_feedback(self, task: dict[str, Any], feedback_identity: str, feedback: str) -> CognitiveStateSnapshot:
+        """Anexa somente feedback público ao snapshot antes de uma nova decisão closed-loop."""
+        previous = self.latest_snapshot(task)
+        updated = CognitiveStateSnapshot(
+            task_id=str(task["id"]),
+            objective=str(task["objective"]),
+            current_subgoal_id=previous.current_subgoal_id,
+            completed_subgoals=list(previous.completed_subgoals),
+            known_facts=list(previous.known_facts),
+            open_questions=list(previous.open_questions),
+            recent_observations=list(previous.recent_observations),
+            failed_strategies=[*previous.failed_strategies, "EXTERNAL_OUTCOME_REJECTED"][-self._limit("max_failed_strategies") :],
+            external_feedback=[*previous.external_feedback, f"{feedback_identity}: {feedback}"][-3:],
+            evidence_refs=[*previous.evidence_refs, feedback_identity][-20:],
+            tool_calls_used=int(task.get("tool_call_count") or 0),
+            remaining_action_budget=self.contract.remaining_budget(task),
+            replan_count=int(task.get("replan_count") or 0),
+            iteration=previous.iteration + 1,
+        )
+        self.persist_snapshot(updated)
+        return updated
+
     def _persist_action(
         self,
         action_id: str,
@@ -413,6 +438,7 @@ class RecedingHorizonController:
             open_questions=previous.open_questions[-self._limit("max_open_questions") :],
             recent_observations=[*previous.recent_observations, observation.output_summary][-self._limit("recent_observations") :],
             failed_strategies=failures[-self._limit("max_failed_strategies") :],
+            external_feedback=previous.external_feedback[-3:],
             evidence_refs=[*previous.evidence_refs, evidence_ref][-20:],
             tool_calls_used=int(task.get("tool_call_count") or 0) + 1,
             remaining_action_budget=max(0, self.contract.remaining_budget(task) - 1),
