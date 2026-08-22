@@ -19,6 +19,7 @@ from ultron.schemas import (
     MissionOutline,
     NextAction,
     PlanStep,
+    ShortHorizonDecision,
     ToolCall,
     VerificationSpec,
 )
@@ -214,6 +215,24 @@ class RecedingHorizonController:
         )
         await self.events.emit("cognition.next_action.proposed", action.model_dump(mode="json"), str(task["id"]))
         return action
+
+    async def decide_short_horizon(
+        self, task: dict[str, Any], snapshot: CognitiveStateSnapshot, *, outline: MissionOutline | None = None
+    ) -> ShortHorizonDecision:
+        if self._has_unobserved_action(str(task["id"])):
+            raise RuntimeError("OBSERVATION_REQUIRED_BEFORE_NEXT_DECISION")
+        prompt = [
+            {"role": "system", "content": "Escolha um bloco de uma a três ações locais. Cada ação deve ser executável com as ferramentas autorizadas. O bloco será invalidado se a observação tornar as próximas ações inadequadas. Responda somente no schema ShortHorizonDecision."},
+            {"role": "user", "content": f"Objetivo: {task['objective']}\nFerramentas: {task.get('allowed_tools')}\nOrçamento: {snapshot.remaining_action_budget}\nObservações: {snapshot.recent_observations[-self._limit('recent_observations') :]}\nOutline: {[item.description for item in outline.subgoals] if outline else []}"},
+        ]
+        return await self.models.structured(
+            ShortHorizonDecision,
+            prompt,
+            model_name=self.models.primary_name,
+            seed=self.planning_seed,
+            repair_attempts=int(self.settings.cognition.get("structured_repair_attempts", 2)),
+            on_response=lambda response, repaired: self._record_model_response(task, response, repaired, "horizon_short_block"),
+        )
 
     async def execute_iteration(
         self,

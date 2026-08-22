@@ -15,6 +15,7 @@ class TaskStatus(str, Enum):
     PLANNING = "planning"
     RUNNING = "running"
     WAITING_APPROVAL = "waiting_approval"
+    WAITING_OUTCOME = "waiting_outcome"
     PAUSED = "paused"
     FAILED = "failed"
     COMPLETED = "completed"
@@ -175,6 +176,21 @@ class NextAction(BaseModel):
         if reason and not info.data.get("stop"):
             raise ValueError("stop_reason exige stop=true.")
         return reason
+
+
+class ShortHorizonDecision(BaseModel):
+    actions: list[NextAction] = Field(min_length=1, max_length=3)
+
+
+class OrientationSnapshot(BaseModel):
+    observations: list[str] = Field(default_factory=list)
+    evidence_refs: list[str] = Field(default_factory=list)
+
+
+class ProgressSignal(BaseModel):
+    progressed: bool
+    reasons: list[str] = Field(default_factory=list)
+    evidence_refs: list[str] = Field(default_factory=list)
 
 
 class CognitiveStateSnapshot(BaseModel):

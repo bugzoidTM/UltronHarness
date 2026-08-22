@@ -8,6 +8,7 @@ from time import monotonic
 from typing import Any
 from uuid import uuid4
 
+from ultron.cognition.outcome_authority import OutcomeAuthority
 from ultron.cognition.progress import ProgressTracker
 from ultron.cognition.task_signature import TaskSignature
 from ultron.configuration import Settings
@@ -24,6 +25,7 @@ from ultron.policy.engine import PolicyEngine
 from ultron.research.cycle import ExperienceCycle, SkillService
 from ultron.schemas import (
     CognitiveState,
+    OutcomeResult,
     Plan,
     PlanStep,
     RiskLevel,
@@ -524,6 +526,28 @@ class Orchestrator:
         finally:
             self.active.pop(task_id, None)
 
+    async def resolve_external_outcome(self, task_id: str, evaluation: dict[str, Any]) -> OutcomeResult:
+        task = self.get_task(task_id)
+        if not task:
+            raise KeyError("Tarefa não encontrada.")
+        if task.get("status") != TaskStatus.WAITING_OUTCOME.value:
+            raise ValueError("A tarefa não aguarda outcome externo.")
+        outcome = OutcomeAuthority().decide(private_evaluation=evaluation)
+        if outcome.success:
+            self._update_task(task_id, status=TaskStatus.COMPLETED, completed_at=utcnow(), error=None)
+            await self._transition(task_id, CognitiveState.COMPLETE, {"external_outcome": True})
+            await self.events.emit("task.completed", {"authority": outcome.authority_level}, task_id)
+            return outcome
+        false_stops = len([row for row in self.db.all("SELECT event_type FROM execution_traces WHERE task_id=?", (task_id,)) if row["event_type"] == "cognition.false_stop"]) + 1
+        self._trace(task_id, "cognition.false_stop", payload={"count": false_stops, "authority": outcome.authority_level})
+        if false_stops >= int(self.settings.cognition.get("max_false_stops", 2)):
+            await self._fail(task_id, "FALSE_STOP_LIMIT")
+            return outcome
+        self._update_task(task_id, status=TaskStatus.RUNNING, error=None)
+        await self.events.emit("cognition.outcome_rejected", {"evidence_refs": outcome.evidence_refs[:3]}, task_id)
+        await self.run(task_id)
+        return outcome
+
     async def _run_receding_horizon(
         self,
         task: dict[str, Any],
@@ -548,17 +572,30 @@ class Orchestrator:
             if self.horizon.contract.remaining_budget(current) <= 0:
                 await self._fail(task_id, "HORIZON_ACTION_BUDGET_EXHAUSTED")
                 return
+            block_actions = None
+            if self.settings.controller_mode == "short_horizon":
+                try:
+                    block_actions = (await self.horizon.decide_short_horizon(current, snapshot, outline=outline)).actions
+                    self._trace(task_id, "cognition.short_horizon_block", payload={"actions": len(block_actions)})
+                except Exception as exc:
+                    invalid_decisions += 1
+                    self._trace(task_id, "cognition.structured_failure", payload={"error": str(exc)[:1000], "count": invalid_decisions})
+                    continue
             for _block_index in range(per_cycle):
                 current = self.get_task(task_id)
                 if not current or self.horizon.contract.remaining_budget(current) <= 0:
                     break
                 try:
-                    action = await self.horizon.decide_next_action(
-                        current,
-                        snapshot,
-                        outline=outline,
-                        routed_procedures=routed_procedures,
-                        memory_summaries=[str(item["summary"]) for item in memories],
+                    action = (
+                        block_actions[_block_index]
+                        if block_actions is not None and _block_index < len(block_actions)
+                        else await self.horizon.decide_next_action(
+                            current,
+                            snapshot,
+                            outline=outline,
+                            routed_procedures=routed_procedures,
+                            memory_summaries=[str(item["summary"]) for item in memories],
+                        )
                     )
                 except Exception as exc:
                     invalid_decisions += 1
@@ -576,6 +613,11 @@ class Orchestrator:
                     continue
                 invalid_decisions = 0
                 if action.stop:
+                    self._trace(task_id, "cognition.stop_proposed", payload={"reason": action.stop_reason})
+                    if current.get("requires_external_outcome"):
+                        self._update_task(task_id, status=TaskStatus.WAITING_OUTCOME, error=None)
+                        await self.events.emit("cognition.waiting_outcome", {"reason": action.stop_reason}, task_id)
+                        return
                     false_stops += 1
                     self._trace(task_id, "cognition.false_stop", payload={"reason": action.stop_reason, "count": false_stops})
                     if false_stops >= 2:
@@ -583,12 +625,15 @@ class Orchestrator:
                         return
                     continue
                 if observation:
-                    action_loop, stagnation = progress.record_action(
-                        action.tool,
-                        action.arguments,
-                        snapshot.evidence_refs,
-                        effective=observation.verification_passed,
+                    action_loop, stagnation, progress_signal = progress.assess(
+                        tool=action.tool,
+                        arguments=action.arguments,
+                        observations=snapshot.recent_observations,
+                        output=observation.output_summary,
+                        verification_passed=observation.verification_passed,
+                        subgoal_completed=observation.verification_passed and action.subgoal_id is not None,
                     )
+                    self._trace(task_id, "cognition.progress", payload=progress_signal.model_dump(mode="json"))
                     if not observation.ok:
                         self._trace(task_id, "cognition.observation.failed", payload=observation.model_dump(mode="json"))
                     if action_loop:

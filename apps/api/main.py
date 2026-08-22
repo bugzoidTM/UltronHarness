@@ -177,6 +177,16 @@ async def run_task(task_id: str) -> dict[str, Any]:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
+@app.post("/api/tasks/{task_id}/outcome")
+async def resolve_task_outcome(task_id: str, evaluation: dict[str, Any]) -> dict[str, Any]:
+    try:
+        return (await svc("orchestrator").resolve_external_outcome(task_id, evaluation)).model_dump(mode="json")
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
 @app.post("/api/tasks/{task_id}/pause")
 async def pause_task(task_id: str) -> dict[str, str]:
     if not svc("orchestrator").get_task(task_id):
