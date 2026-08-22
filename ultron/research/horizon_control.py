@@ -10,6 +10,7 @@ import platform
 import subprocess
 from copy import deepcopy
 from dataclasses import dataclass
+from hashlib import sha256
 from pathlib import Path
 from time import monotonic
 from uuid import uuid4
@@ -126,8 +127,14 @@ class HorizonControlRunner:
         traces: list[dict] = []
 
         for mission in tasks:
+            task_id = str(mission["id"])
+            orientation_payload = json.dumps(
+                {"mission": task_id, "seed": self.seed, "allowed_tools": mission["allowed_tools"], "budget": mission["action_budget"]},
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            orientation_hash = sha256(orientation_payload.encode("utf-8")).hexdigest()
             for mode in modes:
-                task_id = str(mission["id"])
                 workspace = f"horizon_{run_id[:8]}_{mode}_{task_id}"
                 orchestrator = self._orchestrator(db, mode, [str(name) for name in mission["allowed_tools"]])
                 workspace_path = orchestrator.tools.workspace_for(workspace)
@@ -180,6 +187,7 @@ class HorizonControlRunner:
                     "task_allowed_tools": task.get("allowed_tools"),
                     "task_action_budget": task.get("action_budget"),
                     "mission_contract_verified": task.get("allowed_tools") == mission_tools and task.get("action_budget") == mission_budget,
+                    "orientation_hash": orientation_hash,
                     "effective_models": [call["model"] for call in model_calls],
                     "effective_seeds": [call["seed"] for call in model_calls],
                     "model_attribution_verified": bool(model_calls) and all(call["model"] == self.configured_model for call in model_calls),
