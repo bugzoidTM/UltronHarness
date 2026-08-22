@@ -639,3 +639,65 @@ async def test_error_category_distinguishes_validation_from_generation(tmp_path:
     assert len(rows_ok) == 1
     assert rows_ok[0]["error_category"] is None
     assert rows_ok[0]["validation_error_class"] is None
+
+
+# ===========================================================================
+# 7. SQLite Migration for Existing / Persistent Databases
+# ===========================================================================
+
+
+def test_legacy_database_migration_adds_error_category_column(tmp_path: Path) -> None:
+    """Garante que bancos legados criados sem a coluna error_category são migrados com sucesso ao rodar Database.initialize()."""
+    import sqlite3
+
+    from ultron.db import SCHEMA
+
+    db_path = tmp_path / "legacy.db"
+
+    # 1. Cria esquema legado exato do commit v0.7.1B (SCHEMA completo, mas structured_decisions sem error_category)
+    legacy_schema = SCHEMA.replace("    error_category TEXT,\n", "")
+    with sqlite3.connect(db_path) as conn:
+        conn.executescript(legacy_schema)
+        # Insere uma tarefa e uma decisão antiga sem error_category
+        conn.execute(
+            """
+            INSERT INTO tasks (id, title, objective, workspace, status, autonomy_mode, priority, created_at, updated_at)
+            VALUES ('t1', 'Tarefa Antiga', 'Objetivo', 'ws', 'completed', 4, 3, '2026-08-20T00:00:00Z', '2026-08-20T00:00:00Z')
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO structured_decisions (id, task_id, controller_mode, decision_kind, iteration, initial_valid, final_valid, repair_attempts, validation_error_class, model, seed, created_at)
+            VALUES ('d1', 't1', 'full_plan', 'plan', 1, 1, 1, 0, NULL, 'test-model', 53, '2026-08-20T00:00:00Z')
+            """
+        )
+        conn.commit()
+
+    # 2. Roda Database.initialize() no banco legado
+    db = Database(db_path)
+    db.initialize()
+
+    # 3. Verifica que a coluna error_category agora existe no schema
+    with db.connect() as conn:
+        columns = {str(row[1]) for row in conn.execute("PRAGMA table_info(structured_decisions)")}
+        assert "error_category" in columns, "A coluna error_category não foi adicionada pela migração!"
+
+    # 4. Verifica que a linha pré-existente foi preservada e possui error_category=None
+    old_row = db.one("SELECT * FROM structured_decisions WHERE id='d1'")
+    assert old_row is not None
+    assert old_row["id"] == "d1"
+    assert old_row["error_category"] is None
+    assert old_row["initial_valid"] == 1
+
+    # 5. Verifica que novos INSERTs com error_category ("GENERATION_ERROR", "VALIDATION_ERROR") funcionam perfeitamente
+    db.execute(
+        """
+        INSERT INTO structured_decisions (id, task_id, controller_mode, decision_kind, iteration, initial_valid, final_valid, repair_attempts, validation_error_class, error_category, model, seed, created_at)
+        VALUES ('d2', 't1', 'full_plan', 'plan', 2, 0, 0, 0, 'ConnectionError', 'GENERATION_ERROR', 'test-model', 53, '2026-08-22T00:00:00Z')
+        """
+    )
+    new_row = db.one("SELECT * FROM structured_decisions WHERE id='d2'")
+    assert new_row is not None
+    assert new_row["error_category"] == "GENERATION_ERROR"
+    assert new_row["validation_error_class"] == "ConnectionError"
+

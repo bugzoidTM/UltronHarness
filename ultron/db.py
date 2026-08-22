@@ -639,6 +639,11 @@ MEMORY_VERIFICATION_MIGRATIONS = {
 }
 
 
+STRUCTURED_DECISION_MIGRATIONS = {
+    "error_category": "TEXT",
+}
+
+
 PAIR_UTILITY_MIGRATIONS = {
     "task_id": "TEXT",
     "task_family": "TEXT",
@@ -681,6 +686,10 @@ class Database:
             for name, definition in TASK_CONTRACT_MIGRATIONS.items():
                 if name not in task_columns:
                     connection.execute(f"ALTER TABLE tasks ADD COLUMN {name} {definition}")
+            structured_decision_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(structured_decisions)")}
+            for name, definition in STRUCTURED_DECISION_MIGRATIONS.items():
+                if name not in structured_decision_columns:
+                    connection.execute(f"ALTER TABLE structured_decisions ADD COLUMN {name} {definition}")
             memory_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(memories)")}
             for name, definition in MEMORY_VERIFICATION_MIGRATIONS.items():
                 if name not in memory_columns:
