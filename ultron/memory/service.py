@@ -8,12 +8,13 @@ from uuid import uuid4
 
 from ultron.configuration import Settings
 from ultron.db import Database
+from ultron.learning.verified_writeback import VerifiedWritebackGate
 from ultron.memory.embeddings import (
     HashEmbeddingProvider,
     OllamaEmbeddingProvider,
     PersistentVectorStore,
 )
-from ultron.schemas import MemoryCreate, MemorySearch
+from ultron.schemas import MemoryCreate, MemorySearch, OutcomeResult
 
 
 def utcnow() -> str:
@@ -97,6 +98,10 @@ class MemoryService:
                 continue
             if not bool(self.feature_flags.get(row["type"], True)):
                 continue
+            if row["type"] == "procedural" and (
+                row.get("verification_state") != "verified" or not row.get("verified_writeback_id")
+            ):
+                continue
             if request.task_id and row["task_id"] not in {None, request.task_id}:
                 continue
             content = f"{row['content']} {row['summary']}".lower()
@@ -170,13 +175,15 @@ class MemoryService:
             (experience_id, task_id, strategy, self.db.json(actions), result, int(success), self.db.json(errors), self.db.json(lessons), quality, utcnow()),
         )
         narrative = f"Tarefa {task_id}: {result}. Lições: {'; '.join(lessons) or 'nenhuma lição explícita'}"
-        self.create(MemoryCreate(type="episodic", content=narrative, summary=result[:400], importance=0.7 if success else 0.6, confidence=0.9, source="experience", task_id=task_id))
+        episode = self.create(MemoryCreate(type="episodic", content=narrative, summary=result[:400], importance=0.7 if success else 0.6, confidence=0.9, source="experience", task_id=task_id))
+        self.db.execute("UPDATE memories SET verification_state='pending' WHERE id=?", (episode["id"],))
         for lesson in lessons:
-            self.create(MemoryCreate(type="semantic", content=lesson, summary=lesson[:300], importance=0.65, confidence=0.7, source="reflection", task_id=task_id))
+            memory = self.create(MemoryCreate(type="semantic", content=lesson, summary=lesson[:300], importance=0.65, confidence=0.7, source="reflection", task_id=task_id))
+            self.db.execute("UPDATE memories SET verification_state='pending' WHERE id=?", (memory["id"],))
         return experience_id
 
     def consolidate(self) -> dict:
-        episodes = self.db.all("SELECT * FROM memories WHERE type='episodic' ORDER BY created_at DESC LIMIT 200")
+        episodes = self.db.all("SELECT * FROM memories WHERE type='episodic' AND verification_state='verified' AND verified_writeback_id IS NOT NULL ORDER BY created_at DESC LIMIT 200")
         created, seen = 0, set()
         for episode in episodes:
             summary = (episode["summary"] or episode["content"][:300]).strip()
@@ -186,9 +193,33 @@ class MemoryService:
             seen.add(fingerprint)
             existing = self.db.one("SELECT id FROM memories WHERE type='procedural' AND summary=?", (summary,))
             if not existing and ("sucesso" in episode["content"].lower() or "liç" in episode["content"].lower()):
-                self.create(MemoryCreate(type="procedural", content=f"Procedimento consolidado a partir de experiência: {episode['content']}", summary=summary, importance=0.6, confidence=0.6, source="consolidation", task_id=episode["task_id"]))
+                memory = self.create(MemoryCreate(type="procedural", content=f"Procedimento consolidado a partir de experiência: {episode['content']}", summary=summary, importance=0.6, confidence=0.6, source="consolidation", task_id=episode["task_id"]))
+                self.db.execute("UPDATE memories SET verification_state='pending' WHERE id=?", (memory["id"],))
                 created += 1
         return {"episodes_examined": len(episodes), "procedural_memories_created": created}
+
+    def promote_task_writebacks(
+        self,
+        task_id: str,
+        outcome_result: OutcomeResult | None,
+        *,
+        minimum_authority: str = "task_registered_verifier",
+    ) -> dict[str, int]:
+        gate = VerifiedWritebackGate(self.db, minimum_authority=minimum_authority)
+        promoted = {"experiences": 0, "memories": 0}
+        experiences = self.db.all("SELECT id FROM experiences WHERE task_id=? AND verification_state!='verified'", (task_id,))
+        for experience in experiences:
+            decision = gate.evaluate(task_id=task_id, target_type="experience", target_id=str(experience["id"]), outcome_result=outcome_result)
+            if decision.allowed:
+                self.db.execute("UPDATE experiences SET verification_state='verified', verified_writeback_id=? WHERE id=?", (decision.audit_id, experience["id"]))
+                promoted["experiences"] += 1
+        memories = self.db.all("SELECT id FROM memories WHERE task_id=? AND source IN ('experience','reflection','consolidation') AND verification_state!='verified'", (task_id,))
+        for memory in memories:
+            decision = gate.evaluate(task_id=task_id, target_type="memory", target_id=str(memory["id"]), outcome_result=outcome_result)
+            if decision.allowed:
+                self.db.execute("UPDATE memories SET verification_state='verified', verified_writeback_id=? WHERE id=?", (decision.audit_id, memory["id"]))
+                promoted["memories"] += 1
+        return promoted
 
     def _normalize(self, row: dict) -> dict:
         return {**row, "valid_from": row.get("valid_from"), "valid_until": row.get("valid_until")}

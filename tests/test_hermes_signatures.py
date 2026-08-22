@@ -3,6 +3,8 @@ from __future__ import annotations
 from ultron.cognition.task_signature import TaskSignatureClassifier
 from ultron.db import Database
 from ultron.learning.experience_signature import ExperienceSignatureBuilder
+from ultron.learning.verified_writeback import VerifiedWritebackGate
+from ultron.schemas import OutcomeResult
 
 
 def test_task_signature_prefers_explicit_public_metadata() -> None:
@@ -58,6 +60,9 @@ def test_signatures_persist_in_canonical_sqlite_schema(tmp_path) -> None:
     db.execute(
         "INSERT INTO experiences (id,task_id,strategy,actions_json,result,success,errors_json,lessons_json,quality,created_at) VALUES ('experience-1',NULL,'test','[]','ok',1,'[]','[]',1.0,'now')"
     )
+    outcome = OutcomeResult(success=True, authority_level="private_mission_evaluator", evidence_refs=["signature-pass"], confidence=1.0, final=True)
+    audit = VerifiedWritebackGate(db).evaluate(task_id=None, target_type="experience", target_id="experience-1", outcome_result=outcome)
+    db.execute("UPDATE experiences SET verification_state='verified', verified_writeback_id=? WHERE id='experience-1'", (audit.audit_id,))
     experience_id = ExperienceSignatureBuilder.persist(
         db,
         ExperienceSignatureBuilder.build({"family": "configuration_repair", "verified": True}),

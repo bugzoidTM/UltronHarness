@@ -125,3 +125,10 @@ A reorientação não é aceita como mera troca nominal de texto. O schema rejei
 ## Retificação Horizon — ACTION_LOOP alcançável e demonstrado
 
 A contagem de `ACTION_LOOP` passou a usar uma assinatura determinística de ação composta por ferramenta e argumentos, independente do histórico acumulado de observações. A assinatura que inclui estado observável continua reservada à guarda que impede repetir a ação gatilho imediatamente após uma reorientação. Assim, observações repetidas que fazem a lista histórica crescer não fragmentam artificialmente o contador de loop. O teste unitário demonstra que quatro execuções com a mesma ação e saída inalterada atingem `ACTION_LOOP` antes de `STAGNATION`. O E2E correspondente usa o `ProgressTracker` real, registra `cognition.action_loop`, produz `ReorientationDecision`, rejeita uma primeira repetição da ação gatilho e executa uma ação diferente sob a nova estratégia. O cenário de estagnação foi separado com ações distintas e a mesma observação, para manter os dois gatilhos empiricamente distintos.
+
+
+## Horizon v0.7.1F — Verified Writeback Audit
+
+Foi introduzido um gate único e append-only para writebacks verificáveis. Cada tentativa de promover experiência, skill ou memória registra `verified_writebacks` com a autoridade observada, a autoridade mínima configurada, o estado final do outcome, referências de evidência sanitizadas, decisão e motivo. O padrão configurado é `task_registered_verifier`; a política pode exigir `private_mission_evaluator` sem mudanças de código.
+
+Sem `OutcomeResult` final, com outcome falho, ou com autoridade abaixo do mínimo, o writeback permanece pendente ou é rejeitado: não cria assinatura de experiência verificada, não torna skill reutilizável e não permite memória procedural na recuperação futura. Em `PASS` autoritativo, o runtime promove os writebacks pendentes associados à tarefa, associa o audit id e registra `cognition.verified_writeback`. A recuperação de contexto exige simultaneamente experiência bem-sucedida, estado `verified`, audit autorizado e assinatura verificada; a recuperação de procedimentos exige o mesmo estado e audit na memória.

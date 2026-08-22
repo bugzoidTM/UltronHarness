@@ -587,3 +587,74 @@ async def test_short_horizon_false_stop_persists_feedback_and_restarts_closed_lo
     feedback = orchestrator.db.parse_json(snapshot["external_feedback_json"], [])
     assert any("external_feedback_attempt:1" in item for item in feedback)
     assert "PRIVATE_EVALUATOR_SECRET" not in str(feedback)
+
+
+@pytest.mark.asyncio
+async def test_external_outcome_gates_pending_experience_writeback(tmp_path: Path) -> None:
+    orchestrator = _orchestrator(tmp_path)
+
+    failed_task = await orchestrator.create_task(
+        TaskCreate(
+            title="Writeback bloqueado",
+            objective="Não promover experiência após evaluator privado falhar.",
+            workspace="writeback_failed",
+            autonomy_mode=4,
+            requires_external_outcome=True,
+        )
+    )
+    failed_experience = orchestrator.memory.store_experience(
+        failed_task["id"],
+        "structured-plan",
+        [],
+        "Sucesso interno não autoritativo",
+        True,
+        [],
+        ["Não reutilizar sem outcome final."],
+        0.8,
+    )
+    orchestrator._update_task(failed_task["id"], status=TaskStatus.WAITING_OUTCOME, error=None)
+    failed = await orchestrator.resolve_external_outcome(failed_task["id"], {"passed": False, "evidence": ["private-fail"]})
+    assert not failed.success
+    assert orchestrator.db.one("SELECT verification_state,verified_writeback_id FROM experiences WHERE id=?", (failed_experience,)) == {
+        "verification_state": "pending",
+        "verified_writeback_id": None,
+    }
+    assert orchestrator.db.one(
+        "SELECT COUNT(*) AS count FROM verified_writebacks WHERE target_type='experience' AND target_id=? AND allowed=1",
+        (failed_experience,),
+    ) == {"count": 0}
+
+    passed_task = await orchestrator.create_task(
+        TaskCreate(
+            title="Writeback aprovado",
+            objective="Promover experiência somente após evaluator privado aprovar.",
+            workspace="writeback_passed",
+            autonomy_mode=4,
+            requires_external_outcome=True,
+        )
+    )
+    passed_experience = orchestrator.memory.store_experience(
+        passed_task["id"],
+        "structured-plan",
+        [],
+        "Sucesso interno pendente de authority",
+        True,
+        [],
+        ["Reutilizar somente após outcome final."],
+        0.8,
+    )
+    orchestrator._update_task(passed_task["id"], status=TaskStatus.WAITING_OUTCOME, error=None)
+    passed = await orchestrator.resolve_external_outcome(passed_task["id"], {"passed": True, "evidence": ["private-pass"]})
+    assert passed.success
+    promoted = orchestrator.db.one(
+        "SELECT verification_state,verified_writeback_id FROM experiences WHERE id=?", (passed_experience,)
+    )
+    assert promoted["verification_state"] == "verified"
+    assert promoted["verified_writeback_id"]
+    assert orchestrator.db.one(
+        "SELECT COUNT(*) AS count FROM experience_signatures WHERE experience_id=? AND verified=1", (passed_experience,)
+    ) == {"count": 1}
+    assert orchestrator.db.one(
+        "SELECT COUNT(*) AS count FROM verified_writebacks WHERE target_type='experience' AND target_id=? AND allowed=1",
+        (passed_experience,),
+    ) == {"count": 1}

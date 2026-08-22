@@ -8,6 +8,8 @@ from ultron.configuration import Settings, load_settings
 from ultron.db import Database
 from ultron.learning.context_builder import ContextBuilder
 from ultron.learning.experience_signature import ExperienceSignature, ExperienceSignatureBuilder
+from ultron.learning.verified_writeback import VerifiedWritebackGate
+from ultron.schemas import OutcomeResult
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -36,6 +38,30 @@ def _db(tmp_path: Path) -> Database:
     return db
 
 
+def _verified_outcome() -> OutcomeResult:
+    return OutcomeResult(
+        success=True,
+        authority_level="private_mission_evaluator",
+        evidence_refs=["private-pass"],
+        confidence=1.0,
+        final=True,
+    )
+
+
+def _authorize_experience(db: Database, experience_id: str, task_id: str | None = None) -> None:
+    decision = VerifiedWritebackGate(db).evaluate(
+        task_id=task_id,
+        target_type="experience",
+        target_id=experience_id,
+        outcome_result=_verified_outcome(),
+    )
+    assert decision.allowed
+    db.execute(
+        "UPDATE experiences SET verification_state='verified', verified_writeback_id=? WHERE id=?",
+        (decision.audit_id, experience_id),
+    )
+
+
 def test_context_builder_abstains_without_paired_evidence_and_persists_outcome(tmp_path: Path) -> None:
     db = _db(tmp_path)
     prior_task = _task(db, "prior", "Planejar workflow com pré-condição", "planning")
@@ -44,6 +70,7 @@ def test_context_builder_abstains_without_paired_evidence_and_persists_outcome(t
         "INSERT INTO experiences (id,task_id,strategy,actions_json,result,success,errors_json,lessons_json,quality,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
         (experience_id, prior_task["id"], "structured-plan", "[]", "Sucesso", 1, "[]", '["Validar pré-condição antes de executar."]', 0.9, datetime.now(UTC).isoformat()),
     )
+    _authorize_experience(db, experience_id, prior_task["id"])
     ExperienceSignatureBuilder.persist(
         db,
         ExperienceSignature(category="reasoning", family="planning", domain="runtime-test", tool_families=["file.write"], abstraction_level=0.8, verified=True),
@@ -62,7 +89,13 @@ def test_context_builder_abstains_without_paired_evidence_and_persists_outcome(t
         "INSERT INTO experiences (id,task_id,strategy,actions_json,result,success,errors_json,lessons_json,quality,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
         (completed_experience, task["id"], "structured-plan", "[]", "Sucesso", 1, "[]", "[]", 0.9, datetime.now(UTC).isoformat()),
     )
-    builder.record_outcome(task["id"], context, success=True, experience_id=completed_experience)
+    builder.record_outcome(
+        task["id"],
+        context,
+        success=True,
+        experience_id=completed_experience,
+        outcome_result=_verified_outcome(),
+    )
     observed = db.one("SELECT observed_score FROM routing_decisions WHERE task_id=?", (task["id"],))
     assert observed == {"observed_score": 1.0}
     created_signature = db.one("SELECT verified,family FROM experience_signatures WHERE experience_id=?", (completed_experience,))
@@ -81,6 +114,7 @@ def test_candidate_prefilter_preserves_relevant_experience_and_applies_match_bud
             "INSERT INTO experiences (id,strategy,actions_json,result,success,errors_json,lessons_json,quality,created_at) VALUES (?,?,?,?,?,?,?,?,?)",
             (experience_id, "procedure", "[]", f"Resultado {index}", 1, "[]", f'["Lição distinta {index}"]', 0.8, datetime.now(UTC).isoformat()),
         )
+        _authorize_experience(db, experience_id)
         ExperienceSignatureBuilder.persist(
             db,
             ExperienceSignature(category="reasoning", family="planning", domain="runtime-test", tool_families=["file.write"], abstraction_level=0.8, verified=True),

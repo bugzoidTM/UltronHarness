@@ -97,7 +97,8 @@ CREATE TABLE IF NOT EXISTS memories (
     valid_from TEXT,
     valid_until TEXT,
     superseded_by TEXT,
-    verification_state TEXT NOT NULL DEFAULT 'legacy'
+    verification_state TEXT NOT NULL DEFAULT 'legacy',
+    verified_writeback_id TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_memories_type ON memories(type);
 CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(memory_id UNINDEXED, content, summary);
@@ -236,7 +237,9 @@ CREATE TABLE IF NOT EXISTS skills (
     version INTEGER NOT NULL DEFAULT 1,
     last_used TEXT,
     created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+    updated_at TEXT NOT NULL,
+    verification_state TEXT NOT NULL DEFAULT 'pending',
+    verified_writeback_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS experiences (
@@ -249,8 +252,26 @@ CREATE TABLE IF NOT EXISTS experiences (
     errors_json TEXT NOT NULL DEFAULT '[]',
     lessons_json TEXT NOT NULL DEFAULT '[]',
     quality REAL NOT NULL DEFAULT 0.5,
+    verification_state TEXT NOT NULL DEFAULT 'pending',
+    verified_writeback_id TEXT,
     created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS verified_writebacks (
+    id TEXT PRIMARY KEY,
+    task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
+    target_type TEXT NOT NULL,
+    target_id TEXT,
+    outcome_success INTEGER NOT NULL,
+    outcome_final INTEGER NOT NULL,
+    authority_level TEXT NOT NULL,
+    minimum_authority TEXT NOT NULL,
+    allowed INTEGER NOT NULL,
+    evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+    reason TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_verified_writebacks_target ON verified_writebacks(target_type, target_id, allowed, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS experiments (
     id TEXT PRIMARY KEY,
@@ -639,6 +660,17 @@ TASK_CONTRACT_MIGRATIONS = {
 
 MEMORY_VERIFICATION_MIGRATIONS = {
     "verification_state": "TEXT NOT NULL DEFAULT 'legacy'",
+    "verified_writeback_id": "TEXT",
+}
+
+EXPERIENCE_VERIFICATION_MIGRATIONS = {
+    "verification_state": "TEXT NOT NULL DEFAULT 'pending'",
+    "verified_writeback_id": "TEXT",
+}
+
+SKILL_VERIFICATION_MIGRATIONS = {
+    "verification_state": "TEXT NOT NULL DEFAULT 'pending'",
+    "verified_writeback_id": "TEXT",
 }
 
 
@@ -707,6 +739,14 @@ class Database:
             for name, definition in MEMORY_VERIFICATION_MIGRATIONS.items():
                 if name not in memory_columns:
                     connection.execute(f"ALTER TABLE memories ADD COLUMN {name} {definition}")
+            experience_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(experiences)")}
+            for name, definition in EXPERIENCE_VERIFICATION_MIGRATIONS.items():
+                if name not in experience_columns:
+                    connection.execute(f"ALTER TABLE experiences ADD COLUMN {name} {definition}")
+            skill_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(skills)")}
+            for name, definition in SKILL_VERIFICATION_MIGRATIONS.items():
+                if name not in skill_columns:
+                    connection.execute(f"ALTER TABLE skills ADD COLUMN {name} {definition}")
             pair_utility_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(experience_pair_utility)")}
             for name, definition in PAIR_UTILITY_MIGRATIONS.items():
                 if name not in pair_utility_columns:

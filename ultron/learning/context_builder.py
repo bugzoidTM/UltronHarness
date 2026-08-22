@@ -17,6 +17,8 @@ from ultron.db import Database
 from ultron.learning.experience_signature import ExperienceSignature, ExperienceSignatureBuilder
 from ultron.learning.negative_transfer import FamilyUtilityState, NegativeTransferFirewall
 from ultron.learning.routing_service import ShadowExperienceRoutingService
+from ultron.learning.verified_writeback import VerifiedWritebackGate
+from ultron.schemas import OutcomeResult
 
 
 @dataclass(slots=True)
@@ -45,6 +47,7 @@ class ContextBuilder:
         injection_limit: int = 2,
         max_candidates: int | None = None,
         max_procedures: int | None = None,
+        minimum_authority: str = "task_registered_verifier",
     ):
         self.db = db
         # Compatibilidade com a superfície Hermes anterior.
@@ -52,6 +55,7 @@ class ContextBuilder:
         self.match_limit = max(1, match_limit)
         self.injection_limit = max(1, max_procedures if max_procedures is not None else injection_limit)
         self.routing = ShadowExperienceRoutingService(db)
+        self.writeback_gate = VerifiedWritebackGate(db, minimum_authority=minimum_authority)
 
     def _experience_signature(self, row: dict[str, Any]) -> ExperienceSignature:
         return ExperienceSignature(
@@ -87,7 +91,9 @@ class ContextBuilder:
                       es.historical_utility,es.sample_count,es.source
                  FROM experiences e
                  JOIN experience_signatures es ON es.experience_id=e.id
-                WHERE e.success=1 AND es.verified=1
+                WHERE e.success=1 AND e.verification_state='verified' AND e.verified_writeback_id IS NOT NULL
+                  AND es.verified=1
+                  AND EXISTS (SELECT 1 FROM verified_writebacks vw WHERE vw.id=e.verified_writeback_id AND vw.target_type='experience' AND vw.target_id=e.id AND vw.allowed=1)
                   AND (es.family=? OR es.category=? OR es.domain=?)
                 ORDER BY es.historical_utility DESC,e.quality DESC,e.created_at DESC
                 LIMIT ?""",
@@ -159,23 +165,36 @@ class ContextBuilder:
         *,
         success: bool,
         experience_id: str | None = None,
+        outcome_result: OutcomeResult | None = None,
     ) -> None:
+        writeback = self.writeback_gate.evaluate(
+            task_id=task_id,
+            target_type="experience" if experience_id else "routing_context",
+            target_id=experience_id,
+            outcome_result=outcome_result,
+        )
+        if not writeback.allowed:
+            return
         score = 1.0 if success else 0.0
         self.db.execute(
             "UPDATE routing_decisions SET observed_score=? WHERE task_id=? AND observed_score IS NULL",
             (score, task_id),
         )
         if experience_id:
+            self.db.execute(
+                "UPDATE experiences SET verification_state='verified', verified_writeback_id=? WHERE id=?",
+                (writeback.audit_id, experience_id),
+            )
             signature = ExperienceSignature(
                 category=context.task_signature.category,
                 family=context.task_signature.family,
                 domain=context.task_signature.domain,
                 tool_families=context.task_signature.required_tools,
                 abstraction_level=0.8,
-                verified=success,
+                verified=True,
                 historical_utility=0.0,
                 sample_count=0,
-                source="runtime_task_outcome",
+                source="verified_runtime_outcome",
             )
             ExperienceSignatureBuilder.persist(self.db, signature, experience_id)
         rows = self.db.all(

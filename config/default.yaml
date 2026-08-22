@@ -62,6 +62,7 @@ cognition:
 
 learning:
   minimum_experience_quality: 0.60
+  verified_writeback_minimum_authority: task_registered_verifier
 
 research:
   private_benchmark_root: null

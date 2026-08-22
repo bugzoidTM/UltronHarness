@@ -51,6 +51,13 @@ class ExperienceSignatureBuilder:
 
     @staticmethod
     def persist(db: Database, signature: ExperienceSignature, experience_id: str) -> str:
+        if signature.verified:
+            audit = db.one(
+                "SELECT id FROM verified_writebacks WHERE target_type='experience' AND target_id=? AND allowed=1 ORDER BY created_at DESC,rowid DESC LIMIT 1",
+                (experience_id,),
+            )
+            if not audit:
+                raise ValueError("Assinatura verificada exige verified writeback autorizado para a experiência.")
         signature_id = str(uuid4())
         db.execute(
             "INSERT INTO experience_signatures (id,experience_id,category,family,domain,failure_classes_json,tool_families_json,abstraction_level,verified,historical_utility,sample_count,source,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",

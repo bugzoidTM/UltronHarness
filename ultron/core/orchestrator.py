@@ -69,15 +69,19 @@ class Orchestrator:
             self.execute_tool,
             planning_seed=planning_seed,
         )
-        self.context_builder = ContextBuilder(db)
+        minimum_writeback_authority = str(
+            settings.raw.get("learning", {}).get("verified_writeback_minimum_authority", "task_registered_verifier")
+        )
+        self.context_builder = ContextBuilder(db, minimum_authority=minimum_writeback_authority)
         self.continuations = ContinuationStore(db)
         self.skills = SkillService(db)
-        self.experience = ExperienceCycle(db, self.skills)
+        self.experience = ExperienceCycle(db, self.skills, minimum_authority=minimum_writeback_authority)
         self.active: dict[str, asyncio.Task[None]] = {}
         self.cancel_events: dict[str, asyncio.Event] = {}
         self.suspended: dict[str, dict[str, Any]] = {}  # Compatibilidade temporária; a fonte de verdade é SQLite.
         self.plan_sources: dict[str, str] = {}
         self.task_orientations: dict[str, OrientationSnapshot] = {}
+        self.pending_learning_context: dict[str, ContextBuild] = {}
 
     def inject_orientation(self, task_id: str, orientation: OrientationSnapshot) -> None:
         """Injeta uma OrientationSnapshot congelada para a tarefa especificada."""
@@ -576,6 +580,24 @@ class Orchestrator:
             },
         )
         if outcome.success:
+            pending_context = self.pending_learning_context.pop(task_id, None) or self.context_builder.build(task)
+            pending_experiences = self.db.all("SELECT id FROM experiences WHERE task_id=?", (task_id,))
+            for experience in pending_experiences:
+                self.context_builder.record_outcome(
+                    task_id,
+                    pending_context,
+                    success=True,
+                    experience_id=str(experience["id"]),
+                    outcome_result=outcome,
+                )
+            writeback = self.memory.promote_task_writebacks(
+                task_id,
+                outcome,
+                minimum_authority=str(
+                    self.settings.raw.get("learning", {}).get("verified_writeback_minimum_authority", "task_registered_verifier")
+                ),
+            )
+            self._trace(task_id, "cognition.verified_writeback", payload={"authority": outcome.authority_level, **writeback})
             self._update_task(task_id, status=TaskStatus.COMPLETED, completed_at=utcnow(), error=None)
             await self._transition(task_id, CognitiveState.COMPLETE, {"external_outcome": True, "attempt": attempt})
             await self.events.emit("task.completed", {"authority": outcome.authority_level}, task_id)
@@ -1122,8 +1144,20 @@ class Orchestrator:
         ]
         await self._transition(task_id, CognitiveState.LEARN, {"success": success})
         if task.get("requires_external_outcome"):
+            experience_id = self.memory.store_experience(
+                task_id,
+                "structured-plan",
+                actions,
+                "Tarefa aguardando outcome externo" if success else "Tarefa falhou antes do outcome externo",
+                success,
+                errors,
+                lessons,
+                0.85 if success else 0.3,
+            )
+            self.pending_learning_context[task_id] = routed_context
             experience = {
-                "stored": False,
+                "stored": True,
+                "experience_id": experience_id,
                 "verification_state": "pending",
                 "reason": "external_outcome_required",
             }

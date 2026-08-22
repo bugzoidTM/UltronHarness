@@ -95,13 +95,17 @@ def test_recovery_engine_classifies_and_limits_retries(tmp_path: Path) -> None:
 
 def test_skill_promotion_requires_three_uses_and_success_rate(tmp_path: Path) -> None:
     from ultron.db import Database
+    from ultron.learning.verified_writeback import VerifiedWritebackGate
     from ultron.research.cycle import SkillService
+    from ultron.schemas import OutcomeResult
 
     db = Database(tmp_path / "skills.db")
     db.initialize()
     skills = SkillService(db)
+    outcome = OutcomeResult(success=True, authority_level="private_mission_evaluator", evidence_refs=["pass"], confidence=1.0, final=True)
     for success in (True, True, False):
-        skills.observe("safe_file_diagnosis", ["file failure"], ["Inspect error", "retry safely"], success)
+        audit = VerifiedWritebackGate(db).evaluate(task_id=None, target_type="skill", target_id="safe_file_diagnosis", outcome_result=outcome)
+        skills.observe("safe_file_diagnosis", ["file failure"], ["Inspect error", "retry safely"], success, verification_state="verified", verified_writeback_id=audit.audit_id)
     assert skills.status("safe_file_diagnosis") == "validated"
     skills.observe("unstable_procedure", ["x"], ["y"], True)
     assert skills.status("unstable_procedure") == "candidate"
@@ -117,8 +121,8 @@ def test_experience_cycle_rejects_trivial_unsuccessful_event(tmp_path: Path) -> 
     cycle = ExperienceCycle(db, SkillService(db))
     result = cycle.consolidate("oi", "sem ação", [], success=False)
     assert result["stored"] is False
-    assert result["reason"] == "discarded_private_or_duplicate_or_low_evidence"
-    assert result["admission"]["should_write"] is False
+    assert result["reason"] == "final_outcome_required"
+    assert result["verification_state"] == "pending"
 
 
 def test_research_dashboard_exposes_local_research_data(monkeypatch) -> None:
