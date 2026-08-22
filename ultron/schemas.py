@@ -194,6 +194,13 @@ class BlockValidityResult(BaseModel):
     invalidated_from_index: int | None = Field(default=None, ge=0)
 
 
+class ReorientationDecision(BaseModel):
+    trigger: Literal["stagnation", "action_loop"]
+    abandon_strategy: str = Field(min_length=8, max_length=1000)
+    new_strategy: str = Field(min_length=8, max_length=1000)
+    rationale: str = Field(min_length=8, max_length=2000)
+
+
 class OrientationSnapshot(BaseModel):
     mission_id: str
     seed: int | None = None
@@ -219,6 +226,7 @@ class CognitiveStateSnapshot(BaseModel):
     open_questions: list[str] = Field(default_factory=list)
     recent_observations: list[str] = Field(default_factory=list)
     failed_strategies: list[str] = Field(default_factory=list)
+    active_strategy: str | None = Field(default=None, max_length=1000)
     external_feedback: list[str] = Field(default_factory=list)
     evidence_refs: list[str] = Field(default_factory=list)
     tool_calls_used: int = Field(default=0, ge=0)

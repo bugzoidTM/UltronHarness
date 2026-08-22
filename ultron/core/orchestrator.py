@@ -25,6 +25,7 @@ from ultron.policy.engine import PolicyEngine
 from ultron.research.cycle import ExperienceCycle, SkillService
 from ultron.schemas import (
     CognitiveState,
+    CognitiveStateSnapshot,
     OrientationSnapshot,
     OutcomeResult,
     Plan,
@@ -773,6 +774,7 @@ class Orchestrator:
                         remaining_actions,
                         feedback_count_at_creation=feedback_count_at_creation,
                     )
+                    reorientation_trigger = None
                     if observation:
                         action_loop, stagnation, progress_signal = progress.assess(
                             tool=action.tool,
@@ -785,6 +787,27 @@ class Orchestrator:
                         self._trace(task_id, "cognition.progress", payload=progress_signal.model_dump(mode="json"))
                         if not observation.ok:
                             self._trace(task_id, "cognition.observation.failed", payload=observation.model_dump(mode="json"))
+                        if action_loop:
+                            reorientation_trigger = "action_loop"
+                            self._trace(task_id, "cognition.action_loop", payload={"tool": action.tool, "iteration": snapshot.iteration})
+                        elif stagnation:
+                            reorientation_trigger = "stagnation"
+                            self._trace(task_id, "cognition.stagnation", payload={"iteration": snapshot.iteration})
+                    if reorientation_trigger:
+                        snapshot = await self._reorient_after_progress_failure(current_after, snapshot, progress, reorientation_trigger)
+                        self._trace(
+                            task_id,
+                            "cognition.short_horizon_block.invalidated",
+                            payload={
+                                "block_id": block_id,
+                                "executed_action_index": action_index,
+                                "remaining_actions_discarded": len(remaining_actions),
+                                "reason": f"REORIENTATION:{reorientation_trigger.upper()}",
+                                "snapshot_iteration": snapshot.iteration,
+                            },
+                        )
+                        invalidated = True
+                        break
                     if not validity.valid:
                         self._trace(
                             task_id,
@@ -857,15 +880,43 @@ class Orchestrator:
                 self._trace(task_id, "cognition.progress", payload=progress_signal.model_dump(mode="json"))
                 if not observation.ok:
                     self._trace(task_id, "cognition.observation.failed", payload=observation.model_dump(mode="json"))
-                if action_loop:
-                    self._trace(task_id, "cognition.action_loop", payload={"tool": action.tool, "iteration": snapshot.iteration})
-                    snapshot.failed_strategies.append("ACTION_LOOP")
-                if stagnation:
-                    self._trace(task_id, "cognition.stagnation", payload={"iteration": snapshot.iteration})
-                    snapshot.failed_strategies.append("STAGNATION")
-                    self.horizon.persist_snapshot(snapshot)
+                reorientation_trigger = "action_loop" if action_loop else "stagnation" if stagnation else None
+                if reorientation_trigger:
+                    self._trace(
+                        task_id,
+                        f"cognition.{reorientation_trigger}",
+                        payload={"tool": action.tool, "iteration": snapshot.iteration},
+                    )
+                    snapshot = await self._reorient_after_progress_failure(current, snapshot, progress, reorientation_trigger)
             await self.events.emit("cognition.iteration.started", {"iteration": snapshot.iteration + 1}, task_id)
         await self._fail(task_id, "HORIZON_ITERATION_LIMIT")
+
+    async def _reorient_after_progress_failure(
+        self,
+        task: dict[str, Any],
+        snapshot: CognitiveStateSnapshot,
+        progress: ProgressTracker,
+        trigger: str,
+    ) -> CognitiveStateSnapshot:
+        task_id = str(task["id"])
+        try:
+            decision = await self.horizon.decide_reorientation(task, snapshot, trigger=trigger)
+        except Exception as exc:
+            self._trace(task_id, "cognition.reorientation_failed", payload={"trigger": trigger, "error": str(exc)[:1000]})
+            return snapshot
+        updated = self.horizon.persist_reorientation(task, snapshot, decision)
+        progress.reset_for_reorientation()
+        payload = {
+            "trigger": trigger,
+            "abandon_strategy": decision.abandon_strategy,
+            "new_strategy": decision.new_strategy,
+            "rationale": decision.rationale,
+            "snapshot_iteration": updated.iteration,
+            "evidence_ref": updated.evidence_refs[-1],
+        }
+        self._trace(task_id, "cognition.reorientation", payload=payload)
+        await self.events.emit("cognition.reorientation", payload, task_id)
+        return updated
 
     async def _execute_plan(
         self,

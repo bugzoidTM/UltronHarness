@@ -16,6 +16,8 @@ from ultron.policy.engine import PolicyEngine
 from ultron.schemas import (
     MissionOutline,
     NextAction,
+    ProgressSignal,
+    ReorientationDecision,
     ShortHorizonDecision,
     TaskCreate,
     TaskStatus,
@@ -318,4 +320,141 @@ async def test_short_horizon_stop_last_completes_block_accounting(tmp_path: Path
     assert payloads[1]["action_index"] == 0
     assert payloads[2]["actions"] == 1
     assert not _invalidation_payloads(orchestrator, task["id"])
+    assert orchestrator.get_task(task["id"])["status"] == "waiting_outcome"
+
+
+@pytest.mark.asyncio
+async def test_stagnation_triggers_structured_reorientation_and_changes_next_short_horizon_strategy(tmp_path: Path) -> None:
+    orchestrator = _orchestrator(tmp_path)
+    schemas: list[type] = []
+    short_prompts: list[str] = []
+    executed: list[str] = []
+    blocks = [
+        _block(_action("a1")),
+        _block(_action("a1")),
+        _block(_action("a1")),
+        _block(_action("a1")),
+        _block(_action("a1")),
+        _block(_action("b1")),
+        _block(_action("stop", stop=True)),
+    ]
+    new_strategy = "Inspecionar o estado com uma ação b1 diferente e verificável."
+
+    async def structured(schema, messages, **_kwargs):
+        if schema is MissionOutline:
+            return MissionOutline(subgoals=[])
+        schemas.append(schema)
+        if schema is ReorientationDecision:
+            return ReorientationDecision(
+                trigger="stagnation",
+                abandon_strategy="Repetir python.execute com o mesmo argumento.",
+                new_strategy=new_strategy,
+                rationale="A saída observada permaneceu inalterada por várias iterações.",
+            )
+        assert schema is ShortHorizonDecision
+        short_prompts.append(messages[-1]["content"])
+        return blocks.pop(0)
+
+    orchestrator.models.structured = structured  # type: ignore[method-assign]
+    _install_tool_executor(orchestrator, executed)
+    task = await orchestrator.create_task(
+        TaskCreate(
+            title="Reorientar após estagnação",
+            objective="Trocar de estratégia após observações repetidas.",
+            workspace="reorientation_stagnation",
+            autonomy_mode=4,
+            allowed_tools=["python.execute"],
+            action_budget=(1, 8),
+            requires_external_outcome=True,
+        )
+    )
+
+    await _run(orchestrator, task)
+
+    assert executed == ["a1", "a1", "a1", "a1", "a1", "b1"]
+    assert schemas.count(ReorientationDecision) == 1
+    assert schemas.count(ShortHorizonDecision) == 7
+    assert new_strategy in short_prompts[5]
+    traces = orchestrator.db.all(
+        "SELECT event_type,payload_json FROM execution_traces WHERE task_id=? ORDER BY created_at,rowid",
+        (task["id"],),
+    )
+    reorientations = [
+        orchestrator.db.parse_json(row["payload_json"], {})
+        for row in traces
+        if row["event_type"] == "cognition.reorientation"
+    ]
+    assert len(reorientations) == 1
+    assert reorientations[0]["trigger"] == "stagnation"
+    assert reorientations[0]["abandon_strategy"] == "Repetir python.execute com o mesmo argumento."
+    assert reorientations[0]["new_strategy"] == new_strategy
+    assert reorientations[0]["evidence_ref"].startswith("reorientation:")
+    assert orchestrator.get_task(task["id"])["status"] == "waiting_outcome"
+
+
+@pytest.mark.asyncio
+async def test_action_loop_triggers_structured_reorientation_and_changes_next_short_horizon_strategy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class ImmediateActionLoop:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def assess(self, **_kwargs):
+            self.calls += 1
+            if self.calls == 1:
+                return True, False, ProgressSignal(progressed=False, reasons=["repeated_action"], evidence_refs=[])
+            return False, False, ProgressSignal(progressed=True, reasons=["new_action"], evidence_refs=[])
+
+        def reset_for_reorientation(self) -> None:
+            return None
+
+    monkeypatch.setattr("ultron.core.orchestrator.ProgressTracker", ImmediateActionLoop)
+    orchestrator = _orchestrator(tmp_path)
+    schemas: list[type] = []
+    short_prompts: list[str] = []
+    executed: list[str] = []
+    new_strategy = "Trocar a ação repetida por uma inspeção b1 verificável."
+    blocks = [_block(_action("a1")), _block(_action("b1")), _block(_action("stop", stop=True))]
+
+    async def structured(schema, messages, **_kwargs):
+        if schema is MissionOutline:
+            return MissionOutline(subgoals=[])
+        schemas.append(schema)
+        if schema is ReorientationDecision:
+            return ReorientationDecision(
+                trigger="action_loop",
+                abandon_strategy="Repetir a mesma ação python.execute sem evidência nova.",
+                new_strategy=new_strategy,
+                rationale="A assinatura da ação permaneceu repetida no mesmo estado observável.",
+            )
+        assert schema is ShortHorizonDecision
+        short_prompts.append(messages[-1]["content"])
+        return blocks.pop(0)
+
+    orchestrator.models.structured = structured  # type: ignore[method-assign]
+    _install_tool_executor(orchestrator, executed)
+    task = await orchestrator.create_task(
+        TaskCreate(
+            title="Reorientar após loop",
+            objective="Trocar de ação após loop detectado.",
+            workspace="reorientation_loop",
+            autonomy_mode=4,
+            allowed_tools=["python.execute"],
+            action_budget=(1, 4),
+            requires_external_outcome=True,
+        )
+    )
+
+    await _run(orchestrator, task)
+
+    assert executed == ["a1", "b1"]
+    assert schemas.count(ReorientationDecision) == 1
+    assert new_strategy in short_prompts[1]
+    trace = orchestrator.db.one(
+        "SELECT payload_json FROM execution_traces WHERE task_id=? AND event_type='cognition.reorientation'",
+        (task["id"],),
+    )
+    assert trace is not None
+    assert orchestrator.db.parse_json(trace["payload_json"], {})["trigger"] == "action_loop"
     assert orchestrator.get_task(task["id"])["status"] == "waiting_outcome"

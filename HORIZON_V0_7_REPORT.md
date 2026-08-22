@@ -108,3 +108,10 @@ O modo `short_horizon` passou a revalidar deterministicamente um bloco após cad
 | `cognition.short_horizon_block.completed` | Bloco inteiramente observado e validado. |
 
 O runner inclui por trace as métricas `short_horizon_blocks`, `short_horizon_blocks_invalidated`, `short_horizon_actions_planned`, `short_horizon_actions_executed` e `short_horizon_actions_discarded`. O modo mantém pureza experimental: todas as decisões de `short_horizon` usam o schema `ShortHorizonDecision`; um bloco unitário é encerrado e seguido por uma nova inferência do mesmo schema, sem fallback para `NextAction`.
+
+
+## Retificação Horizon — Reorientação estruturada após perda de progresso
+
+A detecção de `STAGNATION` e `ACTION_LOOP` passou de marcador passivo para transição closed-loop auditável. Quando um desses gatilhos ocorre após uma observação, o runtime solicita um `ReorientationDecision` estruturado. A decisão precisa declarar a estratégia abandonada, uma nova estratégia e sua justificativa. O runtime persiste a nova estratégia como `active_strategy` no snapshot, registra `cognition.reorientation`, reinicia apenas os contadores de repetição e descarta as ações restantes do bloco `short_horizon` que foi planejado sob a estratégia anterior.
+
+A inferência seguinte continua no mesmo controller e recebe, no prompt, tanto as estratégias falhas quanto a estratégia ativa reorientada. Não há criação de controller novo, writeback de learning ou alteração da autoridade de outcome. Os E2Es controlados demonstram os dois gatilhos: estagnação por observação repetida e action loop por repetição de assinatura. Em ambos, a estratégia posterior aparece explicitamente no prompt do bloco seguinte, que executa uma ação diferente antes de propor stop.

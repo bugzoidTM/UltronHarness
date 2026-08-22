@@ -31,6 +31,11 @@ class ProgressTracker:
         payload = json.dumps({"tool": tool, "arguments": arguments, "observable_state": cls.stable_digest(observations)}, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
+    def reset_for_reorientation(self) -> None:
+        """Reinicia somente os contadores de repetição após uma mudança explícita de estratégia."""
+        self.stagnant_iterations = 0
+        self.action_counts.clear()
+
     def assess(self, *, tool: str | None, arguments: dict[str, Any], observations: list[str], output: str, verification_passed: bool, subgoal_completed: bool) -> tuple[bool, bool, ProgressSignal]:
         fingerprint = hashlib.sha256(_UUID.sub("<id>", output).encode("utf-8")).hexdigest()
         novel = bool(output.strip()) and fingerprint not in self.seen_observations
