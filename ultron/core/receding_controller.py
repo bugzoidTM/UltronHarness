@@ -8,6 +8,8 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
+from ultron.cognition.epistemic import initial_state, prompt_summary, update_from_observation
+from ultron.cognition.prediction import PredictionError, PredictionService
 from ultron.configuration import Settings
 from ultron.core.events import EventBus
 from ultron.core.verifier import StepSuccessVerifier
@@ -17,6 +19,7 @@ from ultron.schemas import (
     ActionObservation,
     BlockValidityResult,
     CognitiveStateSnapshot,
+    EpistemicState,
     MissionOutline,
     NextAction,
     OrientationSnapshot,
@@ -94,6 +97,22 @@ class RecedingHorizonController:
         self.models, self.tools, self.verifier, self.execute_tool = models, tools, verifier, execute_tool
         self.planning_seed = planning_seed
         self.contract = MissionContractValidator(tools, settings)
+        self.predictions = PredictionService(db)
+        feature_flags = settings.cognition.get("feature_flags", {})
+        self.epistemic_enabled = bool(feature_flags.get("epistemic_state", False))
+        self.prediction_enabled = bool(feature_flags.get("prediction_before_observation", False))
+
+    def _initial_epistemic(self, task: dict[str, Any], observations: list[str] | None = None) -> EpistemicState:
+        return initial_state(str(task["objective"]), observations)
+
+    @staticmethod
+    def _parse_epistemic(payload: Any) -> EpistemicState | None:
+        if not payload:
+            return None
+        try:
+            return EpistemicState.model_validate(payload)
+        except Exception:
+            return None
 
     def latest_snapshot(self, task: dict[str, Any]) -> CognitiveStateSnapshot:
         row = self.db.one(
@@ -107,6 +126,7 @@ class RecedingHorizonController:
                 tool_calls_used=int(task.get("tool_call_count") or 0),
                 remaining_action_budget=self.contract.remaining_budget(task),
                 replan_count=int(task.get("replan_count") or 0),
+                epistemic_state=self._initial_epistemic(task) if self.epistemic_enabled else None,
             )
         return CognitiveStateSnapshot(
             task_id=str(task["id"]),
@@ -121,6 +141,7 @@ class RecedingHorizonController:
             reorientation_blocked_action_signature=row["reorientation_blocked_action_signature"],
             external_feedback=self.db.parse_json(row["external_feedback_json"], []),
             evidence_refs=self.db.parse_json(row["evidence_refs_json"], []),
+            epistemic_state=(self._parse_epistemic(row.get("epistemic_state_json")) or self._initial_epistemic(task)) if self.epistemic_enabled else None,
             tool_calls_used=int(row["tool_calls_used"]),
             remaining_action_budget=int(row["remaining_action_budget"]),
             replan_count=int(task.get("replan_count") or 0),
@@ -130,8 +151,8 @@ class RecedingHorizonController:
     def persist_snapshot(self, snapshot: CognitiveStateSnapshot) -> None:
         self.db.execute(
             """INSERT OR IGNORE INTO cognitive_snapshots
-               (id,task_id,iteration,current_subgoal_id,completed_subgoals_json,known_facts_json,open_questions_json,recent_observations_json,failed_strategies_json,active_strategy,reorientation_blocked_action_signature,external_feedback_json,evidence_refs_json,tool_calls_used,remaining_action_budget,created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               (id,task_id,iteration,current_subgoal_id,completed_subgoals_json,known_facts_json,open_questions_json,recent_observations_json,failed_strategies_json,active_strategy,reorientation_blocked_action_signature,external_feedback_json,evidence_refs_json,epistemic_state_json,tool_calls_used,remaining_action_budget,created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 str(uuid4()),
                 snapshot.task_id,
@@ -146,11 +167,42 @@ class RecedingHorizonController:
                 snapshot.reorientation_blocked_action_signature,
                 self.db.json(snapshot.external_feedback),
                 self.db.json(snapshot.evidence_refs),
+                self.db.json(snapshot.epistemic_state.model_dump(mode="json")) if snapshot.epistemic_state else None,
                 snapshot.tool_calls_used,
                 snapshot.remaining_action_budget,
                 utcnow(),
             ),
         )
+
+    async def _emit_epistemic_state(self, task_id: str, snapshot: CognitiveStateSnapshot) -> None:
+        if not self.epistemic_enabled or snapshot.epistemic_state is None:
+            return
+        await self.events.emit(
+            "cognition.epistemic_state.updated",
+            {"iteration": snapshot.iteration, "state": prompt_summary(snapshot.epistemic_state)},
+            task_id,
+        )
+
+    def _trace_prediction(self, task_id: str, event_type: str, payload: dict[str, Any]) -> None:
+        self.db.execute(
+            """INSERT INTO execution_traces
+               (id,execution_trace_id,task_id,event_type,evidence_json,router_decision_ids_json,payload_json,created_at)
+               VALUES (?,?,?,?,?,?,?,?)""",
+            (
+                str(uuid4()),
+                f"trace-{task_id}",
+                str(task_id),
+                f"cognition.prediction.{event_type}",
+                self.db.json(payload.get("evidence_refs", [])),
+                self.db.json([]),
+                self.db.json(payload),
+                utcnow(),
+            ),
+        )
+
+    async def _emit_prediction(self, task_id: str, event_type: str, payload: dict[str, Any]) -> None:
+        self._trace_prediction(task_id, event_type, payload)
+        await self.events.emit(f"cognition.prediction.{event_type}", payload, task_id)
 
     async def ensure_initial_observation(
         self,
@@ -177,12 +229,14 @@ class RecedingHorizonController:
                 active_strategy=snapshot.active_strategy,
                 reorientation_blocked_action_signature=snapshot.reorientation_blocked_action_signature,
                 evidence_refs=evidence_refs,
+                epistemic_state=self._initial_epistemic(task, obs_list) if self.epistemic_enabled else None,
                 tool_calls_used=int(task.get("tool_call_count") or 0),
                 remaining_action_budget=self.contract.remaining_budget(task),
                 replan_count=int(task.get("replan_count") or 0),
                 iteration=0,
             )
             self.persist_snapshot(updated)
+            await self._emit_epistemic_state(str(task["id"]), updated)
             if obs_list:
                 await self.events.emit(
                     "cognition.observation.received",
@@ -206,6 +260,7 @@ class RecedingHorizonController:
         observation = self._observation("file.list", result, verification_passed=result.get("status") == "completed")
         updated = self._updated_snapshot(task, snapshot, observation, evidence_ref="initial_environment_observation")
         self.persist_snapshot(updated)
+        await self._emit_epistemic_state(str(task["id"]), updated)
         await self.events.emit("cognition.observation.received", observation.model_dump(mode="json"), str(task["id"]))
         await self.events.emit("cognition.state.updated", {"iteration": updated.iteration}, str(task["id"]))
         return updated
@@ -268,10 +323,13 @@ class RecedingHorizonController:
                     f"Estratégias falhas: {snapshot.failed_strategies[-self._limit('max_failed_strategies') :]}\n"
                     f"Estratégia ativa após reorientação: {snapshot.active_strategy or 'nenhuma'}\n"
                     f"Feedback externo sanitizado: {snapshot.external_feedback[-3:]}\n"
-                    f"Procedimentos roteados: {routed_procedures or []}\nMemórias: {memory_summaries or []}"
+                    f"Procedimentos roteados: {routed_procedures or []}\nMemórias: {memory_summaries or []}\n"
+                    f"Previsões avaliadas: {self.predictions.recent_summary(task_id=str(task['id'])) if self.prediction_enabled else []}"
                 ),
             },
         ]
+        epistemic_payload = prompt_summary(snapshot.epistemic_state) if self.epistemic_enabled else {"enabled": False}
+        prompt[1]["content"] += f"\nEstado epistêmico estruturado: {epistemic_payload}"
         action = await self.models.structured(
             NextAction,
             prompt,
@@ -292,8 +350,10 @@ class RecedingHorizonController:
         obs_text = "\n".join(snapshot.recent_observations) if snapshot.recent_observations else "nenhuma"
         prompt = [
             {"role": "system", "content": "Escolha um bloco de uma a três ações locais. Cada ação deve ser executável com as ferramentas autorizadas. O bloco será invalidado se a observação tornar as próximas ações inadequadas. Responda somente no schema ShortHorizonDecision."},
-            {"role": "user", "content": f"Objetivo: {task['objective']}\nObservação inicial do ambiente:\n{obs_text}\nFerramentas: {task.get('allowed_tools')}\nOrçamento: {snapshot.remaining_action_budget}\nObservações: {snapshot.recent_observations[-self._limit('recent_observations') :]}\nEstratégias falhas: {snapshot.failed_strategies[-self._limit('max_failed_strategies') :]}\nEstratégia ativa após reorientação: {snapshot.active_strategy or 'nenhuma'}\nFeedback externo sanitizado: {snapshot.external_feedback[-3:]}\nOutline: {[item.description for item in outline.subgoals] if outline else []}"},
+            {"role": "user", "content": f"Objetivo: {task['objective']}\nObservação inicial do ambiente:\n{obs_text}\nFerramentas: {task.get('allowed_tools')}\nOrçamento: {snapshot.remaining_action_budget}\nObservações: {snapshot.recent_observations[-self._limit('recent_observations') :]}\nEstratégias falhas: {snapshot.failed_strategies[-self._limit('max_failed_strategies') :]}\nEstratégia ativa após reorientação: {snapshot.active_strategy or 'nenhuma'}\nFeedback externo sanitizado: {snapshot.external_feedback[-3:]}\nPrevisões avaliadas: {self.predictions.recent_summary(task_id=str(task['id'])) if self.prediction_enabled else []}\nOutline: {[item.description for item in outline.subgoals] if outline else []}"},
         ]
+        epistemic_payload = prompt_summary(snapshot.epistemic_state) if self.epistemic_enabled else {"enabled": False}
+        prompt[1]["content"] += f"\nEstado epistêmico estruturado: {epistemic_payload}"
         return await self.models.structured(
             ShortHorizonDecision,
             prompt,
@@ -362,6 +422,7 @@ class RecedingHorizonController:
             reorientation_blocked_action_signature=blocked_action_signature,
             external_feedback=list(previous.external_feedback),
             evidence_refs=[*previous.evidence_refs, evidence_ref][-20:],
+            epistemic_state=previous.epistemic_state,
             tool_calls_used=int(task.get("tool_call_count") or 0),
             remaining_action_budget=self.contract.remaining_budget(task),
             replan_count=int(task.get("replan_count") or 0) + 1,
@@ -429,11 +490,38 @@ class RecedingHorizonController:
             return None, snapshot, validation
         action_id = str(uuid4())
         self._persist_action(action_id, task, snapshot, action, "proposed")
+        prediction = None
+        if self.prediction_enabled:
+            prediction = self.predictions.create(
+                task_id=str(task["id"]),
+                action_id=action_id,
+                iteration=snapshot.iteration + 1,
+                action=action,
+            )
+            await self._emit_prediction(
+                str(task["id"]),
+                "proposed",
+                {
+                    "prediction_id": prediction.prediction_id,
+                    "action_id": action_id,
+                    "iteration": prediction.iteration,
+                    "hypothesis": prediction.hypothesis,
+                    "expected_observation": prediction.expected_observation,
+                    "confidence_before": prediction.confidence_before,
+                    "predicted_at": prediction.predicted_at,
+                },
+            )
         result = await self.execute_tool(str(task["id"]), ToolCall(tool_name=str(action.tool), arguments=action.arguments))
-        self.db.execute(
-            "UPDATE cognitive_actions SET status=?, executed_at=? WHERE action_id=?",
-            (str(result.get("status", "unknown")), utcnow(), action_id),
-        )
+        if result.get("status") == "waiting_approval":
+            self.db.execute(
+                "UPDATE cognitive_actions SET status=? WHERE action_id=?",
+                (str(result.get("status", "unknown")), action_id),
+            )
+        else:
+            self.db.execute(
+                "UPDATE cognitive_actions SET status=?, executed_at=? WHERE action_id=?",
+                (str(result.get("status", "unknown")), utcnow(), action_id),
+            )
         verification = self.verifier.verify(
             PlanStep(
                 id=1,
@@ -448,13 +536,59 @@ class RecedingHorizonController:
         )
         observation = self._observation(str(action.tool), result, verification.accepted)
         evidence_ref = f"cognitive_action:{action_id}"
+        if prediction is not None and result.get("status") != "waiting_approval":
+            try:
+                outcome = self.predictions.observe(
+                    prediction_id=prediction.prediction_id,
+                    action_id=action_id,
+                    observed_output=observation.output_summary or observation.error or "",
+                    result_status=str(result.get("status", "unknown")),
+                    verification_passed=verification.accepted,
+                    evidence_refs=[evidence_ref],
+                )
+            except PredictionError as exc:
+                await self._emit_prediction(
+                    str(task["id"]),
+                    "invalid",
+                    {"prediction_id": prediction.prediction_id, "action_id": action_id, "reason": str(exc)},
+                )
+                raise
+            await self._emit_prediction(
+                str(task["id"]),
+                "observed",
+                {
+                    "prediction_id": outcome.prediction_id,
+                    "action_id": action_id,
+                    "observed": outcome.observed_output,
+                    "confidence_after": outcome.confidence_after,
+                    "classification": outcome.classification.value,
+                    "evidence_refs": outcome.evidence_refs,
+                    "observed_at": outcome.observed_at,
+                },
+            )
         updated = self._updated_snapshot(task, snapshot, observation, evidence_ref=evidence_ref, subgoal_id=action.subgoal_id)
         self.persist_snapshot(updated)
+        await self._emit_epistemic_state(str(task["id"]), updated)
         await self.events.emit("cognition.observation.received", observation.model_dump(mode="json"), str(task["id"]))
         await self.events.emit("cognition.state.updated", {"iteration": updated.iteration, "action_id": action_id}, str(task["id"]))
         if verification.accepted and action.subgoal_id is not None:
             await self.events.emit("cognition.subgoal.completed", {"subgoal_id": action.subgoal_id}, str(task["id"]))
         return observation, updated, validation
+
+    async def record_plan_observation(
+        self,
+        task: dict[str, Any],
+        snapshot: CognitiveStateSnapshot,
+        result: dict[str, Any],
+        verification_passed: bool,
+        *,
+        evidence_ref: str,
+    ) -> CognitiveStateSnapshot:
+        observation = self._observation(str(result.get("tool") or "plan"), result, verification_passed)
+        updated = self._updated_snapshot(task, snapshot, observation, evidence_ref=evidence_ref, tool_call_delta=0)
+        self.persist_snapshot(updated)
+        await self._emit_epistemic_state(str(task["id"]), updated)
+        return updated
 
     async def _record_decision(self, task: dict[str, Any], kind: str, iteration: int, initial: bool, final: bool, repairs: int, error: str | None, error_category: str | None = None) -> None:
         self.db.execute(
@@ -497,6 +631,7 @@ class RecedingHorizonController:
             reorientation_blocked_action_signature=previous.reorientation_blocked_action_signature,
             external_feedback=[*previous.external_feedback, f"{feedback_identity}: {feedback}"][-3:],
             evidence_refs=[*previous.evidence_refs, feedback_identity][-20:],
+            epistemic_state=previous.epistemic_state,
             tool_calls_used=int(task.get("tool_call_count") or 0),
             remaining_action_budget=self.contract.remaining_budget(task),
             replan_count=int(task.get("replan_count") or 0),
@@ -504,6 +639,34 @@ class RecedingHorizonController:
         )
         self.persist_snapshot(updated)
         return updated
+
+    def persist_plan_action(
+        self,
+        action_id: str,
+        task: dict[str, Any],
+        snapshot: CognitiveStateSnapshot,
+        step: PlanStep,
+        status: str = "proposed",
+    ) -> None:
+        self.db.execute(
+            """INSERT INTO cognitive_actions
+               (id,action_id,task_id,iteration,subgoal_id,tool,arguments_json,expected_evidence_json,status,model,seed,created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                str(uuid4()),
+                str(action_id),
+                task["id"],
+                snapshot.iteration + 1,
+                None,
+                step.tool,
+                self.db.json(step.arguments),
+                self.db.json({"condition": step.success_condition}),
+                status,
+                self.models.primary_name,
+                self.planning_seed,
+                utcnow(),
+            ),
+        )
 
     def _persist_action(
         self,
@@ -541,6 +704,7 @@ class RecedingHorizonController:
         *,
         evidence_ref: str,
         subgoal_id: int | None = None,
+        tool_call_delta: int = 1,
     ) -> CognitiveStateSnapshot:
         facts = [*previous.known_facts, observation.output_summary] if observation.ok else previous.known_facts
         failures = [*previous.failed_strategies, observation.error or observation.tool] if not observation.ok else previous.failed_strategies
@@ -560,8 +724,22 @@ class RecedingHorizonController:
             reorientation_blocked_action_signature=None,
             external_feedback=previous.external_feedback[-3:],
             evidence_refs=[*previous.evidence_refs, evidence_ref][-20:],
-            tool_calls_used=int(task.get("tool_call_count") or 0) + 1,
-            remaining_action_budget=max(0, self.contract.remaining_budget(task) - 1),
+            epistemic_state=(
+                update_from_observation(
+                    previous.epistemic_state,
+                    objective=str(task["objective"]),
+                    tool=observation.tool,
+                    output=observation.output_summary,
+                    ok=observation.ok,
+                    verification_passed=observation.verification_passed,
+                    error=observation.error,
+                    evidence_ref=evidence_ref,
+                )
+                if self.epistemic_enabled
+                else None
+            ),
+            tool_calls_used=int(task.get("tool_call_count") or 0) + tool_call_delta,
+            remaining_action_budget=max(0, self.contract.remaining_budget(task) - tool_call_delta),
             replan_count=int(task.get("replan_count") or 0),
             iteration=previous.iteration + 1,
         )

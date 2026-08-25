@@ -1,0 +1,98 @@
+{
+  "protocol_version": "gr2-generalization-v1",
+  "status": "design_ready_execution_blocked",
+  "feature_under_test": "cognition.feature_flags.prediction_before_observation",
+  "control_variant": {
+    "name": "gr1_control",
+    "epistemic_state": true,
+    "prediction_before_observation": false,
+    "later_features": false
+  },
+  "candidate_variant": {
+    "name": "gr2_candidate",
+    "epistemic_state": true,
+    "prediction_before_observation": true,
+    "later_features": false
+  },
+  "primary_estimand": "mean_family_clustered(Y_gr2 - Y_gr1)",
+  "primary_outcome": "authoritative_external_pass",
+  "minimum_effect_of_interest": 0.05,
+  "alpha": 0.05,
+  "confidence_level": 0.95,
+  "primary_test": "paired_difference_with_family_cluster_bootstrap_and_mcnemar_sensitivity",
+  "bootstrap_replicates": 10000,
+  "bootstrap_seed": 20260825,
+  "primary_family_count": 10,
+  "reserve_family_count": 2,
+  "missions_per_family": 20,
+  "planned_seeds": [53, 71, 89, 107],
+  "planned_pairs": 960,
+  "required_model_alias": "ollama",
+  "required_effective_model": "qwen2.5:0.5b",
+  "benchmark": "general_reasoning_v1",
+  "required_private_files": [
+    "contracts.json",
+    "evaluator.py",
+    "split_manifest.json",
+    "leakage_policy.json"
+  ],
+  "families": [
+    "causal_reasoning",
+    "constraint_satisfaction",
+    "debugging",
+    "planning",
+    "scientific_inference",
+    "logical_deduction",
+    "abductive_reasoning",
+    "counterfactual_reasoning",
+    "state_recovery",
+    "novel_rule_induction"
+  ],
+  "reserve_families": ["compositional_reasoning_reserve_a", "domain_shift_reserve_b"],
+  "secondary_metrics": [
+    "first_pass_success",
+    "false_stop_recovery",
+    "independent_prediction_accuracy",
+    "assumption_falsification_rate",
+    "calibration_error",
+    "sdv",
+    "tool_calls_per_pass",
+    "llm_calls_per_pass",
+    "latency_per_pass",
+    "invalid_rate"
+  ],
+  "invalid_if": [
+    "model_attribution_unverified",
+    "seed_attribution_unverified",
+    "orientation_mismatch",
+    "fixture_mismatch",
+    "allowed_tool_contract_violated",
+    "action_budget_cap_exceeded",
+    "pre_decision_tool_call_detected",
+    "external_evaluator_error",
+    "prediction_retrospective",
+    "prediction_observation_duplicate",
+    "prediction_pending_without_declared_terminal_rule",
+    "leakage_detected",
+    "unverified_writeback"
+  ],
+  "promotion_requires": [
+    "measurement_valid_for_all_primary_pairs",
+    "ic95_excludes_zero",
+    "effect_at_least_minimum_effect_of_interest",
+    "at_least_eight_primary_families_valid",
+    "effect_not_explained_by_extra_cost",
+    "no_security_regression",
+    "independent_prediction_accuracy_available",
+    "no_leakage",
+    "human_protocol_approval"
+  ],
+  "current_private_root_audit": {
+    "general_reasoning_v1_present": false,
+    "forge_e2e_v1_present": true,
+    "forge_router_v1_present": true,
+    "transfer100_v3_present": true,
+    "transfer100_v4_present": true,
+    "confirmatory_collection_authorized": false
+  }
+}

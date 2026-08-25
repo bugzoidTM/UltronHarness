@@ -78,6 +78,28 @@ models:
 
 O código cognitivo nunca chama esses runtimes diretamente; todas as chamadas passam por `ultron.models.gateway.ModelGateway`.
 
+### Perfis de desenvolvimento
+
+Para desenvolvimento interativo, o launcher aceita perfis locais sem alterar o default nem o protocolo confirmatório. O perfil `local-fast` usa `qwen2.5:0.5b`; `local-capable` usa o `qwen2.5:3b` instalado localmente e é a opção recomendada para explorar planejamento, memória, previsão e recuperação com maior capacidade. O perfil `default` preserva a configuração normal do arquivo local.
+
+```powershell
+# Desenvolvimento rápido e barato, comportamento original
+.\scripts\start.ps1 -ModelProfile local-fast
+
+# Desenvolvimento com o modelo local mais capaz
+.\scripts\start.ps1 -ModelProfile local-capable
+```
+
+O perfil `local-capable` é para engenharia e exploração. Ele **não substitui** o modelo, o split, o budget ou o freeze da avaliação confirmatória GR-1 versus GR-2; resultados obtidos nesse perfil não podem ser usados como evidência comparativa.
+
+As capacidades cognitivas também são opt-in no launcher. `-CognitionProfile gr1` ativa somente o estado epistêmico; `-CognitionProfile gr1-gr2` ativa estado epistêmico e previsão antes da observação. Para o ciclo de desenvolvimento mais capaz atualmente disponível:
+
+```powershell
+.\scripts\start.ps1 -ModelProfile local-capable -CognitionProfile gr1-gr2
+```
+
+Esse comando deve ser usado após parar/reiniciar a API local para que o novo perfil seja herdado pelo processo. Cada flag continua registrada separadamente e permanece desligada quando nenhum perfil é informado.
+
 ## Segurança e autonomia
 
 O UltronPro começa em **Mode 2 — Supervised Agent**. Ações R0 e R1 permitidas podem ser executadas dentro do workspace; modificações R2 aguardam aprovação. As ações R3/R4 requerem aprovação e as R5 são bloqueadas. O diretório permitido é:

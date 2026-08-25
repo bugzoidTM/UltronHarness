@@ -53,6 +53,9 @@ context:
 
 cognition:
   controller_mode: full_plan
+  feature_flags:
+    epistemic_state: false
+    prediction_before_observation: false
   recent_observations: 5
   max_known_facts: 20
   max_open_questions: 10

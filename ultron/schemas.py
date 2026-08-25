@@ -161,6 +161,110 @@ class VerificationSpec(BaseModel):
     registry_id: str | None = Field(default=None, max_length=200)
 
 
+class PredictionClassification(str, Enum):
+    CONFIRM = "confirm"
+    WEAKEN = "weaken"
+    REJECT = "reject"
+    UNCERTAIN = "uncertain"
+
+
+class Prediction(BaseModel):
+    version: int = Field(default=1, ge=1)
+    prediction_id: str = Field(min_length=1, max_length=128)
+    task_id: str = Field(min_length=1, max_length=128)
+    action_id: str = Field(min_length=1, max_length=128)
+    iteration: int = Field(ge=0)
+    hypothesis: str = Field(min_length=1, max_length=2000)
+    expected_observation: str = Field(min_length=1, max_length=2000)
+    confidence_before: float = Field(ge=0.0, le=1.0)
+    action: str = Field(min_length=1, max_length=2000)
+    observed: str | None = Field(default=None, max_length=2000)
+    confidence_after: float | None = Field(default=None, ge=0.0, le=1.0)
+    classification: PredictionClassification | None = None
+    evidence_refs: list[str] = Field(default_factory=list, max_length=20)
+    predicted_at: str = Field(min_length=1, max_length=80)
+    observed_at: str | None = Field(default=None, max_length=80)
+
+    @model_validator(mode="after")
+    def observation_requires_outcome(self) -> Prediction:
+        observed_fields = (self.observed, self.confidence_after, self.classification, self.observed_at)
+        if any(value is not None for value in observed_fields) and not all(value is not None for value in observed_fields):
+            raise ValueError("Uma previsão observada deve conter todos os campos expected/observed do outcome.")
+        return self
+
+
+class PredictionObservation(BaseModel):
+    prediction_id: str = Field(min_length=1, max_length=128)
+    action_id: str = Field(min_length=1, max_length=128)
+    observed_output: str = Field(max_length=2000)
+    result_status: str = Field(min_length=1, max_length=80)
+    verification_passed: bool
+    confidence_after: float = Field(ge=0.0, le=1.0)
+    classification: PredictionClassification
+    evidence_refs: list[str] = Field(default_factory=list, max_length=20)
+    observed_at: str = Field(min_length=1, max_length=80)
+
+
+class EpistemicKind(str, Enum):
+    FACT = "FACT"
+    INFERENCE = "INFERENCE"
+    ASSUMPTION = "ASSUMPTION"
+    HYPOTHESIS = "HYPOTHESIS"
+    UNKNOWN = "UNKNOWN"
+
+
+class EpistemicClaim(BaseModel):
+    kind: EpistemicKind
+    content: str = Field(min_length=1, max_length=2000)
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    evidence_refs: list[str] = Field(default_factory=list, max_length=20)
+    source: str = Field(default="explicit_update", min_length=1, max_length=120)
+
+
+class EpistemicState(BaseModel):
+    version: int = Field(default=1, ge=1)
+    known_facts: list[EpistemicClaim] = Field(default_factory=list, max_length=20)
+    unknowns: list[EpistemicClaim] = Field(default_factory=list, max_length=20)
+    assumptions: list[EpistemicClaim] = Field(default_factory=list, max_length=20)
+    hypotheses: list[EpistemicClaim] = Field(default_factory=list, max_length=10)
+    hypothesis_confidences: dict[str, float] = Field(default_factory=dict)
+    contradictions: list[str] = Field(default_factory=list, max_length=20)
+    causal_relations: list[str] = Field(default_factory=list, max_length=20)
+    constraints: list[str] = Field(default_factory=list, max_length=20)
+    derived_facts: list[EpistemicClaim] = Field(default_factory=list, max_length=20)
+    open_questions: list[str] = Field(default_factory=list, max_length=20)
+    failed_hypotheses: list[str] = Field(default_factory=list, max_length=20)
+    active_strategy: str | None = Field(default=None, max_length=1000)
+    candidate_strategies: list[str] = Field(default_factory=list, max_length=10)
+    evidence_for: dict[str, list[str]] = Field(default_factory=dict)
+    evidence_against: dict[str, list[str]] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def claim_kinds_are_partitioned(self) -> EpistemicState:
+        expected_kinds = {
+            "known_facts": EpistemicKind.FACT,
+            "unknowns": EpistemicKind.UNKNOWN,
+            "assumptions": EpistemicKind.ASSUMPTION,
+            "hypotheses": EpistemicKind.HYPOTHESIS,
+            "derived_facts": EpistemicKind.INFERENCE,
+        }
+        for field_name, expected_kind in expected_kinds.items():
+            if any(claim.kind != expected_kind for claim in getattr(self, field_name)):
+                raise ValueError(f"{field_name} aceita somente claims do tipo {expected_kind.value}.")
+        return self
+
+    @model_validator(mode="after")
+    def hypothesis_is_not_fact(self) -> EpistemicState:
+        fact_contents = {claim.content for claim in self.known_facts}
+        hypothesis_contents = {claim.content for claim in self.hypotheses}
+        if fact_contents.intersection(hypothesis_contents):
+            raise ValueError("Uma hipótese não pode ser promovida silenciosamente a fato.")
+        for content, confidence in self.hypothesis_confidences.items():
+            if not 0.0 <= confidence <= 1.0:
+                raise ValueError(f"Confiança de hipótese inválida: {content}")
+        return self
+
+
 class NextAction(BaseModel):
     subgoal_id: int | None = Field(default=None, ge=1)
     intent: str = Field(min_length=3, max_length=500)
@@ -245,6 +349,7 @@ class CognitiveStateSnapshot(BaseModel):
     remaining_action_budget: int = Field(default=0, ge=0)
     replan_count: int = Field(default=0, ge=0)
     iteration: int = Field(default=0, ge=0)
+    epistemic_state: EpistemicState | None = None
 
 
 class ActionObservation(BaseModel):

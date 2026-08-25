@@ -26,7 +26,7 @@ $task = Invoke-UltronJson 'POST' '/tasks' @{ title = 'Smoke test workspace artif
 Write-Host '[3/7] Run planner and policy' -ForegroundColor Cyan
 $null = Invoke-UltronJson 'POST' "/tasks/$($task.id)/run"
 $state = $null
-for ($attempt = 0; $attempt -lt 120; $attempt++) {
+for ($attempt = 0; $attempt -lt 360; $attempt++) {
   Start-Sleep -Milliseconds 350
   $state = Invoke-UltronJson 'GET' "/tasks/$($task.id)"
   if ($state.status -in @('waiting_approval','completed','failed')) { break }

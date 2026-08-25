@@ -45,13 +45,17 @@ class HorizonRunResult:
     measurement_valid: bool
 
 
-def _load_private_evaluator(path: Path):
-    spec = importlib.util.spec_from_file_location("horizon_private_evaluator", path)
+def _load_private_module(path: Path, module_name: str):
+    spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
-        raise RuntimeError("Avaliador privado Horizon indisponível")
+        raise RuntimeError(f"Módulo privado indisponível: {path.name}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _load_private_evaluator(path: Path):
+    return _load_private_module(path, "horizon_private_evaluator")
 
 
 def _hash_path(path: Path) -> str:
@@ -63,6 +67,12 @@ def _git_commit(root: Path) -> str:
     return result.stdout.strip() if result.returncode == 0 else "unknown"
 
 
+def _parse_timestamp(value: object) -> datetime:
+    text = str(value).replace("Z", "+00:00")
+    parsed = datetime.fromisoformat(text)
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
+
+
 class HorizonControlRunner:
     def __init__(
         self,
@@ -72,9 +82,28 @@ class HorizonControlRunner:
         private_root: Path | None = None,
         model_name: str = "ollama_research",
         seed: int = 53,
+        prediction_before_observation: bool = False,
+        tasks_path: Path | None = None,
+        task_split: str | None = None,
+        benchmark_name: str = "horizon_control_v1",
+        task_ids: tuple[str, ...] | None = None,
+        protocol_hash: str | None = None,
+        split_manifest_hash: str | None = None,
+        leakage_policy_hash: str | None = None,
+        contract_bundle_hash: str | None = None,
+        freeze_manifest_hash: str | None = None,
     ):
         self.settings = Settings(raw=deepcopy(settings.raw), root_dir=settings.root_dir)
         self.public_root = public_root or self.settings.root_dir / "benchmarks" / "forge_e2e_v1"
+        self.tasks_path = tasks_path or (self.public_root / "tasks.yaml")
+        self.task_split = task_split
+        self.benchmark_name = benchmark_name
+        self.task_ids = tuple(str(item) for item in task_ids) if task_ids is not None else None
+        self.protocol_hash = protocol_hash
+        self.split_manifest_hash = split_manifest_hash
+        self.leakage_policy_hash = leakage_policy_hash
+        self.contract_bundle_hash = contract_bundle_hash
+        self.freeze_manifest_hash = freeze_manifest_hash
         configured = private_root or self.settings.private_benchmark_root
         if configured is None:
             raise FileNotFoundError("Horizon exige raiz privada externa configurada.")
@@ -82,14 +111,29 @@ class HorizonControlRunner:
         if model_name not in self.settings.raw["models"]["registry"]:
             raise ValueError(f"Modelo Horizon não registrado: {model_name}")
         self.model_name, self.seed = model_name, seed
+        self.prediction_before_observation = bool(prediction_before_observation)
+        self.settings.raw.setdefault("cognition", {}).setdefault("feature_flags", {})["prediction_before_observation"] = self.prediction_before_observation
         self.settings.raw["models"]["primary"] = model_name
         self.settings.raw["models"]["timeout_seconds"] = max(300, int(self.settings.raw["models"].get("timeout_seconds", 120)))
         self.configured_model = str(self.settings.raw["models"]["registry"][model_name].get("model", model_name))
 
     def _tasks(self) -> list[dict]:
-        tasks = yaml.safe_load((self.public_root / "tasks.yaml").read_text(encoding="utf-8")) or []
-        if not isinstance(tasks, list) or len(tasks) != 10:
+        tasks = yaml.safe_load(self.tasks_path.read_text(encoding="utf-8")) or []
+        if not isinstance(tasks, list) or not tasks:
+            raise ValueError("O manifest de tarefas precisa conter uma lista não vazia")
+        if self.task_split is None and self.benchmark_name == "horizon_control_v1" and len(tasks) != 10:
             raise ValueError("Horizon Control v1 exige as dez missões Forge públicas")
+        if self.task_split is not None:
+            tasks = [task for task in tasks if str(task.get("split")) == self.task_split]
+            if not tasks:
+                raise ValueError(f"Nenhuma missão encontrada no split privado: {self.task_split}")
+        if self.task_ids is not None:
+            wanted = set(self.task_ids)
+            tasks = [task for task in tasks if str(task.get("id")) in wanted]
+            if len(tasks) != len(self.task_ids):
+                found = {str(task.get("id")) for task in tasks}
+                missing = sorted(wanted.difference(found))
+                raise ValueError(f"IDs de missão ausentes no benchmark: {missing[:5]}")
         return tasks
 
     def _orchestrator(self, db: Database, mode: str, allowed_tools: list[str]) -> Orchestrator:
@@ -125,6 +169,8 @@ class HorizonControlRunner:
         evaluator_path = self.private_root / "evaluator.py"
         contracts = json.loads(contracts_path.read_text(encoding="utf-8"))
         evaluator = _load_private_evaluator(evaluator_path)
+        prediction_labeler_path = self.private_root / "prediction_label.py"
+        prediction_labeler = _load_private_module(prediction_labeler_path, "horizon_private_prediction_labeler") if prediction_labeler_path.exists() else None
         run_id = str(uuid4())
         artifact_dir = self.settings.artifacts_dir / "research" / "horizon" / "comparisons" / run_id
         artifact_dir.mkdir(parents=True, exist_ok=True)
@@ -247,6 +293,16 @@ class HorizonControlRunner:
                 )
                 tool_rows = db.all("SELECT tool_name,status FROM tool_executions WHERE task_id=? ORDER BY created_at,rowid", (created["id"],))
                 actions = db.all("SELECT status FROM cognitive_actions WHERE task_id=? ORDER BY created_at,rowid", (created["id"],))
+                prediction_rows = db.all(
+                    """SELECT p.prediction_id,p.action_id,p.iteration,p.hypothesis,p.expected_observation,p.confidence_before,p.predicted_at,
+                              a.created_at AS action_created_at,a.executed_at AS action_executed_at,
+                              o.observed_output,o.result_status,o.verification_passed,o.confidence_after,o.classification,o.evidence_refs_json,o.observed_at
+                       FROM cognitive_predictions p
+                       JOIN cognitive_actions a ON a.action_id=p.action_id
+                       LEFT JOIN prediction_observations o ON o.prediction_id=p.prediction_id
+                       WHERE p.task_id=? ORDER BY p.predicted_at,p.rowid""",
+                    (created["id"],),
+                )
                 horizon_trace_rows = db.all("SELECT event_type,payload_json FROM execution_traces WHERE task_id=? ORDER BY created_at,rowid", (created["id"],))
                 short_horizon_blocks = [row for row in horizon_trace_rows if row["event_type"] == "cognition.short_horizon_block.created"]
                 short_horizon_invalidations = [row for row in horizon_trace_rows if row["event_type"] == "cognition.short_horizon_block.invalidated"]
@@ -268,12 +324,126 @@ class HorizonControlRunner:
                 if first_tool_exec and first_model_call and first_tool_exec["created_at"] < first_model_call["created_at"]:
                     pre_decision_tool_call = True
 
+                prediction_payloads = [
+                    {
+                        "prediction_id": row["prediction_id"],
+                        "action_id": row["action_id"],
+                        "iteration": row["iteration"],
+                        "hypothesis": row["hypothesis"],
+                        "expected_observation": row["expected_observation"],
+                        "confidence_before": row["confidence_before"],
+                        "predicted_at": row["predicted_at"],
+                        "action_created_at": row["action_created_at"],
+                        "action_executed_at": row["action_executed_at"],
+                        "observed": row["observed_output"],
+                        "result_status": row["result_status"],
+                        "verification_passed": bool(row["verification_passed"]) if row["verification_passed"] is not None else None,
+                        "confidence_after": row["confidence_after"],
+                        "classification": row["classification"],
+                        "evidence_refs": db.parse_json(row["evidence_refs_json"], []),
+                        "observed_at": row["observed_at"],
+                    }
+                    for row in prediction_rows
+                ]
+                observed_predictions = [row for row in prediction_payloads if row["observed_at"] is not None]
+                prediction_ids = [str(row["prediction_id"]) for row in prediction_payloads]
+                prediction_action_ids = [str(row["action_id"]) for row in prediction_payloads]
+                prediction_integrity_verified = (
+                    len(prediction_ids) == len(set(prediction_ids))
+                    and len(prediction_action_ids) == len(set(prediction_action_ids))
+                    and all(row["observed_at"] is None or row["observed"] is not None for row in prediction_payloads)
+                    and len(observed_predictions) == sum(row["observed_at"] is not None for row in prediction_payloads)
+                )
+                prediction_temporality_violations = 0
+                for row in prediction_payloads:
+                    try:
+                        predicted_at = _parse_timestamp(row["predicted_at"])
+                        executed_at = row.get("action_executed_at")
+                        observed_at = row.get("observed_at")
+                        if executed_at is not None and predicted_at >= _parse_timestamp(executed_at):
+                            prediction_temporality_violations += 1
+                        if observed_at is not None:
+                            if executed_at is None:
+                                prediction_temporality_violations += 1
+                            elif _parse_timestamp(observed_at) < _parse_timestamp(executed_at):
+                                prediction_temporality_violations += 1
+                            if _parse_timestamp(observed_at) < predicted_at:
+                                prediction_temporality_violations += 1
+                    except (TypeError, ValueError, KeyError):
+                        prediction_temporality_violations += 1
+                prediction_temporality_verified = prediction_temporality_violations == 0
+                prediction_labeler_error: str | None = None
+                independent_prediction_labels: list[bool] = []
+                if prediction_labeler is not None and observed_predictions:
+                    for prediction_payload in observed_predictions:
+                        try:
+                            label = prediction_labeler.label_prediction(
+                                prediction=prediction_payload,
+                                workspace_path=workspace_path,
+                                contract=contracts[task_id],
+                                external_outcome={
+                                    "success": bool(outcome.success),
+                                    "authority_level": outcome.authority_level,
+                                },
+                            )
+                            if not isinstance(label, dict) or "independent_correct" not in label:
+                                raise ValueError("independent_prediction_label_missing")
+                            independent_correct = bool(label["independent_correct"])
+                            prediction_payload["independent_prediction_correct"] = independent_correct
+                            independent_prediction_labels.append(independent_correct)
+                        except Exception as exc:
+                            prediction_labeler_error = f"{type(exc).__name__}: {str(exc)[:500]}"
+                            break
+                independent_prediction_label_available = bool(observed_predictions) and len(independent_prediction_labels) == len(observed_predictions)
+                independent_prediction_accuracy = (
+                    sum(independent_prediction_labels) / len(independent_prediction_labels)
+                    if independent_prediction_labels and independent_prediction_label_available
+                    else None
+                )
+                prediction_accuracy = (
+                    sum(bool(row["verification_passed"]) == (row["classification"] == "confirm") for row in observed_predictions)
+                    / len(observed_predictions)
+                    if observed_predictions
+                    else 0.0
+                )
+                assumption_falsification_rate = (
+                    sum(row["classification"] in {"reject", "weaken"} for row in observed_predictions) / len(observed_predictions)
+                    if observed_predictions
+                    else 0.0
+                )
                 orientation_tool_calls = 1 if ("file.list" in mission_tools) else 0
                 agent_tool_calls = int(task.get("tool_call_count") or 0)
                 total_tool_calls = orientation_tool_calls + agent_tool_calls
+                forbidden_runtime_paths = (
+                    "contracts.json",
+                    "evaluator.py",
+                    "calibration/evaluator_inputs.json",
+                    "validation/evaluator_inputs.json",
+                    "unseen/evaluator_inputs.json",
+                )
+                forbidden_paths_present = [
+                    relative for relative in forbidden_runtime_paths if (workspace_path / relative).exists()
+                ]
+                forbidden_task_keys = {"expected_files", "private_success_rule", "gold_answer", "reference_patch"}
+                public_task_forbidden_keys_present = bool(forbidden_task_keys.intersection(mission))
+                leakage_audit = {
+                    "passed": not forbidden_paths_present and not public_task_forbidden_keys_present,
+                    "forbidden_runtime_paths_checked": len(forbidden_runtime_paths),
+                    "forbidden_runtime_paths_present_count": len(forbidden_paths_present),
+                    "public_task_forbidden_keys_present": public_task_forbidden_keys_present,
+                    "evaluator_invoked_only_after_execution": True,
+                    "workspace_is_distinct_from_reference": workspace_path.resolve() != ref_workspace_path.resolve(),
+                }
 
                 trace = {
                     "mission_id": task_id,
+                    "benchmark": self.benchmark_name,
+                    "task_split": self.task_split,
+                    "protocol_hash": self.protocol_hash,
+                    "split_manifest_hash": self.split_manifest_hash,
+                    "leakage_policy_hash": self.leakage_policy_hash,
+                    "contract_bundle_hash": self.contract_bundle_hash,
+                    "freeze_manifest_hash": self.freeze_manifest_hash,
                     "controller_mode": mode,
                     "requested_model_alias": self.model_name,
                     "configured_model": self.configured_model,
@@ -291,6 +461,20 @@ class HorizonControlRunner:
                     "initial_fixture_hash": initial_fixture_hash,
                     "orientation_tool_calls": orientation_tool_calls,
                     "agent_tool_calls": agent_tool_calls,
+                    "prediction_before_observation_enabled": self.prediction_before_observation,
+                    "predictions": prediction_payloads,
+                    "prediction_count": len(prediction_payloads),
+                    "observed_prediction_count": len(observed_predictions),
+                    "pending_prediction_count": len(prediction_payloads) - len(observed_predictions),
+                    "prediction_integrity_verified": prediction_integrity_verified,
+                    "prediction_temporality_verified": prediction_temporality_verified,
+                    "prediction_temporality_violation_count": prediction_temporality_violations,
+                    "prediction_accuracy": round(prediction_accuracy, 6),
+                    "independent_prediction_label_available": independent_prediction_label_available,
+                    "independent_prediction_label_count": len(independent_prediction_labels),
+                    "independent_prediction_accuracy": round(independent_prediction_accuracy, 6) if independent_prediction_accuracy is not None else None,
+                    "prediction_labeler_error": prediction_labeler_error,
+                    "assumption_falsification_rate": round(assumption_falsification_rate, 6),
                     "total_tool_calls": total_tool_calls,
                     "pre_decision_tool_call_detected": pre_decision_tool_call,
                     "effective_models": [call["model"] for call in model_calls],
@@ -307,6 +491,7 @@ class HorizonControlRunner:
                     "external_evaluation_attempts": evaluation_attempts,
                     "external_evaluator_call_count": len(evaluation_attempts),
                     "external_evaluator_error": evaluator_error,
+                    "leakage_audit": leakage_audit,
                     "experience_written": False,
                     "experience_verified": False,
                     "structured_decisions": len(decisions),
@@ -349,6 +534,14 @@ class HorizonControlRunner:
                 invalidation_reasons.append("pre_decision_tool_call_detected")
             if trace["external_evaluator_error"]:
                 invalidation_reasons.append("external_evaluator_error")
+            if trace.get("pending_prediction_count", 0) > 0:
+                invalidation_reasons.append("prediction_pending_unresolved")
+            if not trace.get("prediction_integrity_verified", True):
+                invalidation_reasons.append("prediction_integrity_invalid")
+            if not trace.get("prediction_temporality_verified", True):
+                invalidation_reasons.append("prediction_temporality_invalid")
+            if not trace.get("leakage_audit", {}).get("passed", False):
+                invalidation_reasons.append("leakage_audit_failed")
 
         # Validação cruzada da tríade por missão
         by_mission: dict[str, list[dict]] = {}
@@ -367,12 +560,20 @@ class HorizonControlRunner:
         summaries = {mode: self._summarize([trace for trace in traces if trace["controller_mode"] == mode]) for mode in modes}
         full_atc = summaries.get("full_plan", {}).get("atc", 0.0)
         payload = {
-            "benchmark": "horizon_control_v1",
+            "benchmark": self.benchmark_name,
             "commit": _git_commit(self.settings.root_dir),
             "hardware": platform.platform(),
             "model_alias": self.model_name,
             "effective_model": self.configured_model,
             "seed": self.seed,
+            "prediction_before_observation_enabled": self.prediction_before_observation,
+            "task_split": self.task_split,
+            "protocol_hash": self.protocol_hash,
+            "split_manifest_hash": self.split_manifest_hash,
+            "leakage_policy_hash": self.leakage_policy_hash,
+            "contract_bundle_hash": self.contract_bundle_hash,
+            "freeze_manifest_hash": self.freeze_manifest_hash,
+            "tasks_path_hash": _hash_path(self.tasks_path),
             "modes": list(modes),
             "measurement_valid": not invalidation_reasons,
             "invalidation_reasons": sorted(set(invalidation_reasons)),
@@ -381,6 +582,8 @@ class HorizonControlRunner:
             "short_horizon_lift": round(summaries.get("short_horizon", {}).get("atc", 0.0) - full_atc, 6),
             "traces": traces,
             "private_evaluator_hash": _hash_path(evaluator_path),
+            "prediction_labeler_hash": _hash_path(prediction_labeler_path) if prediction_labeler_path.exists() else None,
+            "contract_bundle_hash_runtime": _hash_path(contracts_path),
             "mission_contract_hash": _hash_path(self.public_root / "tasks.yaml"),
         }
         (artifact_dir / "horizon_control.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -404,6 +607,11 @@ class HorizonControlRunner:
             "mean_total_tool_calls": round(sum(trace.get("total_tool_calls", trace.get("tool_calls", 0)) for trace in traces) / total, 3) if total else 0.0,
             "mean_tool_calls": round(sum(trace["tool_calls"] for trace in traces) / total, 3) if total else 0.0,
             "mean_llm_calls": round(sum(trace["llm_calls"] for trace in traces) / total, 3) if total else 0.0,
+            "prediction_accuracy": round(sum(trace.get("prediction_accuracy", 0.0) for trace in traces) / total, 6) if total else 0.0,
+            "assumption_falsification_rate": round(sum(trace.get("assumption_falsification_rate", 0.0) for trace in traces) / total, 6) if total else 0.0,
+            "prediction_count": sum(int(trace.get("prediction_count", 0)) for trace in traces),
+            "observed_prediction_count": sum(int(trace.get("observed_prediction_count", 0)) for trace in traces),
+            "pending_prediction_count": sum(int(trace.get("pending_prediction_count", 0)) for trace in traces),
         }
 
     def run(self, *, limit: int = 3, modes: tuple[str, ...] = MODES) -> HorizonRunResult:

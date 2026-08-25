@@ -173,6 +173,7 @@ CREATE TABLE IF NOT EXISTS cognitive_snapshots (
     reorientation_blocked_action_signature TEXT,
     external_feedback_json TEXT NOT NULL DEFAULT '[]',
     evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+    epistemic_state_json TEXT,
     tool_calls_used INTEGER NOT NULL DEFAULT 0,
     remaining_action_budget INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
@@ -196,6 +197,36 @@ CREATE TABLE IF NOT EXISTS cognitive_actions (
     executed_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_cognitive_actions_task_iteration ON cognitive_actions(task_id, iteration, created_at);
+
+CREATE TABLE IF NOT EXISTS cognitive_predictions (
+    id TEXT PRIMARY KEY,
+    prediction_id TEXT NOT NULL UNIQUE,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    action_id TEXT NOT NULL REFERENCES cognitive_actions(action_id) ON DELETE CASCADE,
+    iteration INTEGER NOT NULL,
+    hypothesis TEXT NOT NULL,
+    expected_observation TEXT NOT NULL,
+    confidence_before REAL NOT NULL,
+    action_json TEXT NOT NULL DEFAULT '{}',
+    predicted_at TEXT NOT NULL,
+    UNIQUE(task_id, action_id)
+);
+CREATE INDEX IF NOT EXISTS idx_cognitive_predictions_task_time ON cognitive_predictions(task_id, predicted_at);
+
+CREATE TABLE IF NOT EXISTS prediction_observations (
+    id TEXT PRIMARY KEY,
+    prediction_id TEXT NOT NULL UNIQUE REFERENCES cognitive_predictions(prediction_id) ON DELETE CASCADE,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    action_id TEXT NOT NULL REFERENCES cognitive_actions(action_id) ON DELETE CASCADE,
+    observed_output TEXT NOT NULL DEFAULT '',
+    result_status TEXT NOT NULL,
+    verification_passed INTEGER NOT NULL,
+    confidence_after REAL NOT NULL,
+    classification TEXT NOT NULL CHECK(classification IN ('confirm','weaken','reject','uncertain')),
+    evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+    observed_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_prediction_observations_task_time ON prediction_observations(task_id, observed_at);
 
 CREATE TABLE IF NOT EXISTS structured_decisions (
     id TEXT PRIMARY KEY,
@@ -682,6 +713,7 @@ COGNITIVE_SNAPSHOT_MIGRATIONS = {
     "active_strategy": "TEXT",
     "reorientation_blocked_action_signature": "TEXT",
     "external_feedback_json": "TEXT NOT NULL DEFAULT '[]'",
+    "epistemic_state_json": "TEXT",
 }
 
 

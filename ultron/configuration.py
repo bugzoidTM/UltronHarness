@@ -91,6 +91,15 @@ def load_settings(root_dir: Path | None = None) -> Settings:
             raw = _merge(raw, yaml.safe_load(file) or {})
     if model_override := os.getenv("ULTRON_MODEL_PRIMARY"):
         raw["models"]["primary"] = model_override
+    if cognition_profile := os.getenv("ULTRON_COGNITION_PROFILE"):
+        feature_flags = raw.setdefault("cognition", {}).setdefault("feature_flags", {})
+        profiles = {
+            "gr1": {"epistemic_state": True, "prediction_before_observation": False},
+            "gr1-gr2": {"epistemic_state": True, "prediction_before_observation": True},
+        }
+        if cognition_profile not in profiles:
+            raise ValueError(f"Perfil cognitivo desconhecido: {cognition_profile}")
+        feature_flags.update(profiles[cognition_profile])
     if vector_override := os.getenv("ULTRON_VECTOR_ENABLED"):
         raw["memory"]["vector_enabled"] = vector_override.casefold() in {"1", "true", "yes"}
     if private_root := os.getenv("ULTRON_PRIVATE_BENCHMARK_ROOT"):

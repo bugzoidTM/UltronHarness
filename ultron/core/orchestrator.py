@@ -8,7 +8,9 @@ from time import monotonic
 from typing import Any
 from uuid import uuid4
 
+from ultron.cognition.epistemic import prompt_summary
 from ultron.cognition.outcome_authority import OutcomeAuthority
+from ultron.cognition.prediction import PredictionError
 from ultron.cognition.progress import ProgressTracker
 from ultron.cognition.task_signature import TaskSignature
 from ultron.configuration import Settings
@@ -303,6 +305,8 @@ class Orchestrator:
                         monotonic(),
                         list(payload.get("memories", [])),
                         pending_result=result,
+                        pending_prediction_id=payload.get("prediction_id"),
+                        pending_action_id=payload.get("action_id"),
                     )
                 except Exception as exc:
                     await self._fail(str(task_id), f"Erro ao retomar após aprovação: {exc}")
@@ -525,7 +529,12 @@ class Orchestrator:
             )
             await self.events.emit("plan.created", plan.model_dump(mode="json"), task_id)
             self._update_task(task_id, status=TaskStatus.RUNNING, confidence=plan.confidence)
+            if self.horizon.epistemic_enabled:
+                initial_epistemic_snapshot = self.horizon.latest_snapshot(task)
+                self.horizon.persist_snapshot(initial_epistemic_snapshot)
+                await self.horizon._emit_epistemic_state(task_id, initial_epistemic_snapshot)
             await self._execute_plan(
+
                 task_id,
                 task,
                 plan,
@@ -991,9 +1000,12 @@ class Orchestrator:
         errors: list[str],
         routed_context: Any,
         started: float,
-        memories: list[dict[str, Any]],
+                memories: list[dict[str, Any]],
         pending_result: dict[str, Any] | None = None,
+        pending_prediction_id: str | None = None,
+        pending_action_id: str | None = None,
     ) -> None:
+
         """Executa ou retoma um plano, verificando cada etapa antes de avançar."""
         index = start_index
         pending = pending_result
@@ -1009,11 +1021,48 @@ class Orchestrator:
             )
             await self.events.emit("task.step", {"step": step.model_dump(mode="json"), "revision": revision}, task_id)
             result: dict[str, Any] | None = None
+            prediction_id = pending_prediction_id if pending is not None else None
+            action_id = pending_action_id if pending is not None else None
+            pending_prediction_id, pending_action_id = None, None
             if pending is not None:
                 result, pending = pending, None
             elif step.tool:
                 await self._transition(task_id, CognitiveState.ACT, {"step": step.id, "tool": step.tool})
+                if self.horizon.prediction_enabled:
+                    action_id = str(uuid4())
+                    self.horizon.persist_plan_action(action_id, task, self.horizon.latest_snapshot(task), step)
+                    prediction = self.horizon.predictions.create(
+                        task_id=task_id,
+                        action_id=action_id,
+                        iteration=self.horizon.latest_snapshot(task).iteration + 1,
+                        action=step,
+                    )
+                    prediction_id = prediction.prediction_id
+                    await self.horizon._emit_prediction(
+                        task_id,
+                        "proposed",
+                        {
+                            "prediction_id": prediction.prediction_id,
+                            "action_id": action_id,
+                            "iteration": prediction.iteration,
+                            "hypothesis": prediction.hypothesis,
+                            "expected_observation": prediction.expected_observation,
+                            "confidence_before": prediction.confidence_before,
+                            "predicted_at": prediction.predicted_at,
+                        },
+                    )
                 result = await self.execute_tool(task_id, ToolCall(tool_name=step.tool, arguments=step.arguments))
+                if action_id:
+                    if result.get("status") == "waiting_approval":
+                        self.db.execute(
+                            "UPDATE cognitive_actions SET status=? WHERE action_id=?",
+                            (str(result.get("status", "unknown")), action_id),
+                        )
+                    else:
+                        self.db.execute(
+                            "UPDATE cognitive_actions SET status=?, executed_at=? WHERE action_id=?",
+                            (str(result.get("status", "unknown")), utcnow(), action_id),
+                        )
                 if result["status"] == "waiting_approval":
                     payload = {
                         "plan": plan.model_dump(mode="json"),
@@ -1021,7 +1070,10 @@ class Orchestrator:
                         "errors": errors,
                         "routed_context": self._serialize_context(routed_context),
                         "memories": memories,
+                        "prediction_id": prediction_id,
+                        "action_id": action_id,
                     }
+
                     self.continuations.save(
                         task_id,
                         str(result["approval_id"]),
@@ -1059,7 +1111,47 @@ class Orchestrator:
                     "condition": verification.condition,
                 },
             )
+            if prediction_id is not None and result is not None and result.get("status") != "waiting_approval":
+                try:
+                    outcome = self.horizon.predictions.observe(
+                        prediction_id=prediction_id,
+                        action_id=str(action_id),
+                        observed_output=str(result.get("output") or result.get("error") or ""),
+                        result_status=str(result.get("status", "unknown")),
+                        verification_passed=verification.accepted,
+                        evidence_refs=[f"plan_step:{revision}:{step.id}"],
+                    )
+                except PredictionError as exc:
+                    await self.horizon._emit_prediction(
+                        task_id,
+                        "invalid",
+                        {"prediction_id": prediction_id, "action_id": action_id, "reason": str(exc)},
+                    )
+                    raise
+                await self.horizon._emit_prediction(
+                    task_id,
+                    "observed",
+                    {
+                        "prediction_id": outcome.prediction_id,
+                        "action_id": action_id,
+                        "observed": outcome.observed_output,
+                        "confidence_after": outcome.confidence_after,
+                        "classification": outcome.classification.value,
+                        "evidence_refs": outcome.evidence_refs,
+                        "observed_at": outcome.observed_at,
+                    },
+                )
+            if result is not None and self.horizon.epistemic_enabled:
+                current_task = self.get_task(task_id) or task
+                await self.horizon.record_plan_observation(
+                    current_task,
+                    self.horizon.latest_snapshot(current_task),
+                    result,
+                    verification.accepted,
+                    evidence_ref=f"plan_step:{revision}:{step.id}",
+                )
             evidence_payload = [
+
                 {"kind": item.kind, "value": item.value, "source": item.source}
                 for item in verification.evidence
             ]
@@ -1231,6 +1323,7 @@ class Orchestrator:
             else f"Ferramentas disponíveis: {planner_tools}."
         )
         obs_text = "\n".join(orientation.observations) if (orientation and orientation.observations) else "nenhuma"
+        epistemic_payload = prompt_summary(self.horizon.latest_snapshot(task).epistemic_state) if self.horizon.epistemic_enabled else {"enabled": False}
         prompt = [
             {
                 "role": "system",
@@ -1243,6 +1336,8 @@ class Orchestrator:
                     f"Observação inicial do ambiente:\n{obs_text}\n"
                     f"Memórias relevantes: {[m['summary'] for m in memories]}\n"
                     f"Experiências procedurais roteadas: {routed_procedures or []}\n"
+                    f"Estado epistêmico estruturado: {epistemic_payload}\n"
+                    f"Previsões avaliadas: {self.horizon.predictions.recent_summary(task_id=str(task['id'])) if self.horizon.prediction_enabled else []}\n"
                     f"{contract_text}"
                 ),
             },
@@ -1280,11 +1375,42 @@ class Orchestrator:
                     task, "plan", 1, initial, final, repairs, error, category
                 ),
             )
+            self._validate_plan_semantics(task, plan)
             self.plan_sources[str(task["id"])] = "model_structured"
             return plan
         except Exception:
             self.plan_sources[str(task["id"])] = "fallback_after_model_error"
             return self._fallback_plan(task)
+
+    def _validate_plan_semantics(self, task: dict[str, Any], plan: Plan) -> None:
+        """Rejeita planos estruturalmente válidos, mas inexequíveis ou fora do contrato."""
+        registered_tools = {str(item["name"]) for item in self.tools.list_manifests()}
+        allowed_tools = task.get("allowed_tools")
+        required_arguments = {
+            "file.read": {"path"},
+            "file.search": {"query"},
+            "file.write": {"path", "content"},
+            "file.delete": {"path"},
+            "python.execute": {"code"},
+            "shell.run": {"command"},
+        }
+        errors: list[str] = []
+        for step in plan.steps:
+            if step.tool:
+                if step.tool not in registered_tools:
+                    errors.append(f"step {step.id}: ferramenta desconhecida {step.tool}")
+                if allowed_tools is not None and step.tool not in allowed_tools:
+                    errors.append(f"step {step.id}: ferramenta fora do contrato {step.tool}")
+                missing = required_arguments.get(step.tool, set()) - set(step.arguments)
+                if missing:
+                    errors.append(f"step {step.id}: argumentos ausentes para {step.tool}: {sorted(missing)}")
+            condition_name, condition_argument = self.verifier._split(step.success_condition)
+            if condition_name not in self.verifier.registry:
+                errors.append(f"step {step.id}: verificador desconhecido {condition_name}")
+            elif condition_name in {"file_exists", "file_contains", "json_schema", "manifest_files"} and not condition_argument.strip():
+                errors.append(f"step {step.id}: argumento ausente para {condition_name}")
+        if errors:
+            raise ValueError("Plano rejeitado por contrato semântico: " + "; ".join(errors[:8]))
 
     async def _record_decision(
         self,
