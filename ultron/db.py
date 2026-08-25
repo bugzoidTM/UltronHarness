@@ -675,6 +675,69 @@ CREATE TABLE IF NOT EXISTS assertions (
     valid_from TEXT,
     valid_until TEXT
 );
+
+CREATE TABLE IF NOT EXISTS life_tensions (
+    id TEXT PRIMARY KEY,
+    run_id TEXT NOT NULL,
+    task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
+    kind TEXT NOT NULL CHECK(kind IN ('UNKNOWN_IMPORTANT','PREDICTION_ERROR','COMPETENCE_GAP','CONTRADICTION','UNFINISHED_COMMITMENT')),
+    description TEXT NOT NULL,
+    importance REAL NOT NULL,
+    confidence REAL NOT NULL,
+    evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_life_tensions_run ON life_tensions(run_id, created_at);
+
+CREATE TABLE IF NOT EXISTS life_goal_candidates (
+    id TEXT PRIMARY KEY,
+    run_id TEXT NOT NULL,
+    tension_id TEXT NOT NULL REFERENCES life_tensions(id) ON DELETE CASCADE,
+    objective TEXT NOT NULL,
+    expected_information_gain REAL NOT NULL,
+    expected_capability_gain REAL NOT NULL,
+    importance REAL NOT NULL,
+    tractability REAL NOT NULL,
+    expected_transfer REAL NOT NULL,
+    estimated_cost REAL NOT NULL,
+    estimated_risk REAL NOT NULL,
+    goal_value REAL NOT NULL,
+    selected INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_life_candidates_run ON life_goal_candidates(run_id, created_at);
+
+CREATE TABLE IF NOT EXISTS life_intentions (
+    id TEXT PRIMARY KEY,
+    run_id TEXT NOT NULL,
+    goal_id TEXT NOT NULL,
+    task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
+    objective TEXT NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('ACTIVE','SATISFIED','ABANDONED','BLOCKED')),
+    started_at TEXT NOT NULL,
+    cycle_budget INTEGER NOT NULL,
+    evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+    completed_at TEXT,
+    blocked_reason TEXT,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_life_intentions_run_status ON life_intentions(run_id, status, updated_at);
+
+CREATE TABLE IF NOT EXISTS life_cycles (
+    id TEXT PRIMARY KEY,
+    run_id TEXT NOT NULL,
+    superior_goal TEXT NOT NULL,
+    cycle_index INTEGER NOT NULL,
+    tension_id TEXT,
+    goal_id TEXT,
+    intention_id TEXT,
+    status TEXT NOT NULL,
+    action_count INTEGER NOT NULL DEFAULT 0,
+    result_json TEXT NOT NULL DEFAULT '{}',
+    started_at TEXT NOT NULL,
+    completed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_life_cycles_run ON life_cycles(run_id, cycle_index);
 """
 
 

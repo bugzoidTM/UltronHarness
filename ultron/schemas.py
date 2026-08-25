@@ -132,6 +132,68 @@ class Plan(BaseModel):
     confidence: float = Field(default=0.5, ge=0, le=1)
 
 
+class CognitiveTension(BaseModel):
+    id: str = Field(min_length=1, max_length=128)
+    kind: Literal[
+        "UNKNOWN_IMPORTANT",
+        "PREDICTION_ERROR",
+        "COMPETENCE_GAP",
+        "CONTRADICTION",
+        "UNFINISHED_COMMITMENT",
+    ]
+    description: str = Field(min_length=1, max_length=2000)
+    importance: float = Field(ge=0.0, le=1.0)
+    confidence: float = Field(ge=0.0, le=1.0)
+    evidence_refs: list[str] = Field(min_length=1, max_length=20)
+    created_at: str = Field(min_length=1, max_length=80)
+
+
+class LifeGoalCandidate(BaseModel):
+    id: str = Field(min_length=1, max_length=128)
+    tension_id: str = Field(min_length=1, max_length=128)
+    objective: str = Field(min_length=3, max_length=2000)
+    expected_information_gain: float = Field(ge=0.0, le=1.0)
+    expected_capability_gain: float = Field(ge=0.0, le=1.0)
+    importance: float = Field(ge=0.0, le=1.0)
+    tractability: float = Field(ge=0.0, le=1.0)
+    expected_transfer: float = Field(ge=0.0, le=1.0)
+    estimated_cost: float = Field(ge=0.0, le=1.0)
+    estimated_risk: float = Field(ge=0.0, le=1.0)
+    goal_value: float = 0.0
+
+
+class PersistentIntention(BaseModel):
+    goal_id: str = Field(min_length=1, max_length=128)
+    objective: str = Field(min_length=3, max_length=2000)
+    status: Literal["ACTIVE", "SATISFIED", "ABANDONED", "BLOCKED"]
+    started_at: str = Field(min_length=1, max_length=80)
+    cycle_budget: int = Field(ge=1, le=10)
+    evidence_refs: list[str] = Field(default_factory=list, max_length=20)
+    completed_at: str | None = Field(default=None, max_length=80)
+    blocked_reason: str | None = Field(default=None, max_length=500)
+
+
+class LifeRunRequest(BaseModel):
+    superior_goal: str = Field(min_length=3, max_length=4000)
+    workspace: str = Field(default="life", pattern=r"^[a-zA-Z0-9_-]+$")
+    autonomy_mode: int = Field(default=2, ge=0, le=4)
+    allowed_tools: list[str] | None = Field(default=None, max_length=50)
+
+
+class LifeRunSummary(BaseModel):
+    run_id: str = Field(min_length=1, max_length=128)
+    superior_goal: str
+    status: Literal["completed", "blocked", "abandoned", "no_tension"]
+    tensions_detected: int = Field(ge=0)
+    goals_created: int = Field(ge=0)
+    goals_completed: int = Field(ge=0)
+    human_prompts_after_initial_goal: int = Field(ge=0)
+    tool_calls: int = Field(ge=0)
+    agc: int = Field(ge=0)
+    ipr: float = Field(ge=0.0, le=1.0)
+    eggr: float = Field(ge=0.0, le=1.0)
+
+
 class MissionSubgoal(BaseModel):
     id: int = Field(ge=1)
     description: str = Field(min_length=3, max_length=500)

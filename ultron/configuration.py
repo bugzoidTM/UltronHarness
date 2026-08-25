@@ -100,6 +100,21 @@ def load_settings(root_dir: Path | None = None) -> Settings:
         if cognition_profile not in profiles:
             raise ValueError(f"Perfil cognitivo desconhecido: {cognition_profile}")
         feature_flags.update(profiles[cognition_profile])
+    if life_profile := os.getenv("ULTRON_LIFE_PROFILE"):
+        profiles = {
+            "full": {
+                "enabled": True,
+                "feature_flags": {
+                    "tension_detection": True,
+                    "goal_selection": True,
+                    "intention_persistence": True,
+                    "autonomous_continuation": True,
+                },
+            },
+        }
+        if life_profile not in profiles:
+            raise ValueError(f"Perfil LIFE desconhecido: {life_profile}")
+        raw["life"] = _merge(raw.get("life", {}), profiles[life_profile])
     if vector_override := os.getenv("ULTRON_VECTOR_ENABLED"):
         raw["memory"]["vector_enabled"] = vector_override.casefold() in {"1", "true", "yes"}
     if private_root := os.getenv("ULTRON_PRIVATE_BENCHMARK_ROOT"):

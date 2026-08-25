@@ -63,6 +63,27 @@ cognition:
   max_iterations: 30
   structured_repair_attempts: 2
 
+life:
+  enabled: false
+  max_goals: 2
+  max_candidates: 3
+  max_actions_per_goal: 2
+  competence_min_sample: 2
+  competence_max_success_rate: 0.5
+  feature_flags:
+    tension_detection: false
+    goal_selection: false
+    intention_persistence: false
+    autonomous_continuation: false
+  goal_value_weights:
+    expected_information_gain: 0.30
+    expected_capability_gain: 0.30
+    importance: 0.20
+    tractability: 0.10
+    expected_transfer: 0.10
+    estimated_cost: 0.10
+    estimated_risk: 0.20
+
 learning:
   minimum_experience_quality: 0.60
   verified_writeback_minimum_authority: task_registered_verifier

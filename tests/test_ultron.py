@@ -96,6 +96,17 @@ def test_api_health_and_task_lifecycle() -> None:
         assert len(current["events"]) > 0
 
 
+def test_api_life_is_disabled_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ULTRON_LIFE_PROFILE", raising=False)
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/life/runs",
+            json={"superior_goal": "Torne-se progressivamente mais capaz"},
+        )
+    assert response.status_code == 409
+    assert "desabilitado" in response.json()["detail"]
+
+
 def test_api_stop_is_available() -> None:
     with TestClient(app) as client:
         response = client.post("/api/system/stop")

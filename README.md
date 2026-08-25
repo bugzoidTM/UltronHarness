@@ -100,6 +100,18 @@ As capacidades cognitivas também são opt-in no launcher. `-CognitionProfile gr
 
 Esse comando deve ser usado após parar/reiniciar a API local para que o novo perfil seja herdado pelo processo. Cada flag continua registrada separadamente e permanece desligada quando nenhum perfil é informado.
 
+### Project LIFE v0.1
+
+O Project LIFE é uma camada experimental e bounded de **agência cognitiva persistente verificável**. Após uma única meta superior, ele pode detectar tensões baseadas em evidência, selecionar objetivos por uma fórmula determinística, manter uma intenção e executar até dois ciclos curtos sem novo prompt humano. Ele reutiliza o Orchestrator, Horizon, memória, prediction, verificação, OutcomeAuthority e verified writeback existentes; não cria um executor, planner, evaluator ou sistema de permissões paralelo.
+
+O LIFE permanece desligado por padrão. Para uma execução local de desenvolvimento, habilite-o explicitamente:
+
+```powershell
+.\scripts\start.ps1 -ModelProfile local-capable -CognitionProfile gr1-gr2 -LifeProfile full
+```
+
+A API expõe `POST /api/life/runs` e `GET /api/life/runs/{run_id}`. O perfil impõe no máximo dois objetivos e duas ações por objetivo, registra tensões, candidatos, intenções, ciclos e métricas AGC/IPR/EGGR no SQLite, e rejeita objetivos proibidos de forma determinística. O LIFE não é um score de AGI, não cria metas de autopreservação, expansão de acesso, credenciais, replicação, evasão de política ou autoimplantação, e não deve ser usado para executar o benchmark privado ou o split unseen.
+
 ## Segurança e autonomia
 
 O UltronPro começa em **Mode 2 — Supervised Agent**. Ações R0 e R1 permitidas podem ser executadas dentro do workspace; modificações R2 aguardam aprovação. As ações R3/R4 requerem aprovação e as R5 são bloqueadas. O diretório permitido é:

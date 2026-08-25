@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from ultron.cognition.life import LifeAgencyController
 from ultron.configuration import load_settings
 from ultron.core.events import EventBus
 from ultron.core.orchestrator import Orchestrator
@@ -30,6 +31,8 @@ from ultron.schemas import (
     ChatResponse,
     ExperimentCreate,
     GoalCreate,
+    LifeRunRequest,
+    LifeRunSummary,
     MemoryCreate,
     MemorySearch,
     TaskCreate,
@@ -56,6 +59,7 @@ async def lifespan(app: FastAPI):
     policy = PolicyEngine(settings)
     tools = ToolRegistry(settings)
     orchestrator = Orchestrator(settings, db, events, memory, models, policy, tools)
+    life = LifeAgencyController(settings, db, events, orchestrator)
     experiments = ExperimentService(settings, db)
     health = HealthService(settings, db, models)
     watchdog = Watchdog(settings, orchestrator, events)
@@ -68,6 +72,7 @@ async def lifespan(app: FastAPI):
         "policy": policy,
         "tools": tools,
         "orchestrator": orchestrator,
+        "life": life,
         "experiments": experiments,
         "health": health,
         "watchdog": watchdog,
@@ -221,6 +226,27 @@ async def execute_tool(task_id: str, call: ToolCall) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/life/runs", response_model=LifeRunSummary)
+async def run_life(payload: LifeRunRequest) -> LifeRunSummary:
+    try:
+        return await svc("life").run(
+            payload.superior_goal,
+            workspace=payload.workspace,
+            autonomy_mode=payload.autonomy_mode,
+            allowed_tools=payload.allowed_tools,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@app.get("/api/life/runs/{run_id}")
+async def get_life_run(run_id: str) -> dict[str, Any]:
+    result = svc("life").inspect(run_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Execução LIFE não encontrada.")
+    return result
 
 
 @app.get("/api/memories")
