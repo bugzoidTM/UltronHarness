@@ -5,45 +5,31 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-GENESIS_PROTOCOL_VERSION = "genesis-v0.1"
-GENESIS_MAX_PROGRAMS = 3
-GENESIS_MAX_OPERATORS = 6
+GENESIS_PROTOCOL_VERSION = "genesis-v0.2-cognitive-vm"
+GENESIS_MAX_PROGRAMS = 2
+GENESIS_MAX_OPERATORS = 4
 
 GenesisOperator = Literal[
-    "OBSERVE",
-    "IDENTIFY_UNKNOWN",
     "REPRESENT",
     "DECOMPOSE",
     "HYPOTHESIZE",
-    "COMPARE",
-    "PREDICT",
-    "TEST",
     "DEDUCT",
-    "BACKTRACK",
     "VERIFY",
-    "UPDATE_BELIEF",
-    "STOP",
+    "BACKTRACK",
 ]
 
 GENESIS_OPERATORS: tuple[str, ...] = (
-    "OBSERVE",
-    "IDENTIFY_UNKNOWN",
     "REPRESENT",
     "DECOMPOSE",
     "HYPOTHESIZE",
-    "COMPARE",
-    "PREDICT",
-    "TEST",
     "DEDUCT",
-    "BACKTRACK",
     "VERIFY",
-    "UPDATE_BELIEF",
-    "STOP",
+    "BACKTRACK",
 )
 
 
 class CognitiveProgram(BaseModel):
-    """Programa temporário interpretável; não contém código executável."""
+    """Programa temporário de operadores; rationale é metadado somente de auditoria."""
 
     id: str = Field(pattern=r"^CP-[A-Z0-9_-]{1,32}$", max_length=36)
     operators: list[GenesisOperator] = Field(min_length=1, max_length=GENESIS_MAX_OPERATORS)
@@ -52,12 +38,8 @@ class CognitiveProgram(BaseModel):
 
     @model_validator(mode="after")
     def validate_program_shape(self) -> CognitiveProgram:
-        if len(set(self.operators)) != len(self.operators):
-            raise ValueError("duplicate_operators")
-        if "STOP" in self.operators[:-1]:
-            raise ValueError("stop_must_be_last")
-        if self.operators[-1] != "STOP":
-            raise ValueError("stop_required_last")
+        if "STOP" in self.operators:
+            raise ValueError("stop_is_not_a_vm_operator")
         return self
 
 
@@ -69,10 +51,19 @@ class CognitiveProgramBatch(BaseModel):
         ids = [program.id for program in self.programs]
         if len(set(ids)) != len(ids):
             raise ValueError("duplicate_program_ids")
-        signatures = [tuple(program.operators) for program in self.programs]
-        if len(set(signatures)) != len(signatures):
-            raise ValueError("duplicate_program_signatures")
         return self
+
+
+class CognitiveFrame(BaseModel):
+    problem: str = Field(min_length=1, max_length=8000)
+    facts: list[str] = Field(default_factory=list, max_length=32)
+    unknowns: list[str] = Field(default_factory=list, max_length=16)
+    constraints: list[str] = Field(default_factory=list, max_length=32)
+    hypotheses: list[str] = Field(default_factory=list, max_length=16)
+    predictions: list[str] = Field(default_factory=list, max_length=16)
+    candidate_answer: str | None = Field(default=None, max_length=256)
+    verification: dict[str, str] = Field(default_factory=dict, max_length=16)
+    trace: list[dict[str, str]] = Field(default_factory=list, max_length=32)
 
 
 @dataclass(frozen=True, slots=True)

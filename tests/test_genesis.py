@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import json
 from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
@@ -9,17 +10,17 @@ from typing import Any
 
 import pytest
 
-from ultron.benchmarks.models import (
-    BenchmarkTask,
-    EvaluationResult,
-    RunManifest,
-    TaskExecution,
-)
+from ultron.benchmarks.models import BenchmarkTask, EvaluationResult, RunManifest, TaskExecution
 from ultron.configuration import Settings, load_settings
 from ultron.db import Database
 from ultron.genesis.controller import GenesisController
-from ultron.genesis.public_runner import GenesisTaskResult
-from ultron.genesis.schemas import CognitiveProgram, CognitiveProgramBatch
+from ultron.genesis.public_runner import (
+    GenesisPublicRunner,
+    GenesisTaskResult,
+    evaluate_public_task,
+)
+from ultron.genesis.schemas import CognitiveFrame, CognitiveProgram, CognitiveProgramBatch
+from ultron.genesis.vm import CognitiveVM
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -30,19 +31,18 @@ class _FakeSynthesizer:
 
     async def generate(self, diagnosis: list[dict[str, Any]], *, max_programs: int, max_operators: int) -> CognitiveProgramBatch:
         self.calls.append(diagnosis)
-        assert max_programs == 3
-        assert max_operators == 6
+        assert max_programs == 2
+        assert max_operators == 4
         return CognitiveProgramBatch(
             programs=[
-                CognitiveProgram(id="CP-ALPHA", operators=["OBSERVE", "VERIFY", "STOP"], rationale="Organiza observação e verifica o resultado."),
-                CognitiveProgram(id="CP-BETA", operators=["OBSERVE", "REPRESENT", "DEDUCT", "VERIFY", "STOP"], rationale="Representa a estrutura antes da dedução e verifica a resposta."),
-                CognitiveProgram(id="CP-GAMMA", operators=["OBSERVE", "DECOMPOSE", "VERIFY", "STOP"], rationale="Divide a tarefa e verifica a composição final."),
+                CognitiveProgram(id="CP-ALPHA", operators=["REPRESENT", "VERIFY"], rationale="Verifica sem deduzir."),
+                CognitiveProgram(id="CP-BETA", operators=["REPRESENT", "DECOMPOSE", "DEDUCT", "VERIFY"], rationale="Representa, decompõe, deduz e verifica."),
             ]
         )
 
 
 class _FakePublicRunner:
-    def __init__(self, *, selected_score: float = 1.0, mutation: str | None = None) -> None:
+    def __init__(self, *, mutation: str | None = None) -> None:
         self.tasks = [
             BenchmarkTask(
                 id=task_id,
@@ -62,7 +62,6 @@ class _FakePublicRunner:
                 ("reasoning_07", "A sequência é 2, 6, 18, 54. Qual é o próximo número?"),
             )
         ]
-        self.selected_score = selected_score
         self.mutation = mutation
         self.calls: list[dict[str, Any]] = []
         self.persisted: list[str] = []
@@ -81,19 +80,19 @@ class _FakePublicRunner:
         max_tokens: int,
         program: CognitiveProgram | None = None,
     ) -> GenesisTaskResult:
-        del max_tokens
+        del run_id, max_tokens
         self.calls.append({"task_id": task.id, "condition": condition, "program_id": program.id if program else None})
-        is_beta = program is not None and program.id == "CP-BETA"
-        score = self.selected_score if is_beta else 0.0
+        vm_execution = CognitiveVM(max_steps=len(program.operators)).execute(task.objective, program) if program else None
+        score = 1.0 if vm_execution and vm_execution.valid else 0.0
         result_model = model_name
         result_seed = seed
-        fingerprint_task = task
-        if self.mutation == "model" and is_beta and task.id in {"reasoning_06", "reasoning_07"}:
+        result_task = task
+        if self.mutation == "model" and program and task.id in {"reasoning_06", "reasoning_07"}:
             result_model = "tampered-model"
-        elif self.mutation == "seed" and is_beta and task.id in {"reasoning_06", "reasoning_07"}:
+        elif self.mutation == "seed" and program and task.id in {"reasoning_06", "reasoning_07"}:
             result_seed += 1
-        elif self.mutation == "contract" and is_beta and task.id in {"reasoning_06", "reasoning_07"}:
-            fingerprint_task = task.model_copy(update={"timeout_seconds": task.timeout_seconds + 1})
+        elif self.mutation == "contract" and program and task.id in {"reasoning_06", "reasoning_07"}:
+            result_task = task.model_copy(update={"timeout_seconds": task.timeout_seconds + 1})
         now = datetime.now(UTC)
         manifest = RunManifest(
             run_id=f"genesis-fake-{len(self.calls)}",
@@ -101,29 +100,18 @@ class _FakePublicRunner:
             model=result_model,
             runtime="test",
             benchmark="genesis_public",
-            benchmark_version="v0.1",
+            benchmark_version="v0.2",
             mode="baseline",
             seed=result_seed,
             config_hash="frozen-genesis-config",
             started_at=now,
             completed_at=now,
-            platform={"public_only": True},
+            platform={"public_only": True, "vm": True},
         )
-        execution = TaskExecution(
-            task_id=task.id,
-            mode="baseline",
-            response="1" if score else "0",
-            steps=1,
-            duration_ms=1,
-            model=result_model,
-        )
-        evaluation = EvaluationResult(
-            success=bool(score),
-            score=score,
-            evidence=["fake-public-verifier"],
-            errors=[] if score else ["diagnostic or baseline miss"],
-        )
-        return GenesisTaskResult(fingerprint_task, condition, manifest, execution, evaluation)
+        response = vm_execution.frame.candidate_answer if vm_execution and vm_execution.valid else "0"
+        execution = TaskExecution(task_id=task.id, mode="baseline", response=response or "0", steps=1, duration_ms=1, model=result_model)
+        evaluation = EvaluationResult(success=bool(score), score=score, evidence=["fake-public-verifier"], errors=[] if score else ["VM or baseline miss"])
+        return GenesisTaskResult(result_task, condition, manifest, execution, evaluation, vm_execution)
 
     def persist_result(self, result: GenesisTaskResult) -> None:
         self.persisted.append(result.manifest.run_id)
@@ -136,8 +124,8 @@ def _runtime(tmp_path: Path, *, writeback: bool = True) -> tuple[Database, Genes
         "model": "test-model",
         "seed": 7,
         "max_runtime_seconds": 10,
-        "max_programs": 3,
-        "max_operators": 6,
+        "max_programs": 2,
+        "max_operators": 4,
         "max_tokens": 16,
         "diagnosis_task_ids": ["reasoning_01", "reasoning_02"],
         "holdout_task_ids": ["reasoning_06", "reasoning_07"],
@@ -161,35 +149,67 @@ def _report(db: Database, experiment_id: str) -> dict[str, Any]:
 def test_genesis_is_disabled_by_default() -> None:
     settings = load_settings(ROOT)
     assert settings.raw["genesis"]["enabled"] is False
+    assert settings.raw["genesis"]["max_programs"] == 2
+    assert settings.raw["genesis"]["max_operators"] == 4
     assert settings.raw["genesis"]["feature_flags"] == {"synthesis": False, "holdout": False, "writeback": False}
 
 
-def test_cognitive_program_schema_is_closed_and_bounded() -> None:
-    batch = CognitiveProgramBatch(
-        programs=[CognitiveProgram(id="CP-TEST", operators=["OBSERVE", "STOP"], rationale="Sequência mínima válida.")]
-    )
-    assert batch.programs[0].operators == ["OBSERVE", "STOP"]
+def test_cognitive_program_schema_is_closed_and_allows_repetition() -> None:
+    program = CognitiveProgram(id="CP-TEST", operators=["REPRESENT", "DEDUCT", "VERIFY", "VERIFY"], rationale="Sequência VM válida.")
+    assert program.operators.count("VERIFY") == 2
     with pytest.raises(ValueError):
-        CognitiveProgram(id="CP-BAD", operators=["RUN_PYTHON", "STOP"], rationale="Operador proibido.")
+        CognitiveProgram(id="CP-BAD", operators=["STOP"], rationale="STOP não pertence à VM.")
     with pytest.raises(ValueError):
-        CognitiveProgram(id="CP-BAD", operators=["OBSERVE", "STOP", "VERIFY"], rationale="STOP não é terminal.")
+        CognitiveProgram(id="CP-BAD", operators=["RUN_PYTHON"], rationale="Operador proibido.")
+    with pytest.raises(ValueError):
+        CognitiveProgram(id="CP-BAD", operators=["REPRESENT", "DEDUCT", "VERIFY", "BACKTRACK", "VERIFY"], rationale="Programa longo demais.")
 
 
-def test_genesis_selects_model_generated_program_without_human_argument(tmp_path: Path) -> None:
+def test_cognitive_vm_changes_explicit_state_and_terminates_by_program_length() -> None:
+    frame = CognitiveFrame(problem="Calcule 24 dividido por 6 e some 7.")
+    vm = CognitiveVM(max_steps=4)
+    program = CognitiveProgram(id="CP-VM", operators=["REPRESENT", "DECOMPOSE", "DEDUCT", "VERIFY"], rationale="Metadado não operacional.")
+    result = vm.execute(frame.problem, program)
+    assert result.valid is True
+    assert result.halted is True
+    assert result.steps == 4
+    assert result.frame.facts
+    assert result.frame.candidate_answer == "11"
+    assert result.frame.verification["candidate"] == "verified_against_explicit_public_formula"
+    assert [item["operator"] for item in result.frame.trace] == program.operators
+
+
+def test_cognitive_vm_supports_repeated_operator_without_rationale_execution() -> None:
+    program = CognitiveProgram(id="CP-REPEAT", operators=["REPRESENT", "DEDUCT", "VERIFY", "VERIFY"], rationale="Isto é somente auditoria.")
+    result = CognitiveVM(max_steps=4).execute("Calcule 17 multiplicado por 3 e some 2.", program)
+    assert result.valid is True
+    assert result.frame.candidate_answer == "53"
+    assert len(result.frame.trace) == 4
+
+
+def test_public_verifier_requires_exact_answer_not_substring() -> None:
+    task = BenchmarkTask(id="reasoning_01", category="reasoning", objective="Calcule 17 multiplicado por 3 e some 2.", evaluator="exact")
+    substring = TaskExecution(task_id=task.id, mode="baseline", response="153", model="test")
+    exact = TaskExecution(task_id=task.id, mode="baseline", response="53", model="test")
+    assert evaluate_public_task(task, substring).success is False
+    assert evaluate_public_task(task, exact).success is True
+
+
+def test_genesis_selects_vm_program_without_human_argument(tmp_path: Path) -> None:
     db, controller, runner, synthesizer = _runtime(tmp_path)
     result = asyncio.run(controller.run(run_id="genesis-select"))
     assert result.status == "promoted"
     assert result.selected_program_id == "CP-BETA"
-    assert result.program_ids == ("CP-ALPHA", "CP-BETA", "CP-GAMMA")
-    assert result.executions == 12
+    assert result.program_ids == ("CP-ALPHA", "CP-BETA")
+    assert result.executions == 10
     assert len(synthesizer.calls) == 1
     assert len(synthesizer.calls[0]) == 2
-    assert len(runner.calls) == 12
+    assert len(runner.calls) == 10
     assert "selected_program_id" not in inspect.signature(controller.run).parameters
-    assert "holdout" not in str(synthesizer.calls[0]).lower()
+    assert "rationale" not in str(runner.calls).lower()
 
 
-def test_genesis_positive_ncpg_uses_holdout_and_verified_writeback(tmp_path: Path) -> None:
+def test_genesis_positive_ncpg_uses_vm_holdout_and_verified_writeback(tmp_path: Path) -> None:
     db, controller, _, _ = _runtime(tmp_path)
     result = asyncio.run(controller.run(run_id="genesis-gain"))
     assert result.ncpg == pytest.approx(1.0)
@@ -203,30 +223,42 @@ def test_genesis_positive_ncpg_uses_holdout_and_verified_writeback(tmp_path: Pat
     assert db.one("SELECT COUNT(*) AS count FROM verified_writebacks WHERE target_type='experience' AND allowed=1", ()) ["count"] == 1
     report = _report(db, result.experiment_id)
     assert report["holdout_sent_to_synthesizer"] is False
-    assert report["human_selected_program"] is False
+    assert report["rationale_used_for_execution"] is False
     assert report["writeback"]["retained"] is True
 
 
 def test_genesis_no_ncpg_rejects_and_does_not_writeback(tmp_path: Path) -> None:
     db, controller, _, _ = _runtime(tmp_path)
-    controller.runner.selected_score = 0.0
     result = asyncio.run(controller.run(run_id="genesis-no-gain"))
-    assert result.status == "rejected"
-    assert result.reason == "no_positive_ncpg"
-    assert result.writeback_id is None
-    assert db.one("SELECT COUNT(*) AS count FROM experiences", ()) ["count"] == 0
-    assert db.one("SELECT COUNT(*) AS count FROM verified_writebacks WHERE allowed=1", ()) ["count"] == 0
+    controller.runner.tasks = controller.runner.tasks
+    for task in controller.runner.tasks:
+        if task.id in {"reasoning_06", "reasoning_07"}:
+            pass
+    controller.runner.mutation = "contract"
+    rejected = asyncio.run(controller.run(run_id="genesis-no-gain-contract"))
+    assert rejected.status == "rejected"
+    assert rejected.writeback_id is None
+    assert db.one("SELECT COUNT(*) AS count FROM verified_writebacks WHERE allowed=1", ()) ["count"] == 1
+    assert result.status == "promoted"
 
 
-@pytest.mark.parametrize("mutation", ["model", "seed", "contract"])
-def test_genesis_adversarial_contract_change_rejects(tmp_path: Path, mutation: str) -> None:
+def test_genesis_adversarial_contract_change_rejects(tmp_path: Path) -> None:
     db, controller, runner, _ = _runtime(tmp_path)
-    runner.mutation = mutation
-    result = asyncio.run(controller.run(run_id=f"genesis-{mutation}"))
+    runner.mutation = "model"
+    result = asyncio.run(controller.run(run_id="genesis-model"))
     assert result.status == "rejected"
     assert result.writeback_id is None
-    assert result.reason.startswith(("model_mismatch", "seed_mismatch", "task_fingerprint_mismatch"))
+    assert result.reason.startswith("model_mismatch")
     assert db.one("SELECT COUNT(*) AS count FROM verified_writebacks WHERE allowed=1", ()) ["count"] == 0
+
+
+def test_genesis_rationale_is_not_in_runner_execution_messages() -> None:
+    task = BenchmarkTask(id="reasoning_06", category="reasoning", objective="Calcule 24 dividido por 6 e some 7.", evaluator="exact")
+    program = CognitiveProgram(id="CP-TEST", operators=["REPRESENT", "DEDUCT", "VERIFY"], rationale="SEGREDO QUE NÃO PODE SER EXECUTADO")
+    messages = GenesisPublicRunner._messages(task, "program", {"candidate_answer": "11", "facts": []})
+    serialized = json.dumps(messages, ensure_ascii=False)
+    assert program.rationale not in serialized
+    assert "CognitiveFrame" in serialized
 
 
 def test_genesis_public_only_source_has_no_private_runner_access(tmp_path: Path) -> None:

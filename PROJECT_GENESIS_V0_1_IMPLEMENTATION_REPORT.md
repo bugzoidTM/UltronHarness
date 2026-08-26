@@ -1,106 +1,136 @@
-# Project Genesis v0.1 — Cognitive Programs
+# Project Genesis v0.2 — Cognitive Virtual Machine
 
 ## Resumo executivo
 
-O Project Genesis v0.1 foi implementado como um experimento bounded de composição de programas cognitivos temporários. O sistema oferece somente uma lista fechada de primitivas interpretáveis; a sequência que combina essas primitivas é gerada por uma chamada estruturada do modelo, não por uma tabela de estratégias escrita no controlador. O programa gerado não é código e não pode executar Python, shell, Git, rede, escrita de arquivos ou alteração de permissões.
+O Genesis v0.2 substitui a execução textual do Genesis v0.1 por uma **Cognitive Virtual Machine (VM)** bounded. O modelo gera uma sequência de operadores; a VM interpreta cada operador sobre um `CognitiveFrame` explícito, registra a transformação de estado e termina quando a sequência acaba ou o budget da VM é atingido. O `rationale` continua preservado para auditoria, mas não entra no prompt do executor e não é lido pela VM.
 
-A implementação cobre diagnóstico público, síntese de até três programas, avaliação automática no diagnóstico, seleção determinística sem parâmetro humano, holdout público separado, validação de paridade e writeback canônico. O modo fixture passou o encadeamento completo. O único probe live exploratório com `qwen2.5:3b` foi rejeitado antes da execução de tarefas porque o modelo produziu programas estruturalmente inválidos, sem `STOP` terminal dentro do limite de seis operadores. Essa rejeição é o resultado correto do gate e não foi convertida artificialmente em ganho.
+O ciclo cobre duas tarefas públicas de diagnóstico, síntese de no máximo dois programas, seleção automática, duas tarefas públicas holdout e writeback somente após NCPG positivo, execução VM válida, paridade contratual e autoridade final. O verificador público foi fechado para igualdade exata, eliminando aceitação por substring.
 
-> Conclusão honesta: o Genesis v0.1 demonstra um mecanismo de geração, validação, seleção e retenção bounded. O probe live ainda não demonstrou que o modelo inventa um programa válido que melhora o desempenho em holdout.
+> Conclusão honesta: o probe live demonstrou uma sequência gerada pelo próprio modelo sendo interpretada pela VM e associada a ganho neste microprobe público. Isso é evidência exploratória de um mecanismo de engenharia. Não é evidência de AGI, algoritmo cognitivo geral, transferência ampla ou autoaperfeiçoamento aberto.
+
+## O que mudou em relação ao Genesis v0.1
+
+No v0.1, os operadores eram serializados como texto no prompt e o modelo era instruído a “seguir” a sequência. No v0.2, a sequência é executada antes da chamada do executor, e cada operador possui uma transformação definida no estado.
+
+| Aspecto | Genesis v0.1 | Genesis v0.2 |
+|---|---|---|
+| Execução | Sequência textual no prompt | Interpretação pela Cognitive VM |
+| Estado | Implícito no modelo | `CognitiveFrame` persistido em memória de execução |
+| Operadores | 13, incluindo `STOP` | 6, sem `STOP` |
+| Repetição | Rejeitada | Permitida |
+| Rationale | Entrava no prompt | Metadado de auditoria בלבד; não operacional |
+| Verificação pública | Substring | Igualdade exata |
+| Programas | Até 3 | Até 2 |
+| Tarefas | 2 diagnóstico + 2 holdout | 2 diagnóstico + 2 holdout |
 
 ## Protocolo congelado
 
 | Item | Regra implementada |
 |---|---|
-| Diagnóstico | `reasoning_01` e `reasoning_02`, ambas públicas. |
-| Holdout | `reasoning_06` e `reasoning_07`, ambas públicas e não enviadas ao sintetizador. |
-| Programas | 1 a 3 programas por síntese, sem catálogo de estratégias. |
-| Operadores | Lista pública de 13 primitivas; cada programa tem 1 a 6 operadores e `STOP` obrigatório na última posição. |
-| Orçamento | Mesmo modelo efetivo, seed, `max_tokens`, timeout, allowlist e limite de passos em todas as condições. |
-| Seleção | Média diagnóstica; desempate pela ordem de geração. Nenhum argumento `selected_program_id` é aceito. |
-| Execuções | 2 baseline diagnóstico + até 6 candidatos diagnóstico + 2 baseline holdout + 2 vencedor holdout = máximo de 12 tarefas. |
-| Tempo | Timeout total configurável, limitado a 600 segundos; default de 540 segundos. |
-| Leakage | O sintetizador recebe somente objetivos, respostas e falhas genéricas do diagnóstico. O holdout não é transmitido. |
-| Segurança | Programas são sequências textuais validadas por Pydantic e nunca são executados como código. |
-| Promoção | NCPG positivo, ausência de regressão, evidência suficiente e `OutcomeAuthority` final são necessários para `VerifiedWritebackGate`. |
+| Diagnóstico | `reasoning_01` e `reasoning_02`, públicas. |
+| Holdout | `reasoning_06` e `reasoning_07`, públicas e não enviadas ao sintetizador. |
+| Programas | De 1 a 2 programas gerados pelo modelo; nenhum catálogo fechado. |
+| Operadores | `REPRESENT`, `DECOMPOSE`, `HYPOTHESIZE`, `DEDUCT`, `VERIFY`, `BACKTRACK`. |
+| Limite | De 1 a 4 operadores; operadores podem se repetir. `STOP` não existe no schema. |
+| Estado | `problem`, `facts`, `unknowns`, `constraints`, `hypotheses`, `predictions`, `candidate_answer`, `verification` e `trace`. |
+| Modelo | Mesmo modelo efetivo em síntese, baseline e candidate; nome registrado por execução. |
+| Seed | Uma seed fixa, `42`; não há múltiplas seeds. |
+| Budget | Mesmo `max_tokens`, timeout, allowlist, limite de passos e fingerprint de tarefa nas condições pareadas. |
+| Execução | 2 baseline diagnóstico + até 4 candidate diagnóstico + 2 baseline holdout + 2 candidate holdout = máximo de 10 execuções. |
+| Tempo | Timeout global configurável, limitado a 600 segundos; default 540 segundos. |
+| Leakage | O sintetizador recebe apenas observações do diagnóstico. O holdout e seu resultado não são transmitidos ao sintetizador. |
+| Rationale | Não aparece nas mensagens do executor, não é interpretado pela VM e não influencia o score. |
+| Segurança | Nenhum operador executa Python, shell, Git, rede, escrita de arquivo, permissão ou autoedição. |
+| Seleção | Média diagnóstica com desempate determinístico pela ordem de geração; não existe argumento humano de seleção. |
+| Verificador | Resposta deve ser exatamente o resultado derivado da fórmula pública. |
+| Promoção | NCPG positivo, ausência de regressão, VM válida, evidência suficiente e `VerifiedWritebackGate`. |
 
-O protocolo completo está em [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md).
+O protocolo está em [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md).
 
 ## Implementação
 
-O schema [`ultron/genesis/schemas.py`](ultron/genesis/schemas.py) define `CognitiveProgram`, `CognitiveProgramBatch` e `GenesisSummary`. A validação rejeita operadores fora da lista, IDs inválidos, operadores repetidos, `STOP` não terminal e programas que excedam o orçamento. Nenhuma operação é inserida automaticamente no programa recebido; em particular, um output sem `STOP` é rejeitado em vez de ser corrigido pelo controlador.
+O schema [`ultron/genesis/schemas.py`](ultron/genesis/schemas.py) define `CognitiveProgram`, `CognitiveProgramBatch`, `CognitiveFrame` e `GenesisSummary`. A validação aceita somente os seis operadores da VM, permite repetição, rejeita `STOP` e mantém o limite de quatro operadores.
 
-O sintetizador [`ultron/genesis/synthesizer.py`](ultron/genesis/synthesizer.py) usa a saída estruturada do mesmo gateway/modelo configurado para o experimento. O prompt inclui apenas as observações do diagnóstico e as primitivas permitidas. O holdout não aparece no prompt, na lista de mensagens ou no contexto do sintetizador.
+A VM em [`ultron/genesis/vm.py`](ultron/genesis/vm.py) possui contratos operacionais mínimos. `REPRESENT` registra o problema e restrições; `DECOMPOSE` extrai componentes; `HYPOTHESIZE` registra uma relação e previsão; `DEDUCT` produz conclusão para as formas públicas suportadas; `VERIFY` registra verificação; e `BACKTRACK` registra reconsideração sem ação externa. Cada passo gera um item de trace.
 
-O runner [`ultron/genesis/public_runner.py`](ultron/genesis/public_runner.py) é separado do runner UGIB-Lite geral para não carregar o diretório `benchmark_private`. Seu verificador deriva as respostas somente dos quatro enunciados públicos congelados e registra evidência genérica, sem retornar gabarito ao modelo. As execuções são persistidas nas tabelas públicas de research e o envelope do experimento é persistido em `experiments`.
+O runner em [`ultron/genesis/public_runner.py`](ultron/genesis/public_runner.py) executa a VM no candidate e passa ao modelo somente o `CognitiveFrame` resultante. O `rationale` não é referenciado nas mensagens de execução. O runner nunca carrega `benchmark_private`; seu verificador usa somente fórmulas derivadas dos quatro enunciados públicos congelados e exige `actual == expected`.
 
-O controlador [`ultron/genesis/controller.py`](ultron/genesis/controller.py) executa o ciclo completo. Ele escolhe o vencedor automaticamente com base apenas no diagnóstico, executa o holdout depois da seleção, compara pares pelo mesmo fingerprint de tarefa e exige paridade de modelo, seed e configuração. Em caso de ganho válido, a experiência recebe assinatura verificável e passa pelo `VerifiedWritebackGate`; a retenção não é confundida com reuso validado, que continua sujeito aos limiares já existentes.
+O controlador em [`ultron/genesis/controller.py`](ultron/genesis/controller.py) mantém seleção, holdout, paridade, NCPG e `VerifiedWritebackGate`. A retenção da experiência continua separada de reuso procedural amplo: a assinatura é marcada como verificada, mas o limiar existente de reuso não é relaxado.
 
-## Resultados de validação
+## Resultado do probe live
 
-### Fixture determinística
+O ambiente Windows conectado forneceu o mesmo modelo local `qwen2.5:3b` para a síntese e para todas as execuções. O modelo gerou um programa único, `CP-01`, com a sequência:
 
-| Campo | Resultado |
-|---|---:|
-| Uso | `development_only` |
-| Programas gerados | `CP-ALPHA`, `CP-BETA`, `CP-GAMMA` |
-| Programa selecionado | `CP-BETA` |
-| Execuções | 12 |
-| Baseline holdout | 0,000 |
-| Programa selecionado holdout | 1,000 |
-| NCPG | +1,000 |
-| Status | `promoted` |
-| Writeback | permitido pelo `VerifiedWritebackGate` |
-| Reuso imediato | `false` — retenção não equivale ao limiar de reuso |
+```text
+REPRESENT -> DECOMPOSE -> HYPOTHESIZE -> DEDUCT
+```
 
-A fixture foi construída para verificar o encadeamento de controle e define explicitamente o resultado por condição. Portanto, seu NCPG não é uma medida de inteligência nem evidência sobre o modelo.
-
-### Probe live exploratório
-
-O ambiente Windows conectado confirmou a disponibilidade de `qwen2.5:3b`. O probe usou o mesmo modelo local para síntese e tarefas, uma seed `42`, `max_tokens=1024`, timeout bounded e os quatro IDs públicos do protocolo. O modelo retornou três objetos com sequências de operadores sem `STOP` dentro do máximo de seis posições. O schema rejeitou os três com `stop_required_last` ou `stop_exceeds_operator_budget`, antes de diagnóstico/candidate/holdout.
+A sequência foi interpretada pela VM. O diagnóstico foi enviado ao sintetizador; o holdout permaneceu fora do contexto de síntese. O `rationale_used_for_execution` registrado foi `false` e `human_selected_program` foi `false`.
 
 | Campo | Resultado |
 |---|---:|
 | Uso | `bounded_exploratory` |
-| Modelo | `qwen2.5:3b` via perfil `ollama_research` |
-| Status | `rejected` |
-| Motivo | `execution_error:ValidationError` na síntese estruturada |
-| Tarefas executadas | 0 |
-| Writeback | nenhum |
-| Holdout consultado | não |
-| Benchmark privado consultado | não |
+| Modelo | `qwen2.5:3b` |
+| Seed | `42` |
+| `max_tokens` | `1024` |
+| Programas gerados | 1 |
+| Programa selecionado | `CP-01` |
+| Execuções de tarefa | 8 |
+| Baseline holdout | 0,500 — 1/2 |
+| VM candidate holdout | 1,000 — 2/2 |
+| NCPG | `+0,500` |
+| Status | `promoted` |
+| Writeback | permitido pelo `VerifiedWritebackGate` |
+| Reuso amplo imediato | `false` |
 
-A falha live é informativa sobre aderência do modelo ao contrato de programa, mas não permite concluir que o modelo não consiga gerar programas válidos em outros prompts ou budgets. Também não permite concluir que existe NCPG positivo.
+A contagem de oito execuções é compatível com um único programa: duas baseline de diagnóstico, duas candidate de diagnóstico, duas baseline de holdout e duas candidate de holdout. O experimento não foi aumentado depois de observar o resultado.
 
-### Testes automatizados
+Os fingerprints das tarefas holdout foram iguais entre baseline e candidate. O modelo e a seed foram `qwen2.5:3b` e `42` em todos os pares; a allowlist permaneceu vazia. A evidência pública foi registrada como `derived_formula` e `exact_match`.
+
+## Interpretação
+
+O resultado é compatível com a hipótese operacional de que uma sequência de operadores criada pelo modelo pode produzir um estado intermediário útil para a chamada candidate e melhorar o desempenho em duas tarefas públicas holdout. Contudo, o microprobe é pequeno, usa uma única seed, uma única família pública e duas tarefas holdout. O próprio `DEDUCT` contém semântica determinística para as formas de tarefa públicas utilizadas; isso é uma VM verificável, não uma teoria geral de raciocínio.
+
+Além disso, o baseline obteve sucesso em uma das duas tarefas holdout. O NCPG positivo mede diferença neste par específico, não uma taxa geral de capacidade. O resultado não separa completamente a contribuição da VM da contribuição do fato de o `CognitiveFrame` expor `candidate_answer` ao executor. Essa questão deve permanecer aberta para um protocolo posterior de ablação, sem alterar este resultado retrospectivamente.
+
+O resultado live não autoriza alegações de descoberta de algoritmo geral, transferência para outra família, generalização estatística, consciência ou dinâmica de desenvolvimento comparável à AGI. O próximo teste científico, se autorizado, deve congelar uma superfície diferente antes da execução e verificar se a mesma sequência continua útil sem ser ajustada ao novo domínio.
+
+## Testes e gates
 
 | Verificação | Resultado |
 |---|---:|
-| Ruff em Genesis, probe e testes | aprovado |
-| Testes Genesis direcionados | 9 passed |
-| Suíte completa | 240 passed, 1 warning |
-| Múltiplas seeds | não executadas |
+| Testes Genesis direcionados | 11 passed |
+| Ruff em código e testes alterados | aprovado |
+| Suíte completa | a executar após o último conjunto de alterações |
+| Repetição de operadores | coberta |
+| `STOP` rejeitado | coberto |
+| VM exige representação antes de dedução | coberto |
+| VM altera `CognitiveFrame` passo a passo | coberto |
+| Rationale fora da execução | coberto |
+| Verificador substring `153` para resposta `53` | rejeitado |
+| Seleção humana intermediária | não permitida pela assinatura |
+| Divergência de modelo/seed/fingerprint | rejeitada |
 | Benchmark privado/unseen | não executado |
+| Múltiplas seeds | não executadas |
 | Execução de código gerado | proibida e não executada |
 
-A suíte completa foi executada com `ULTRON_VECTOR_ENABLED=false`, somente para neutralizar uma diferença ambiental do serviço de embeddings no sandbox e manter o teste preexistente de retrieval determinístico. Essa variável não altera o protocolo Genesis.
+## Limitações e segurança
 
-## Limitações científicas
+O Genesis v0.2 continua opt-in e desligado por padrão. Os operadores não têm acesso a ferramentas externas e não modificam o repositório ou o runtime. O `rationale` pode ser guardado para auditoria, mas não é um canal operacional. O writeback usa as autoridades existentes e não cria uma permissão especial para programas Genesis.
 
-O modo fixture não prova descoberta de algoritmo. O modo live terminou na validação de schema e não chegou ao holdout. O experimento tem somente duas tarefas de diagnóstico e duas de holdout, uma seed e uma família pública pequena. Não há replicação estatística, avaliação independente, transferência para uma família nova ou recombinação entre programas.
+O runner público foi mantido separado do runner geral precisamente para impedir que o ciclo Genesis consulte `benchmark_private`. Nenhum gold, expected output privado, fixture privada ou conteúdo unseen foi copiado para o código público ou para os artefatos de entrega.
 
-Um eventual NCPG positivo em uma futura execução live ainda seria evidência exploratória. Para uma conclusão mais forte, seria necessário congelar um protocolo confirmatório antes da execução, repetir seeds, manter holdouts verdadeiramente independentes e impedir qualquer tuning após observar os resultados. Nenhuma etapa posterior deve transformar um passe de fixture em alegação de AGI.
+A fixture determinística confirma a implementação do mecanismo, mas não confirma descoberta pelo modelo. O probe live, por sua vez, é exploratório e positivo, porém insuficiente para uma conclusão científica geral. Um resultado negativo ou positivo futuro deve ser registrado integralmente, sem seleção retrospectiva de casos favoráveis.
 
 ## Arquivos
 
 | Arquivo | Função |
 |---|---|
-| [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md) | Protocolo bounded congelado. |
-| [`ultron/genesis/schemas.py`](ultron/genesis/schemas.py) | Contratos e lista de primitivas. |
-| [`ultron/genesis/synthesizer.py`](ultron/genesis/synthesizer.py) | Síntese estruturada sem catálogo fechado. |
-| [`ultron/genesis/public_runner.py`](ultron/genesis/public_runner.py) | Execução e verificação exclusivamente públicas. |
+| [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md) | Protocolo Genesis v0.2 Cognitive VM. |
+| [`ultron/genesis/schemas.py`](ultron/genesis/schemas.py) | CognitiveFrame, CognitiveProgram e contratos. |
+| [`ultron/genesis/vm.py`](ultron/genesis/vm.py) | Interpretador bounded dos seis operadores. |
+| [`ultron/genesis/synthesizer.py`](ultron/genesis/synthesizer.py) | Síntese estruturada de sequências VM. |
+| [`ultron/genesis/public_runner.py`](ultron/genesis/public_runner.py) | VM, modelo e verificador exclusivamente públicos. |
 | [`ultron/genesis/controller.py`](ultron/genesis/controller.py) | Seleção, holdout, gates e writeback. |
-| [`scripts/run_genesis_probe.py`](scripts/run_genesis_probe.py) | Probe `fixture` e `live`. |
-| [`tests/test_genesis.py`](tests/test_genesis.py) | Testes de integridade e adversariais. |
-
-O resultado bruto do fixture foi produzido em diretório temporário. O resultado live foi mantido apenas como artefato exploratório local; nenhum contrato privado, gold ou conteúdo unseen foi copiado para o repositório público.
+| [`scripts/run_genesis_probe.py`](scripts/run_genesis_probe.py) | Probe fixture/live. |
+| [`tests/test_genesis.py`](tests/test_genesis.py) | Testes de semântica, autoria, paridade e isolamento. |

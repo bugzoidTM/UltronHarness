@@ -1,8 +1,8 @@
-"""Executa o microprobe público bounded do Project Genesis v0.1.
+"""Executa o microprobe público bounded do Project Genesis v0.2.
 
-Por padrão usa uma fixture determinística para validar o encadeamento. O modo
-live usa o mesmo modelo local para síntese, diagnóstico e holdout, sem carregar
-o runner UGIB-Lite privado.
+Por padrão usa uma fixture determinística para validar o encadeamento e a VM.
+O modo live usa o mesmo modelo local para síntese, diagnóstico e holdout, sem
+carregar o runner UGIB-Lite privado.
 """
 
 from __future__ import annotations
@@ -15,32 +15,39 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from ultron.benchmarks.models import BenchmarkTask, EvaluationResult, RunManifest, TaskExecution
+from ultron.benchmarks.models import BenchmarkTask, RunManifest, TaskExecution
 from ultron.configuration import Settings, load_settings
 from ultron.db import Database
 from ultron.genesis.controller import GenesisController
-from ultron.genesis.public_runner import GenesisPublicRunner, GenesisTaskResult
+from ultron.genesis.public_runner import (
+    GenesisPublicRunner,
+    GenesisTaskResult,
+    evaluate_public_task,
+)
 from ultron.genesis.schemas import CognitiveProgram, CognitiveProgramBatch
 from ultron.genesis.synthesizer import CognitiveProgramSynthesizer
+from ultron.genesis.vm import CognitiveVM
 from ultron.models.gateway import ModelGateway
 
 
 class FixtureSynthesizer:
     async def generate(self, diagnosis: list[dict[str, Any]], *, max_programs: int, max_operators: int) -> CognitiveProgramBatch:
-        del diagnosis, max_programs, max_operators
+        del diagnosis
+        assert max_programs == 2
+        assert max_operators == 4
         return CognitiveProgramBatch(
             programs=[
-                CognitiveProgram(id="CP-ALPHA", operators=["OBSERVE", "VERIFY", "STOP"], rationale="Observa e verifica o resultado."),
-                CognitiveProgram(id="CP-BETA", operators=["OBSERVE", "REPRESENT", "DEDUCT", "VERIFY", "STOP"], rationale="Representa a estrutura antes da dedução e verifica."),
-                CognitiveProgram(id="CP-GAMMA", operators=["OBSERVE", "DECOMPOSE", "VERIFY", "STOP"], rationale="Divide a tarefa e verifica a composição."),
+                CognitiveProgram(id="CP-ALPHA", operators=["REPRESENT", "VERIFY"], rationale="Verifica sem deduzir."),
+                CognitiveProgram(id="CP-BETA", operators=["REPRESENT", "DECOMPOSE", "DEDUCT", "VERIFY"], rationale="Representa, decompõe, deduz e verifica."),
             ]
         )
 
 
 class FixtureRunner:
     def __init__(self, root: Path) -> None:
+        del root
         self.tasks = [
-            BenchmarkTask(id=task_id, category="reasoning", objective=objective, allowed_tools=[], timeout_seconds=30, evaluator="fixture", difficulty="easy", max_steps=1)
+            BenchmarkTask(id=task_id, category="reasoning", objective=objective, allowed_tools=[], timeout_seconds=30, evaluator="exact", difficulty="easy", max_steps=1)
             for task_id, objective in (
                 ("reasoning_01", "Calcule 17 multiplicado por 3 e some 2."),
                 ("reasoning_02", "A sequência é 3, 9, 27, 81. Qual é o próximo número?"),
@@ -48,26 +55,25 @@ class FixtureRunner:
                 ("reasoning_07", "A sequência é 2, 6, 18, 54. Qual é o próximo número?"),
             )
         ]
-        self.db = Database(root / "data" / "ultron.db")
-        self.db.initialize()
 
     def load_tasks(self) -> list[BenchmarkTask]:
         return list(self.tasks)
 
     async def run_one(self, *, task: BenchmarkTask, condition: str, run_id: str, model_name: str, seed: int, max_tokens: int, program: CognitiveProgram | None = None) -> GenesisTaskResult:
-        del max_tokens
-        score = 1.0 if program and program.id == "CP-BETA" else 0.0
+        del run_id, max_tokens
+        vm_execution = CognitiveVM(max_steps=len(program.operators)).execute(task.objective, program) if program else None
+        response = vm_execution.frame.candidate_answer if vm_execution and vm_execution.valid else "0"
         now = datetime.now(UTC)
-        manifest = RunManifest(run_id=f"fixture-{run_id}-{condition}-{task.id}", git_commit="fixture", model=model_name, runtime="fixture", benchmark="genesis_public", benchmark_version="v0.1", mode="baseline", seed=seed, config_hash="fixture-config", started_at=now, completed_at=now, platform={"public_only": True})
-        execution = TaskExecution(task_id=task.id, mode="baseline", response="fixture", steps=1, duration_ms=1, model=model_name)
-        evaluation = EvaluationResult(success=bool(score), score=score, evidence=["fixture-public-verifier"], errors=[] if score else ["fixture miss"])
-        return GenesisTaskResult(task, condition, manifest, execution, evaluation)
+        manifest = RunManifest(run_id=f"fixture-{condition}-{task.id}", git_commit="fixture", model=model_name, runtime="fixture", benchmark="genesis_public", benchmark_version="v0.2", mode="baseline", seed=seed, config_hash="fixture-vm-config", started_at=now, completed_at=now, platform={"public_only": True, "vm": True})
+        execution = TaskExecution(task_id=task.id, mode="baseline", response=response or "", steps=1, duration_ms=1, model=model_name)
+        evaluation = evaluate_public_task(task, execution)
+        return GenesisTaskResult(task, condition, manifest, execution, evaluation, vm_execution)
 
     def persist_result(self, result: GenesisTaskResult) -> None:
         del result
 
 
-def _settings(root: Path, output: Path, mode: str, model: str) -> Settings:
+def _settings(root: Path, output: Path, model: str) -> Settings:
     settings = load_settings(root)
     raw = deepcopy(settings.raw)
     raw["genesis"] = {
@@ -76,8 +82,8 @@ def _settings(root: Path, output: Path, mode: str, model: str) -> Settings:
         "model": model,
         "seed": 42,
         "max_runtime_seconds": 540,
-        "max_programs": 3,
-        "max_operators": 6,
+        "max_programs": 2,
+        "max_operators": 4,
         "max_tokens": 1024,
         "feature_flags": {"synthesis": True, "holdout": True, "writeback": True},
     }
@@ -115,7 +121,7 @@ async def _run(args: argparse.Namespace) -> int:
     root = Path(__file__).resolve().parents[1]
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
-    settings = _settings(root, output, args.mode, args.model)
+    settings = _settings(root, output, args.model)
     db = Database(settings.db_path)
     db.initialize()
     if args.mode == "fixture":
@@ -141,7 +147,7 @@ async def _run(args: argparse.Namespace) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Microprobe público bounded do Genesis v0.1.")
+    parser = argparse.ArgumentParser(description="Microprobe público bounded do Genesis v0.2 Cognitive VM.")
     parser.add_argument("--mode", choices=("fixture", "live"), default="fixture")
     parser.add_argument("--model", default="ollama_research")
     parser.add_argument("--output", type=Path, default=Path("data/artifacts/research/genesis_probe"))

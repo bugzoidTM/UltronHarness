@@ -10,6 +10,8 @@ from pathlib import Path
 from time import perf_counter
 from typing import Literal
 
+import yaml
+
 from ultron.benchmarks.models import (
     BenchmarkRunSummary,
     BenchmarkTask,
@@ -20,6 +22,7 @@ from ultron.benchmarks.models import (
 from ultron.configuration import Settings
 from ultron.db import Database
 from ultron.genesis.schemas import CognitiveProgram
+from ultron.genesis.vm import CognitiveVM, VMExecution
 from ultron.models.gateway import ModelGateway
 
 GENESIS_PUBLIC_TASK_IDS = ("reasoning_01", "reasoning_02", "reasoning_06", "reasoning_07")
@@ -33,6 +36,7 @@ class GenesisTaskResult:
     manifest: RunManifest
     execution: TaskExecution
     evaluation: EvaluationResult
+    vm_execution: VMExecution | None = None
 
 
 def _public_answer(objective: str) -> str | None:
@@ -67,18 +71,18 @@ def evaluate_public_task(task: BenchmarkTask, execution: TaskExecution) -> Evalu
     if expected is None:
         return EvaluationResult(success=False, score=0.0, evidence=[], errors=["public_verifier_cannot_derive_task"])
     actual = execution.response.casefold().strip()
-    success = bool(actual) and expected in actual
+    success = actual == expected
     return EvaluationResult(
         success=success,
         score=1.0 if success else 0.0,
-        evidence=["public_verifier:derived_formula", f"response_length={len(execution.response)}"],
-        errors=[] if success else ["public response did not satisfy derived formula"],
+        evidence=["public_verifier:derived_formula", "public_verifier:exact_match", f"response_length={len(execution.response)}"],
+        errors=[] if success else ["public response did not exactly satisfy derived formula"],
         duration_ms=int((perf_counter() - started) * 1000),
     )
 
 
 class GenesisPublicRunner:
-    """Runner público que nunca resolve ou carrega o diretório benchmark_private."""
+    """Runner público que interpreta o programa em VM e nunca carrega o split privado."""
 
     def __init__(self, settings: Settings, *, benchmark_root: Path | None = None) -> None:
         self.settings = settings
@@ -90,8 +94,6 @@ class GenesisPublicRunner:
     def load_tasks(self) -> list[BenchmarkTask]:
         tasks: list[BenchmarkTask] = []
         for path in sorted((self.root / "tasks").glob("*.yaml")):
-            import yaml
-
             loaded = yaml.safe_load(path.read_text(encoding="utf-8")) or []
             entries = loaded if isinstance(loaded, list) else [loaded]
             tasks.extend(BenchmarkTask.model_validate(entry) for entry in entries)
@@ -104,7 +106,7 @@ class GenesisPublicRunner:
             "seed": seed,
             "max_tokens": max_tokens,
             "allowlist": [],
-            "program_budget": self.settings.raw.get("genesis", {}).get("max_operators", 6),
+            "program_budget": self.settings.raw.get("genesis", {}).get("max_operators", 4),
         }
         return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
 
@@ -113,18 +115,17 @@ class GenesisPublicRunner:
         return str(config.get("model", model_name))
 
     @staticmethod
-    def _messages(task: BenchmarkTask, condition: GenesisCondition, program: CognitiveProgram | None) -> list[dict[str, str]]:
+    def _messages(task: BenchmarkTask, condition: GenesisCondition, frame: dict[str, object] | None) -> list[dict[str, str]]:
         system = (
-            "Você é um executor de tarefa pública. Responda somente com a solução final verificável. "
+            "Você é um executor de tarefa pública. Responda somente com a solução final exata. "
             "Não use internet, ferramentas ou arquivos."
         )
-        if program is None:
-            context = "Modo baseline: resolva diretamente, sem programa cognitivo adicional."
+        if frame is None:
+            context = "Modo baseline: resolva diretamente, sem estado cognitivo adicional."
         else:
-            sequence = " -> ".join(program.operators)
             context = (
-                "Modo programa: siga esta sequência temporária de primitivas cognitivas, sem executar código: "
-                f"{sequence}. Rationale: {program.rationale}"
+                "Modo Cognitive VM: use exclusivamente o CognitiveFrame produzido pela execução dos operadores. "
+                f"Não invente etapas fora do estado fornecido.\nCognitiveFrame: {json.dumps(frame, ensure_ascii=False, sort_keys=True)}"
             )
         return [
             {"role": "system", "content": system},
@@ -146,11 +147,42 @@ class GenesisPublicRunner:
         effective_model = self._effective_model(model_name)
         workspace = self.settings.artifacts_dir / "genesis" / run_id / condition / task.id
         workspace.mkdir(parents=True, exist_ok=True)
+        vm_execution: VMExecution | None = None
+        frame: dict[str, object] | None = None
+        if program is not None:
+            vm_execution = CognitiveVM(max_steps=len(program.operators)).execute(task.objective, program)
+            if not vm_execution.valid:
+                execution = TaskExecution(
+                    task_id=task.id,
+                    mode="baseline",
+                    failure_category="VM_ERROR",
+                    steps=0,
+                    duration_ms=0,
+                    context_metrics={"vm_steps": vm_execution.steps},
+                    model=effective_model,
+                )
+                evaluation = evaluate_public_task(task, execution)
+                manifest = RunManifest(
+                    run_id=f"{run_id}:{condition}:{task.id}",
+                    git_commit="runtime",
+                    model=effective_model,
+                    runtime="local-public-genesis-vm",
+                    benchmark="genesis_public",
+                    benchmark_version="v0.2",
+                    mode="baseline",
+                    seed=seed,
+                    config_hash=self._config_hash(model_name=model_name, seed=seed, max_tokens=max_tokens),
+                    started_at=now,
+                    completed_at=datetime.now(UTC),
+                    platform={"public_only": True, "condition": condition, "vm": True},
+                )
+                return GenesisTaskResult(task, condition, manifest, execution, evaluation, vm_execution)
+            frame = vm_execution.frame.model_dump(mode="json", exclude={"trace"})
         started = perf_counter()
         try:
             response = await asyncio.wait_for(
                 self.models.generate(
-                    self._messages(task, condition, program),
+                    self._messages(task, condition, frame),
                     model_name,
                     seed=seed,
                     max_tokens=max_tokens,
@@ -160,11 +192,11 @@ class GenesisPublicRunner:
             execution = TaskExecution(
                 task_id=task.id,
                 mode="baseline",
-                response=response.content,
+                response=response.content.strip(),
                 tool_calls=response.tool_calls,
                 steps=1,
                 duration_ms=response.latency_ms,
-                context_metrics={"program_operators": len(program.operators) if program else 0},
+                context_metrics={"vm_steps": vm_execution.steps if vm_execution else 0},
                 model=response.model,
             )
         except TimeoutError:
@@ -191,17 +223,17 @@ class GenesisPublicRunner:
             run_id=f"{run_id}:{condition}:{task.id}",
             git_commit="runtime",
             model=execution.model,
-            runtime="local-public-genesis",
+            runtime="local-public-genesis-vm",
             benchmark="genesis_public",
-            benchmark_version="v0.1",
+            benchmark_version="v0.2",
             mode="baseline",
             seed=seed,
             config_hash=self._config_hash(model_name=model_name, seed=seed, max_tokens=max_tokens),
             started_at=now,
             completed_at=datetime.now(UTC),
-            platform={"public_only": True, "condition": condition},
+            platform={"public_only": True, "condition": condition, "vm": True},
         )
-        return GenesisTaskResult(task, condition, manifest, execution, evaluation)
+        return GenesisTaskResult(task, condition, manifest, execution, evaluation, vm_execution)
 
     def persist_result(self, result: GenesisTaskResult) -> None:
         summary = BenchmarkRunSummary(

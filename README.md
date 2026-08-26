@@ -121,13 +121,13 @@ O protocolo congelado usa uma seed, um modelo efetivo, a mesma allowlist, o mesm
 
 O v0.2 permanece desligado por padrão, inclusive fora do perfil explicitamente opt in. O protocolo e o microprobe determinístico estão em [`LIFE_V0_2_PROTOCOL.md`](LIFE_V0_2_PROTOCOL.md) e [`scripts/run_life_sdcg_probe.py`](scripts/run_life_sdcg_probe.py). Um resultado positivo nesse microprobe demonstra apenas que o encadeamento bounded de gap, hipótese, comparação, gate e writeback funciona na fixture pública; não sustenta alegações de AGI, generalização, transferência ou autoaperfeiçoamento geral.
 
-### Project Genesis v0.1 — Cognitive Programs
+### Project Genesis v0.2 — Cognitive Virtual Machine
 
-O Genesis é o próximo experimento qualitativo e permanece desligado por padrão. Ele fornece uma lista pequena de primitivas cognitivas interpretáveis, mas não fornece um catálogo fechado de estratégias. O modelo recebe somente as observações de duas tarefas públicas de diagnóstico e pode gerar até três programas temporários, cada um com no máximo seis operadores. A seleção é automática pelo desempenho diagnóstico; nenhum humano fornece ou escolhe o programa intermediário.
+O Genesis permanece desligado por padrão e agora interpreta Cognitive Programs sobre um `CognitiveFrame` explícito. O modelo gera de um a dois programas usando somente seis primitivas (`REPRESENT`, `DECOMPOSE`, `HYPOTHESIZE`, `DEDUCT`, `VERIFY` e `BACKTRACK`), com no máximo quatro operadores e repetição permitida. A VM executa cada operador e registra as transformações de estado; não existe `STOP` no schema e a terminação é determinada pelo fim da sequência ou pelo budget da VM.
 
-Depois da seleção, o mesmo modelo, seed, budget, timeout, allowlist e limite de passos executa duas tarefas públicas holdout que não participaram da síntese. O holdout não é devolvido ao sintetizador. NCPG positivo, ausência de regressão, evidência suficiente e a autoridade final do verificador são necessários para writeback. Programas inválidos, saídas inválidas, divergências de contrato e empate são rejeitados. Cognitive Programs são sequências textuais e nunca são executados como Python, shell, Git ou permissões.
+O `rationale` é mantido apenas como metadado de auditoria. Ele não entra no prompt do executor e não é lido pela VM. Depois da seleção automática no diagnóstico, o mesmo modelo, seed, budget, timeout, allowlist e limite de passos executa dois holdouts públicos não enviados ao sintetizador. O verificador exige igualdade exata, não substring. NCPG positivo, ausência de regressão, execução VM válida, evidência suficiente e autoridade final são necessários para writeback.
 
-O probe está em [`scripts/run_genesis_probe.py`](scripts/run_genesis_probe.py), com modo `fixture` para validar o mecanismo e modo `live` para exploração local bounded. O protocolo está em [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md). Mesmo um NCPG positivo live será apenas evidência exploratória de um experimento pequeno; não demonstrará AGI, generalização estatística ou autoaperfeiçoamento aberto.
+O probe está em [`scripts/run_genesis_probe.py`](scripts/run_genesis_probe.py), com modo `fixture` para validar a VM e modo `live` para exploração local bounded. O protocolo está em [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md). Um resultado live positivo ainda é evidência exploratória de um microprobe, não demonstra AGI, generalização estatística, transferência ou autoaperfeiçoamento aberto.
 
 ## Segurança e autonomia
 

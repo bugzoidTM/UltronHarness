@@ -30,7 +30,7 @@ from ultron.models.gateway import ModelGateway
 
 
 class GenesisController:
-    """Coordena um único experimento Genesis sem executar código gerado."""
+    """Coordena um único experimento Genesis sobre a Cognitive VM."""
 
     def __init__(
         self,
@@ -80,8 +80,8 @@ class GenesisController:
             "INSERT OR REPLACE INTO experiments (id,hypothesis,baseline_version,candidate_version,benchmark,baseline_score,candidate_score,regression_score,status,report,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,COALESCE((SELECT created_at FROM experiments WHERE id=?),?),?)",
             (
                 experiment_id,
-                "Self-generated Cognitive Program from public diagnostic failures",
-                "genesis-baseline-v0.1",
+                "Self-generated Cognitive Program executed by Cognitive VM",
+                "genesis-v0.2-baseline",
                 candidate_version,
                 "genesis_public",
                 baseline_score,
@@ -127,6 +127,8 @@ class GenesisController:
             "score": result.evaluation.score,
             "success": result.evaluation.success,
             "output_valid": bool(result.execution.response.strip()) and result.execution.failure_category is None,
+            "vm_valid": result.vm_execution is None or result.vm_execution.valid,
+            "vm_steps": result.vm_execution.steps if result.vm_execution else 0,
             "failure_category": result.execution.failure_category,
             "evidence_count": len(result.evaluation.evidence),
             "evidence": list(result.evaluation.evidence),
@@ -152,8 +154,8 @@ class GenesisController:
         if left["task_id"] != right["task_id"]:
             return "task_id_mismatch"
         for record in (left, right):
-            if not record["output_valid"]:
-                return f"invalid_output:{record['task_id']}"
+            if not record["output_valid"] or not record["vm_valid"]:
+                return f"invalid_execution:{record['task_id']}"
             if record["evidence_count"] < 1:
                 return f"insufficient_evidence:{record['task_id']}"
             if not 0.0 <= float(record["score"]) <= 1.0:
@@ -195,12 +197,12 @@ class GenesisController:
             (
                 experience_id,
                 None,
-                f"Genesis Cognitive Program {program.id}",
-                self.db.json([{"protocol": GENESIS_PROTOCOL_VERSION, "operators": program.operators}]),
+                f"Genesis VM Cognitive Program {program.id}",
+                self.db.json([{"protocol": GENESIS_PROTOCOL_VERSION, "vm": True, "operators": program.operators}]),
                 f"NCPG holdout={ncpg:.6f}; status={status}",
                 int(status == "verified"),
                 self.db.json([] if status == "verified" else ["ncpg_not_verified"]),
-                self.db.json([program.rationale]),
+                self.db.json(["Program retained as VM operator sequence; rationale is audit metadata only."]),
                 max(0.0, min(1.0, 0.5 + ncpg / 2)),
                 "pending" if status == "pending" else "rejected",
                 None,
@@ -224,10 +226,7 @@ class GenesisController:
             return GenesisSummary(run_id, "rejected", "invalid_program_budget", experiment_id)
         if not 1 <= max_runtime <= 600 or max_tokens < 1:
             return GenesisSummary(run_id, "rejected", "invalid_runtime_budget", experiment_id)
-        if self.config.get("feature_flags", {}).get("writeback", False) is False:
-            writeback_enabled = False
-        else:
-            writeback_enabled = True
+        writeback_enabled = bool(self.config.get("feature_flags", {}).get("writeback", False))
         self._write_experiment(experiment_id=experiment_id, status="running", report={"protocol_version": GENESIS_PROTOCOL_VERSION, "run_id": run_id})
         try:
             diagnosis_tasks, holdout_tasks = self._protocol_tasks(self.runner.load_tasks())
@@ -302,6 +301,7 @@ class GenesisController:
                 "selected_program_id": selected.id,
                 "diagnosis_observations_sent_to_synthesizer": diagnosis,
                 "holdout_sent_to_synthesizer": False,
+                "rationale_used_for_execution": False,
                 "human_selected_program": False,
                 "baseline_holdout": baseline_records,
                 "selected_holdout": selected_records,
@@ -314,6 +314,7 @@ class GenesisController:
                 "seed": seed,
                 "max_tokens": max_tokens,
                 "allowlist": [],
+                "vm_max_steps": max_operators,
                 "writeback_enabled": writeback_enabled,
                 "validation_reason": reason,
             }
@@ -348,7 +349,7 @@ class GenesisController:
                     verified=True,
                     historical_utility=ncpg,
                     sample_count=len(holdout_tasks),
-                    source="genesis_verified_holdout",
+                    source="genesis_vm_verified_holdout",
                 ),
                 experience_id,
             )
