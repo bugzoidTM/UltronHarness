@@ -129,6 +129,18 @@ O `rationale` é mantido apenas como metadado de auditoria. Ele não entra no pr
 
 O probe está em [`scripts/run_genesis_probe.py`](scripts/run_genesis_probe.py), com modo `fixture` para validar a VM e modo `live` para exploração local bounded. O protocolo está em [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md). Um resultado live positivo ainda é evidência exploratória de um microprobe, não demonstra AGI, generalização estatística, transferência ou autoaperfeiçoamento aberto.
 
+### Genesis v0.2.1 — No-Answer Ablation
+
+A ablação v0.2.1 testa o confound do `candidate_answer` sem nova síntese, sem seleção humana e sem writeback. O CP-01 foi congelado como `REPRESENT -> DECOMPOSE -> HYPOTHESIZE -> DEDUCT`, e foram executadas exatamente as condições A/B/C nos holdouts públicos `reasoning_06` e `reasoning_07`, com `qwen2.5:3b`, seed `42` e `max_tokens=1024`.
+
+| Condição | reasoning_06 | reasoning_07 | Média |
+|---|---:|---:|---:|
+| A — baseline | 0/1 | 1/1 | 0,500 |
+| B — somente estado intermediário | 0/1 | 1/1 | 0,500 |
+| C — frame completo | 1/1 | 1/1 | 1,000 |
+
+O resultado live foi `Δ(B−A)=0,000` e `Δ(C−A)=+0,500`. Em B, o executor recebeu apenas `facts`, `unknowns`, `constraints`, `hypotheses` e `predictions`; `candidate_answer`, `verification`, `trace` e `rationale` ficaram fora da mensagem. Portanto, este microprobe é consistente com o ganho anterior depender de uma resposta calculada pelo solver ou de conteúdo correlato do frame completo, e não somente da estrutura intermediária. A conclusão é exploratória, não uma prova causal geral: são duas tarefas, uma seed, uma família de modelo e um programa. **Transferência e Genesis v0.3 ficam bloqueados até revisão da semântica da VM.**
+
 ## Segurança e autonomia
 
 O UltronPro começa em **Mode 2 — Supervised Agent**. Ações R0 e R1 permitidas podem ser executadas dentro do workspace; modificações R2 aguardam aprovação. As ações R3/R4 requerem aprovação e as R5 são bloqueadas. O diretório permitido é:
@@ -173,6 +185,12 @@ Execute a suíte automatizada e os gates específicos:
 .\.venv\Scripts\python.exe -m pytest tests_security_windows -q
 .\.venv\Scripts\python.exe -m pytest tests_agent -m agent -q
 .\.venv\Scripts\python.exe -m ruff check ultron tests tests_security_windows apps\api
+```
+
+Para reproduzir a fixture mecânica da ablação, sem alegação de capacidade:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\run_genesis_ablation.py --mode fixture --output data\artifacts\research\genesis_ablation_v021_fixture
 ```
 
 Com a API e a UI ativas, execute o fluxo ponta a ponta:

@@ -26,7 +26,8 @@ from ultron.genesis.vm import CognitiveVM, VMExecution
 from ultron.models.gateway import ModelGateway
 
 GENESIS_PUBLIC_TASK_IDS = ("reasoning_01", "reasoning_02", "reasoning_06", "reasoning_07")
-GenesisCondition = Literal["baseline", "program"]
+GenesisCondition = Literal["baseline", "program", "program_no_answer"]
+FrameProjection = Literal["none", "full", "intermediate"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -142,6 +143,7 @@ class GenesisPublicRunner:
         seed: int,
         max_tokens: int,
         program: CognitiveProgram | None = None,
+        frame_projection: FrameProjection = "full",
     ) -> GenesisTaskResult:
         now = datetime.now(UTC)
         effective_model = self._effective_model(model_name)
@@ -174,10 +176,17 @@ class GenesisPublicRunner:
                     config_hash=self._config_hash(model_name=model_name, seed=seed, max_tokens=max_tokens),
                     started_at=now,
                     completed_at=datetime.now(UTC),
-                    platform={"public_only": True, "condition": condition, "vm": True},
+                    platform={"public_only": True, "condition": condition, "vm": True, "frame_projection": frame_projection},
                 )
                 return GenesisTaskResult(task, condition, manifest, execution, evaluation, vm_execution)
-            frame = vm_execution.frame.model_dump(mode="json", exclude={"trace"})
+            full_frame = vm_execution.frame.model_dump(mode="json", exclude={"trace"})
+            if frame_projection == "intermediate":
+                frame = {field: full_frame[field] for field in ("facts", "unknowns", "constraints", "hypotheses", "predictions")}
+            elif frame_projection == "full":
+                frame = full_frame
+            else:
+                raise ValueError("unknown_frame_projection")
+        projection_code = {"none": 0, "full": 2, "intermediate": 1}[frame_projection]
         started = perf_counter()
         try:
             response = await asyncio.wait_for(
@@ -196,7 +205,10 @@ class GenesisPublicRunner:
                 tool_calls=response.tool_calls,
                 steps=1,
                 duration_ms=response.latency_ms,
-                context_metrics={"vm_steps": vm_execution.steps if vm_execution else 0},
+                context_metrics={
+                    "vm_steps": vm_execution.steps if vm_execution else 0,
+                    "frame_projection": projection_code,
+                },
                 model=response.model,
             )
         except TimeoutError:
@@ -231,7 +243,7 @@ class GenesisPublicRunner:
             config_hash=self._config_hash(model_name=model_name, seed=seed, max_tokens=max_tokens),
             started_at=now,
             completed_at=datetime.now(UTC),
-            platform={"public_only": True, "condition": condition, "vm": True},
+            platform={"public_only": True, "condition": condition, "vm": True, "frame_projection": frame_projection},
         )
         return GenesisTaskResult(task, condition, manifest, execution, evaluation, vm_execution)
 

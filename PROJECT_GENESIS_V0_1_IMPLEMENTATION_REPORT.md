@@ -6,7 +6,7 @@ O Genesis v0.2 substitui a execução textual do Genesis v0.1 por uma **Cognitiv
 
 O ciclo cobre duas tarefas públicas de diagnóstico, síntese de no máximo dois programas, seleção automática, duas tarefas públicas holdout e writeback somente após NCPG positivo, execução VM válida, paridade contratual e autoridade final. O verificador público foi fechado para igualdade exata, eliminando aceitação por substring.
 
-> Conclusão honesta: o probe live demonstrou uma sequência gerada pelo próprio modelo sendo interpretada pela VM e associada a ganho neste microprobe público. Isso é evidência exploratória de um mecanismo de engenharia. Não é evidência de AGI, algoritmo cognitivo geral, transferência ampla ou autoaperfeiçoamento aberto.
+> Conclusão honesta: o probe live v0.2 demonstrou uma sequência gerada pelo próprio modelo sendo interpretada pela VM e associada a ganho neste microprobe público, mas a ablação v0.2.1 mostrou que esse ganho não apareceu quando o executor recebeu somente o estado intermediário. O resultado é consistente com um confound de resposta fornecida pelo solver, não com uma demonstração isolada de benefício estrutural da VM. Continua sendo evidência exploratória de engenharia bounded, não evidência de AGI, algoritmo cognitivo geral, transferência ampla ou autoaperfeiçoamento aberto.
 
 ## O que mudou em relação ao Genesis v0.1
 
@@ -91,21 +91,37 @@ O programa live selecionado foi `CP-01`, gerado pelo modelo, com a sequência `R
 
 O baseline holdout acertou `reasoning_07` e falhou `reasoning_06`; o candidate com CP-01 acertou os dois. Assim, o NCPG foi `0,500` (`1,000 - 0,500`) em duas tarefas, com oito execuções totais porque apenas um programa foi gerado. O holdout permaneceu ausente do prompt de síntese, e o relatório registrou `rationale_used_for_execution=false` e `human_selected_program=false`.
 
-## Interpretação
+## Genesis v0.2.1 — No-Answer Ablation
 
-O resultado é compatível com a hipótese operacional de que uma sequência de operadores criada pelo modelo pode produzir um estado intermediário útil para a chamada candidate e melhorar o desempenho em duas tarefas públicas holdout. Contudo, o microprobe é pequeno, usa uma única seed, uma única família pública e duas tarefas holdout. O próprio `DEDUCT` contém semântica determinística para as formas de tarefa públicas utilizadas; isso é uma VM verificável, não uma teoria geral de raciocínio.
+A v0.2.1 foi executada como uma ablação A/B/C estritamente bounded para separar a estrutura intermediária do conteúdo calculado deterministamente pela VM. O CP-01 foi congelado exatamente como no probe anterior (`REPRESENT -> DECOMPOSE -> HYPOTHESIZE -> DEDUCT`), sem nova síntese, seleção humana ou writeback. Foram usadas exatamente as duas tarefas holdout públicas `reasoning_06` e `reasoning_07`, com seis chamadas totais.
 
-Além disso, o baseline obteve sucesso em uma das duas tarefas holdout. O NCPG positivo mede diferença neste par específico, não uma taxa geral de capacidade. O resultado não separa completamente a contribuição da VM da contribuição do fato de o `CognitiveFrame` expor `candidate_answer` ao executor. Essa questão deve permanecer aberta para um protocolo posterior de ablação, sem alterar este resultado retrospectivamente.
+| Condição | reasoning_06 | reasoning_07 | Score médio |
+|---|---:|---:|---:|
+| A — baseline | 0/1 | 1/1 | 0,500 |
+| B — VM sem `candidate_answer` | 0/1 | 1/1 | 0,500 |
+| C — VM com frame completo | 1/1 | 1/1 | 1,000 |
 
-O resultado live não autoriza alegações de descoberta de algoritmo geral, transferência para outra família, generalização estatística, consciência ou dinâmica de desenvolvimento comparável à AGI. O próximo teste científico, se autorizado, deve congelar uma superfície diferente antes da execução e verificar se a mesma sequência continua útil sem ser ajustada ao novo domínio.
+O ambiente Windows conectado usou `qwen2.5:3b`, seed `42`, `max_tokens=1024`, a mesma configuração pareada e os mesmos fingerprints de tarefa. O resultado foi `Δ(B−A)=0,000` e `Δ(C−A)=+0,500`. Em B, o executor recebeu somente `facts`, `unknowns`, `constraints`, `hypotheses` e `predictions`; `candidate_answer`, `verification`, `trace` e `rationale` não foram serializados. Em C, o frame completo foi enviado. A telemetria registrou `vm_valid=true` em todas as execuções, `vm_steps=0` em A e `vm_steps=4` em B/C.
+
+Os invariantes de desenho foram `rationale_used_for_execution=false`, `synthesis_performed=false` e `writeback_performed=false`. A condição B não reproduziu o ganho de C sobre A, enquanto C repetiu o ganho observado no v0.2. Isso é consistente com a hipótese de que o ganho anterior dependeu do `candidate_answer` (ou de conteúdo correlato do frame completo) fornecido pelo solver, e não apenas dos campos intermediários. A evidência não prova causalidade geral: o n é duas tarefas, há uma única seed, uma família de modelo e um programa congelado. Por isso, o resultado bloqueia transferência e exige correção semântica da VM antes de atribuir capacidade ao estado intermediário.
+
+A fixture determinística A/B/C valida apenas serialização, paridade e ausência de síntese/writeback; não é evidência de capacidade. Nenhuma condição da ablação v0.2.1 foi promovida ou escreveu experiência.
+
+## Interpretação e decisão
+
+O resultado live v0.2 original permanece válido como histórico do comportamento observado: um único CP-01 produziu baseline holdout `0,500` e candidate `1,000`. A nova ablação, porém, restringe a interpretação desse ganho. O próprio `DEDUCT` contém semântica determinística para as formas públicas utilizadas; portanto, o frame completo pode ter funcionado como uma resposta calculada, e não como uma representação intermediária que o modelo precisou transformar em solução.
+
+A conclusão operacional é **não prosseguir para transferência, Genesis v0.3 ou alegações de autoaperfeiçoamento** nesta linha. O próximo trabalho autorizado deve primeiro revisar a semântica e o contrato de execução da VM para eliminar a exposição de respostas prontas, seguido de um protocolo novo e explicitamente pré-registrado. O resultado atual não autoriza alegações de descoberta de algoritmo geral, generalização estatística, consciência ou dinâmica de desenvolvimento comparável à AGI.
 
 ## Testes e gates
 
 | Verificação | Resultado |
 |---|---:|
-| Testes Genesis direcionados | 11 passed |
+| Testes Genesis direcionados + ablação | 15 passed |
 | Ruff em código e testes alterados | aprovado |
-| Suíte completa | a executar após o último conjunto de alterações |
+| Fixture A/B/C de mecânica | A=0,500; B=0,500; C=1,000; desenvolvimento-only |
+| Suíte completa Linux | 246 passed, 1 warning |
+| Segurança Windows | 12 passed, 1 skipped, 1 warning |
 | Repetição de operadores | coberta |
 | `STOP` rejeitado | coberto |
 | VM exige representação antes de dedução | coberto |
@@ -124,17 +140,19 @@ O Genesis v0.2 continua opt-in e desligado por padrão. Os operadores não têm 
 
 O runner público foi mantido separado do runner geral precisamente para impedir que o ciclo Genesis consulte `benchmark_private`. Nenhum gold, expected output privado, fixture privada ou conteúdo unseen foi copiado para o código público ou para os artefatos de entrega.
 
-A fixture determinística confirma a implementação do mecanismo, mas não confirma descoberta pelo modelo. O probe live, por sua vez, é exploratório e positivo, porém insuficiente para uma conclusão científica geral. Um resultado negativo ou positivo futuro deve ser registrado integralmente, sem seleção retrospectiva de casos favoráveis.
+A fixture determinística confirma a implementação do mecanismo, mas não confirma descoberta pelo modelo. Os probes live v0.2 e v0.2.1 são exploratórios e insuficientes para uma conclusão científica geral; o resultado A/B/C foi registrado integralmente, sem seleção retrospectiva de casos favoráveis.
 
 ## Arquivos
 
 | Arquivo | Função |
 |---|---|
-| [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md) | Protocolo Genesis v0.2 Cognitive VM. |
+| [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md) | Protocolo Genesis v0.2 Cognitive VM e ablação No-Answer v0.2.1. |
 | [`ultron/genesis/schemas.py`](ultron/genesis/schemas.py) | CognitiveFrame, CognitiveProgram e contratos. |
 | [`ultron/genesis/vm.py`](ultron/genesis/vm.py) | Interpretador bounded dos seis operadores. |
 | [`ultron/genesis/synthesizer.py`](ultron/genesis/synthesizer.py) | Síntese estruturada de sequências VM. |
 | [`ultron/genesis/public_runner.py`](ultron/genesis/public_runner.py) | VM, modelo e verificador exclusivamente públicos. |
 | [`ultron/genesis/controller.py`](ultron/genesis/controller.py) | Seleção, holdout, gates e writeback. |
-| [`scripts/run_genesis_probe.py`](scripts/run_genesis_probe.py) | Probe fixture/live. |
+| [`scripts/run_genesis_probe.py`](scripts/run_genesis_probe.py) | Probe Genesis v0.2 fixture/live. |
+| [`scripts/run_genesis_ablation.py`](scripts/run_genesis_ablation.py) | Probe A/B/C v0.2.1 sem nova síntese e sem writeback. |
 | [`tests/test_genesis.py`](tests/test_genesis.py) | Testes de semântica, autoria, paridade e isolamento. |
+| [`tests/test_genesis_ablation.py`](tests/test_genesis_ablation.py) | Testes da projeção No-Answer, paridade e ausência de persistência. |
