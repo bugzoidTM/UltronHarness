@@ -90,3 +90,28 @@ Assim, `Δ(B−A)=0,000` e `Δ(C−A)=+0,500` neste microprobe. As seis execuç�
 A leitura causal é deliberadamente limitada: como B não melhorou sobre A enquanto C repetiu o ganho anterior, o resultado é **consistente com o ganho live v0.2 depender do conteúdo de resposta fornecida pelo solver (`candidate_answer`/estado completo), e não apenas da estrutura intermediária**. Isso não é prova causal geral: são duas tarefas, uma seed, uma família de modelo e um único programa. Portanto, não se autoriza transferência; a semântica da VM deve ser corrigida antes de qualquer próxima etapa que pretenda atribuir capacidade ao estado intermediário.
 
 A fixture A/B/C existente valida apenas a mecânica e não é evidência de capacidade. Nenhuma condição desta ablação produz writeback ou promoção.
+
+## Genesis v0.2.2 — Non-Solving Cognitive VM
+
+A v0.2.2 substitui a semântica solucionadora da VM por operadores cognitivos que delegam ao mesmo modelo efetivo mediante schemas estruturados. O objetivo é testar se uma organização autogerada do raciocínio oferece ganho além de chamadas adicionais ou de uma resposta pronta. O protocolo não adiciona memória, multiagente, recombinação, transferência, autoedição ou novos benchmarks.
+
+| Item | Regra v0.2.2 |
+|---|---|
+| Operadores | Somente `REPRESENT`, `HYPOTHESIZE`, `DEDUCT` e `VERIFY`. `DECOMPOSE` e `BACKTRACK` foram removidos do schema ativo. |
+| Semântica | `REPRESENT` produz entidades, fatos, restrições e incógnitas; `HYPOTHESIZE` produz hipóteses e previsões; `DEDUCT` produz uma conclusão via modelo; `VERIFY` classifica a conclusão como `supported`, `contradicted` ou `uncertain`. |
+| Proibição central | Nenhum operador contém regex, aritmética, reconhecimento de família de benchmark, gabarito ou lógica de domínio. A VM não calcula respostas em Python. |
+| Modelo | O mesmo modelo efetivo, seed e gateway são usados nas condições pareadas e em todas as chamadas do programa. |
+| Diagnóstico | Exatamente `reasoning_01` e `reasoning_02`, públicos; somente as observações do diagnóstico são enviadas ao sintetizador. |
+| Holdout | Exatamente `reasoning_06` e `reasoning_07`, públicos e ausentes do sintetizador. |
+| A — DIRECT | Uma chamada estruturada com orçamento total de `1024` tokens por tarefa. |
+| B — MATCHED COMPUTE | Quatro chamadas genéricas de deliberação com `256` tokens cada, sem Cognitive Program específico. |
+| C — SELF-GENERATED PROGRAM | Quatro chamadas estruturadas de `256` tokens cada, organizadas pelo programa gerado no diagnóstico. |
+| Métrica primária | `Δ(C−B)`, para controlar o efeito de simplesmente fazer quatro chamadas. `Δ(C−A)` é secundária. |
+| Síntese | De 1 a 2 programas, no máximo 4 operadores; geração estruturada e sem seleção humana. |
+| Segurança | Nenhuma chamada usa ferramentas, internet, arquivos, shell, Git, escrita, permissões ou autoedição. |
+| Escrita | O probe v0.2.2 não executa writeback nem promoção. |
+| Tempo | Timeout global bounded de 540 segundos, inferior a 10 minutos. |
+
+A igualdade do orçamento é definida por tarefa: A recebe uma chamada de até 1024 tokens; B e C recebem quatro chamadas de até 256 tokens, totalizando 1024 tokens solicitados por condição. Os códigos `call_budget`, `call_tokens`, `model_calls` e `max_tokens_total` são registrados na telemetria. O `config_hash` é comum às condições pareadas; a condição experimental fica no manifesto e no registro da execução.
+
+A fixture do v0.2.2 é somente validação de encadeamento, schema, paridade e invariantes. Seu resultado não deve ser interpretado como capacidade live. Um resultado live com `C > B` ainda seria exploratório; exigiria replicação independente antes de qualquer transferência. Um resultado `C <= B` mantém a hipótese arquitetural sem suporte e encerra a linha para revisão.

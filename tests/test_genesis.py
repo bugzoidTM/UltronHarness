@@ -19,8 +19,7 @@ from ultron.genesis.public_runner import (
     GenesisTaskResult,
     evaluate_public_task,
 )
-from ultron.genesis.schemas import CognitiveFrame, CognitiveProgram, CognitiveProgramBatch
-from ultron.genesis.vm import CognitiveVM
+from ultron.genesis.schemas import CognitiveProgram, CognitiveProgramBatch
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -36,7 +35,7 @@ class _FakeSynthesizer:
         return CognitiveProgramBatch(
             programs=[
                 CognitiveProgram(id="CP-ALPHA", operators=["REPRESENT", "VERIFY"], rationale="Verifica sem deduzir."),
-                CognitiveProgram(id="CP-BETA", operators=["REPRESENT", "DECOMPOSE", "DEDUCT", "VERIFY"], rationale="Representa, decompõe, deduz e verifica."),
+                CognitiveProgram(id="CP-BETA", operators=["REPRESENT", "HYPOTHESIZE", "DEDUCT", "VERIFY"], rationale="Representa, formula, deduz e verifica."),
             ]
         )
 
@@ -79,11 +78,11 @@ class _FakePublicRunner:
         seed: int,
         max_tokens: int,
         program: CognitiveProgram | None = None,
+        call_budget: int = 1,
     ) -> GenesisTaskResult:
-        del run_id, max_tokens
+        del run_id, max_tokens, call_budget
         self.calls.append({"task_id": task.id, "condition": condition, "program_id": program.id if program else None})
-        vm_execution = CognitiveVM(max_steps=len(program.operators)).execute(task.objective, program) if program else None
-        score = 1.0 if vm_execution and vm_execution.valid else 0.0
+        score = 1.0 if program and program.id == "CP-BETA" else 0.0
         result_model = model_name
         result_seed = seed
         result_task = task
@@ -108,10 +107,10 @@ class _FakePublicRunner:
             completed_at=now,
             platform={"public_only": True, "vm": True},
         )
-        response = vm_execution.frame.candidate_answer if vm_execution and vm_execution.valid else "0"
-        execution = TaskExecution(task_id=task.id, mode="baseline", response=response or "0", steps=1, duration_ms=1, model=result_model)
-        evaluation = EvaluationResult(success=bool(score), score=score, evidence=["fake-public-verifier"], errors=[] if score else ["VM or baseline miss"])
-        return GenesisTaskResult(result_task, condition, manifest, execution, evaluation, vm_execution)
+        response = "53" if score else "0"
+        execution = TaskExecution(task_id=task.id, mode="baseline", response=response, steps=1, duration_ms=1, model=result_model)
+        evaluation = EvaluationResult(success=bool(score), score=score, evidence=["fake-public-verifier"], errors=[] if score else ["fake baseline miss"])
+        return GenesisTaskResult(result_task, condition, manifest, execution, evaluation, None)
 
     def persist_result(self, result: GenesisTaskResult) -> None:
         self.persisted.append(result.manifest.run_id)
@@ -162,29 +161,8 @@ def test_cognitive_program_schema_is_closed_and_allows_repetition() -> None:
     with pytest.raises(ValueError):
         CognitiveProgram(id="CP-BAD", operators=["RUN_PYTHON"], rationale="Operador proibido.")
     with pytest.raises(ValueError):
-        CognitiveProgram(id="CP-BAD", operators=["REPRESENT", "DEDUCT", "VERIFY", "BACKTRACK", "VERIFY"], rationale="Programa longo demais.")
+        CognitiveProgram(id="CP-BAD", operators=["REPRESENT", "HYPOTHESIZE", "DEDUCT", "VERIFY", "VERIFY"], rationale="Programa longo demais.")
 
-
-def test_cognitive_vm_changes_explicit_state_and_terminates_by_program_length() -> None:
-    frame = CognitiveFrame(problem="Calcule 24 dividido por 6 e some 7.")
-    vm = CognitiveVM(max_steps=4)
-    program = CognitiveProgram(id="CP-VM", operators=["REPRESENT", "DECOMPOSE", "DEDUCT", "VERIFY"], rationale="Metadado não operacional.")
-    result = vm.execute(frame.problem, program)
-    assert result.valid is True
-    assert result.halted is True
-    assert result.steps == 4
-    assert result.frame.facts
-    assert result.frame.candidate_answer == "11"
-    assert result.frame.verification["candidate"] == "verified_against_explicit_public_formula"
-    assert [item["operator"] for item in result.frame.trace] == program.operators
-
-
-def test_cognitive_vm_supports_repeated_operator_without_rationale_execution() -> None:
-    program = CognitiveProgram(id="CP-REPEAT", operators=["REPRESENT", "DEDUCT", "VERIFY", "VERIFY"], rationale="Isto é somente auditoria.")
-    result = CognitiveVM(max_steps=4).execute("Calcule 17 multiplicado por 3 e some 2.", program)
-    assert result.valid is True
-    assert result.frame.candidate_answer == "53"
-    assert len(result.frame.trace) == 4
 
 
 def test_public_verifier_requires_exact_answer_not_substring() -> None:
@@ -255,7 +233,7 @@ def test_genesis_adversarial_contract_change_rejects(tmp_path: Path) -> None:
 def test_genesis_rationale_is_not_in_runner_execution_messages() -> None:
     task = BenchmarkTask(id="reasoning_06", category="reasoning", objective="Calcule 24 dividido por 6 e some 7.", evaluator="exact")
     program = CognitiveProgram(id="CP-TEST", operators=["REPRESENT", "DEDUCT", "VERIFY"], rationale="SEGREDO QUE NÃO PODE SER EXECUTADO")
-    messages = GenesisPublicRunner._messages(task, "program", {"candidate_answer": "11", "facts": []})
+    messages = GenesisPublicRunner._messages(task, "program", {"candidate_answer": "11", "facts": []}, 1)
     serialized = json.dumps(messages, ensure_ascii=False)
     assert program.rationale not in serialized
     assert "CognitiveFrame" in serialized

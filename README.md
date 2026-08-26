@@ -121,25 +121,27 @@ O protocolo congelado usa uma seed, um modelo efetivo, a mesma allowlist, o mesm
 
 O v0.2 permanece desligado por padrão, inclusive fora do perfil explicitamente opt in. O protocolo e o microprobe determinístico estão em [`LIFE_V0_2_PROTOCOL.md`](LIFE_V0_2_PROTOCOL.md) e [`scripts/run_life_sdcg_probe.py`](scripts/run_life_sdcg_probe.py). Um resultado positivo nesse microprobe demonstra apenas que o encadeamento bounded de gap, hipótese, comparação, gate e writeback funciona na fixture pública; não sustenta alegações de AGI, generalização, transferência ou autoaperfeiçoamento geral.
 
-### Project Genesis v0.2 — Cognitive Virtual Machine
+### Project Genesis v0.2.2 — Non-Solving Cognitive Virtual Machine
 
-O Genesis permanece desligado por padrão e agora interpreta Cognitive Programs sobre um `CognitiveFrame` explícito. O modelo gera de um a dois programas usando somente seis primitivas (`REPRESENT`, `DECOMPOSE`, `HYPOTHESIZE`, `DEDUCT`, `VERIFY` e `BACKTRACK`), com no máximo quatro operadores e repetição permitida. A VM executa cada operador e registra as transformações de estado; não existe `STOP` no schema e a terminação é determinada pelo fim da sequência ou pelo budget da VM.
+O Genesis permanece desligado por padrão. A VM ativa usa somente quatro primitivas (`REPRESENT`, `HYPOTHESIZE`, `DEDUCT` e `VERIFY`), cada uma chamando o mesmo modelo com schema estruturado. Nenhum operador contém regex, aritmética, lógica de domínio, gabarito ou reconhecimento de família de benchmark; `DEDUCT` não calcula respostas em Python.
 
-O `rationale` é mantido apenas como metadado de auditoria. Ele não entra no prompt do executor e não é lido pela VM. Depois da seleção automática no diagnóstico, o mesmo modelo, seed, budget, timeout, allowlist e limite de passos executa dois holdouts públicos não enviados ao sintetizador. O verificador exige igualdade exata, não substring. NCPG positivo, ausência de regressão, execução VM válida, evidência suficiente e autoridade final são necessários para writeback.
+O protocolo compara três condições com o mesmo modelo, seed e orçamento solicitado total por tarefa: A — uma chamada direta de 1024 tokens; B — quatro chamadas genéricas de 256 tokens; C — quatro chamadas de 256 tokens organizadas pelo programa gerado no diagnóstico. A métrica primária é `Δ(C−B)`, para separar organização do raciocínio de simplesmente aumentar o número de chamadas. O holdout permanece fora do sintetizador, e o probe não faz writeback nem transferência.
 
-O probe está em [`scripts/run_genesis_probe.py`](scripts/run_genesis_probe.py), com modo `fixture` para validar a VM e modo `live` para exploração local bounded. O protocolo está em [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md). Um resultado live positivo ainda é evidência exploratória de um microprobe, não demonstra AGI, generalização estatística, transferência ou autoaperfeiçoamento aberto.
+O probe está em [`scripts/run_genesis_v022.py`](scripts/run_genesis_v022.py), com modo `fixture` para validar a mecânica e modo `live` para exploração bounded. O entrypoint histórico [`scripts/run_genesis_probe.py`](scripts/run_genesis_probe.py) encaminha para o protocolo vigente. O contrato está em [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md).
 
-### Genesis v0.2.1 — No-Answer Ablation
-
-A ablação v0.2.1 testa o confound do `candidate_answer` sem nova síntese, sem seleção humana e sem writeback. O CP-01 foi congelado como `REPRESENT -> DECOMPOSE -> HYPOTHESIZE -> DEDUCT`, e foram executadas exatamente as condições A/B/C nos holdouts públicos `reasoning_06` e `reasoning_07`, com `qwen2.5:3b`, seed `42` e `max_tokens=1024`.
+No único probe live válido, com `qwen2.5:3b`, seed `42` e holdouts públicos `reasoning_06`/`reasoning_07`, o resultado foi:
 
 | Condição | reasoning_06 | reasoning_07 | Média |
 |---|---:|---:|---:|
-| A — baseline | 0/1 | 1/1 | 0,500 |
-| B — somente estado intermediário | 0/1 | 1/1 | 0,500 |
-| C — frame completo | 1/1 | 1/1 | 1,000 |
+| A — DIRECT | 0/1 | 0/1 | 0,000 |
+| B — MATCHED COMPUTE | 0/1 | 1/1 | 0,500 |
+| C — SELF-GENERATED PROGRAM | 0/1 | 0/1 | 0,000 |
 
-O resultado live foi `Δ(B−A)=0,000` e `Δ(C−A)=+0,500`. Em B, o executor recebeu apenas `facts`, `unknowns`, `constraints`, `hypotheses` e `predictions`; `candidate_answer`, `verification`, `trace` e `rationale` ficaram fora da mensagem. Portanto, este microprobe é consistente com o ganho anterior depender de uma resposta calculada pelo solver ou de conteúdo correlato do frame completo, e não somente da estrutura intermediária. A conclusão é exploratória, não uma prova causal geral: são duas tarefas, uma seed, uma família de modelo e um programa. **Transferência e Genesis v0.3 ficam bloqueados até revisão da semântica da VM.**
+`Δ(C−B)=-0,500` e `Δ(C−A)=0,000`. O resultado não demonstra ganho além de compute extra e não autoriza transferência, Genesis v0.3 ou alegação de ganho cognitivo estrutural. A fixture é somente teste de mecanismo, não evidência de capacidade.
+
+### Histórico Genesis v0.2.1 — No-Answer Ablation
+
+A ablação anterior mostrou `B=A=0,500` e `C=1,000`, sendo consistente com o confound de `candidate_answer` calculado pelo solver. A v0.2.2 removeu essa semântica solucionadora e repetiu a avaliação sob paridade explícita de chamadas e orçamento solicitado.
 
 ## Segurança e autonomia
 

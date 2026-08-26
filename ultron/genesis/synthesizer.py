@@ -7,7 +7,7 @@ from ultron.genesis.schemas import GENESIS_OPERATORS, CognitiveProgramBatch
 
 
 class CognitiveProgramSynthesizer:
-    """Solicita sequências de operadores VM ao mesmo modelo do experimento."""
+    """Solicita ao mesmo modelo uma organização de operadores não solucionadores."""
 
     def __init__(self, gateway: Any, *, model_name: str, seed: int, max_tokens: int) -> None:
         self.gateway = gateway
@@ -19,24 +19,23 @@ class CognitiveProgramSynthesizer:
     @staticmethod
     def _messages(diagnosis: list[dict[str, Any]], max_programs: int, max_operators: int) -> list[dict[str, str]]:
         system = (
-            "Você é um sintetizador de Cognitive Programs para uma VM fechada. "
-            "Crie sequências novas usando somente as primitivas fornecidas. "
-            "Não use código, ferramentas, internet, memória externa ou operações fora da lista. "
-            "A sequência será interpretada por uma VM; não escreva um roteiro textual para outro modelo. "
+            "Você é um sintetizador de Cognitive Programs para uma VM não solucionadora. "
+            "Crie sequências usando somente as quatro primitivas fornecidas. "
+            "Não use código, ferramentas, internet, memória externa, gabaritos ou operações fora da lista. "
+            "Cada primitiva chama o mesmo modelo com um schema estruturado; a VM não conhece a semântica das tarefas. "
             "Responda somente o schema JSON."
         )
         user = {
-            "task": "Com base apenas nas falhas observadas no diagnóstico, proponha programas de operadores que possam ser executados pela Cognitive VM.",
+            "task": "Com base apenas nas falhas observadas no diagnóstico, proponha organizações de raciocínio para a VM.",
             "primitive_operators": list(GENESIS_OPERATORS),
             "max_programs": max_programs,
             "max_operators_per_program": max_operators,
             "diagnosis_observations": diagnosis,
             "constraints": [
                 "cada programa deve conter de 1 a max_operators operadores",
-                "repetição de operadores é permitida quando fizer parte do algoritmo",
-                "não existe operador STOP; a VM termina quando a lista termina",
-                "o rationale explica somente a origem da hipótese e não será usado pela VM",
-                "não descreva nem invente gabaritos",
+                "somente REPRESENT, HYPOTHESIZE, DEDUCT e VERIFY são permitidos",
+                "não invente gabaritos nem respostas prontas",
+                "o rationale é auditoria e não será usado pela VM",
             ],
         }
         return [

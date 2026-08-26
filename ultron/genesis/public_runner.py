@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter
-from typing import Literal
+from typing import Any, Literal
 
 import yaml
 
@@ -21,13 +21,16 @@ from ultron.benchmarks.models import (
 )
 from ultron.configuration import Settings
 from ultron.db import Database
-from ultron.genesis.schemas import CognitiveProgram
+from ultron.genesis.schemas import (
+    CognitiveProgram,
+    DeliberationOutput,
+    FinalAnswerOutput,
+)
 from ultron.genesis.vm import CognitiveVM, VMExecution
 from ultron.models.gateway import ModelGateway
 
 GENESIS_PUBLIC_TASK_IDS = ("reasoning_01", "reasoning_02", "reasoning_06", "reasoning_07")
-GenesisCondition = Literal["baseline", "program", "program_no_answer"]
-FrameProjection = Literal["none", "full", "intermediate"]
+GenesisCondition = Literal["direct", "matched_compute", "program"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,7 +67,7 @@ def _public_answer(objective: str) -> str | None:
 
 
 def evaluate_public_task(task: BenchmarkTask, execution: TaskExecution) -> EvaluationResult:
-    """Verificador público derivado do enunciado; não expõe a resposta ao modelo."""
+    """Verificador público derivado do enunciado; não é um operador cognitivo da VM."""
     started = perf_counter()
     if task.id not in GENESIS_PUBLIC_TASK_IDS:
         return EvaluationResult(success=False, score=0.0, evidence=[], errors=["public_task_not_in_genesis_protocol"])
@@ -83,7 +86,7 @@ def evaluate_public_task(task: BenchmarkTask, execution: TaskExecution) -> Evalu
 
 
 class GenesisPublicRunner:
-    """Runner público que interpreta o programa em VM e nunca carrega o split privado."""
+    """Runner público que usa somente tarefas públicas e o mesmo gateway do experimento."""
 
     def __init__(self, settings: Settings, *, benchmark_root: Path | None = None) -> None:
         self.settings = settings
@@ -105,7 +108,7 @@ class GenesisPublicRunner:
             "settings": self.settings.raw,
             "model_name": model_name,
             "seed": seed,
-            "max_tokens": max_tokens,
+            "max_tokens_total": max_tokens,
             "allowlist": [],
             "program_budget": self.settings.raw.get("genesis", {}).get("max_operators", 4),
         }
@@ -116,22 +119,61 @@ class GenesisPublicRunner:
         return str(config.get("model", model_name))
 
     @staticmethod
-    def _messages(task: BenchmarkTask, condition: GenesisCondition, frame: dict[str, object] | None) -> list[dict[str, str]]:
+    def _messages(task: BenchmarkTask, condition: GenesisCondition, frame: dict[str, object] | None, call_index: int = 1) -> list[dict[str, str]]:
         system = (
-            "Você é um executor de tarefa pública. Responda somente com a solução final exata. "
+            "Você é um executor de tarefa pública. Responda somente conforme o schema solicitado. "
             "Não use internet, ferramentas ou arquivos."
         )
-        if frame is None:
-            context = "Modo baseline: resolva diretamente, sem estado cognitivo adicional."
+        if condition == "direct":
+            instruction = "Resolva diretamente o objetivo e retorne o schema final."
+        elif condition == "matched_compute":
+            instruction = f"Faça uma etapa genérica de deliberação ({call_index}/4), sem Cognitive Program específico, e mantenha uma hipótese provisória."
         else:
-            context = (
-                "Modo Cognitive VM: use exclusivamente o CognitiveFrame produzido pela execução dos operadores. "
-                f"Não invente etapas fora do estado fornecido.\nCognitiveFrame: {json.dumps(frame, ensure_ascii=False, sort_keys=True)}"
-            )
+            instruction = f"Use o estado cognitivo produzido pelo operador ({call_index}/4) para avançar sem inventar campos fora do frame."
+        context = f"Condição={condition}. {instruction}"
+        if frame is not None:
+            context += f"\nCognitiveFrame atual: {json.dumps(frame, ensure_ascii=False, sort_keys=True)}"
         return [
             {"role": "system", "content": system},
-            {"role": "user", "content": f"Condição={condition}. {context}\n\nObjetivo público:\n{task.objective}"},
+            {"role": "user", "content": f"{context}\n\nObjetivo público:\n{task.objective}"},
         ]
+
+    @staticmethod
+    def _deliberation_schema_message(task: BenchmarkTask, call_index: int) -> list[dict[str, str]]:
+        return [
+            {
+                "role": "system",
+                "content": "Você é uma etapa genérica de deliberação. Retorne somente o schema JSON, sem ferramentas, gabaritos ou código.",
+            },
+            {
+                "role": "user",
+                "content": f"Etapa {call_index}/4. Registre uma nota provisória e, se houver, uma resposta candidata para o objetivo público:\n{task.objective}",
+            },
+        ]
+
+    @staticmethod
+    def _final_schema_message(task: BenchmarkTask, notes: list[str]) -> list[dict[str, str]]:
+        return [
+            {
+                "role": "system",
+                "content": "Você é o executor final de uma deliberação pareada. Retorne somente a resposta final no schema JSON; não use ferramentas ou gabaritos.",
+            },
+            {
+                "role": "user",
+                "content": f"Objetivo público:\n{task.objective}\nNotas das quatro etapas:\n{notes}",
+            },
+        ]
+
+    async def _structured(self, schema: type[Any], messages: list[dict[str, str]], model_name: str, seed: int, max_tokens: int) -> Any:
+        return await self.models.structured(
+            schema,
+            messages,
+            model_name,
+            seed=seed,
+            max_tokens=max_tokens,
+            temperature=0.2,
+            repair_attempts=0,
+        )
 
     async def run_one(
         self,
@@ -143,107 +185,97 @@ class GenesisPublicRunner:
         seed: int,
         max_tokens: int,
         program: CognitiveProgram | None = None,
-        frame_projection: FrameProjection = "full",
+        call_budget: int = 1,
     ) -> GenesisTaskResult:
-        now = datetime.now(UTC)
+        if condition == "program" and program is None:
+            raise ValueError("program_condition_requires_program")
+        if condition != "program" and program is not None:
+            raise ValueError("non_program_condition_rejects_program")
+        if condition == "direct" and call_budget != 1:
+            raise ValueError("direct_call_budget_must_be_one")
+        if condition in {"matched_compute", "program"} and call_budget != 4:
+            raise ValueError("structured_condition_call_budget_must_be_four")
+        started_at = datetime.now(UTC)
         effective_model = self._effective_model(model_name)
-        workspace = self.settings.artifacts_dir / "genesis" / run_id / condition / task.id
+        workspace = self.settings.artifacts_dir / "genesis-v022" / run_id / condition / task.id
         workspace.mkdir(parents=True, exist_ok=True)
-        vm_execution: VMExecution | None = None
-        frame: dict[str, object] | None = None
-        if program is not None:
-            vm_execution = CognitiveVM(max_steps=len(program.operators)).execute(task.objective, program)
-            if not vm_execution.valid:
-                execution = TaskExecution(
-                    task_id=task.id,
-                    mode="baseline",
-                    failure_category="VM_ERROR",
-                    steps=0,
-                    duration_ms=0,
-                    context_metrics={"vm_steps": vm_execution.steps},
-                    model=effective_model,
-                )
-                evaluation = evaluate_public_task(task, execution)
-                manifest = RunManifest(
-                    run_id=f"{run_id}:{condition}:{task.id}",
-                    git_commit="runtime",
-                    model=effective_model,
-                    runtime="local-public-genesis-vm",
-                    benchmark="genesis_public",
-                    benchmark_version="v0.2",
-                    mode="baseline",
-                    seed=seed,
-                    config_hash=self._config_hash(model_name=model_name, seed=seed, max_tokens=max_tokens),
-                    started_at=now,
-                    completed_at=datetime.now(UTC),
-                    platform={"public_only": True, "condition": condition, "vm": True, "frame_projection": frame_projection},
-                )
-                return GenesisTaskResult(task, condition, manifest, execution, evaluation, vm_execution)
-            full_frame = vm_execution.frame.model_dump(mode="json", exclude={"trace"})
-            if frame_projection == "intermediate":
-                frame = {field: full_frame[field] for field in ("facts", "unknowns", "constraints", "hypotheses", "predictions")}
-            elif frame_projection == "full":
-                frame = full_frame
-            else:
-                raise ValueError("unknown_frame_projection")
-        projection_code = {"none": 0, "full": 2, "intermediate": 1}[frame_projection]
+        call_tokens = max(1, int(max_tokens) // call_budget)
+        config_hash = self._config_hash(model_name=model_name, seed=seed, max_tokens=max_tokens)
         started = perf_counter()
+        vm_execution: VMExecution | None = None
+        response_text = ""
+        failure_category: str | None = None
+        usage_output_tokens = 0
         try:
-            response = await asyncio.wait_for(
-                self.models.generate(
-                    self._messages(task, condition, frame),
-                    model_name,
-                    seed=seed,
-                    max_tokens=max_tokens,
-                ),
-                timeout=task.timeout_seconds,
-            )
-            execution = TaskExecution(
-                task_id=task.id,
-                mode="baseline",
-                response=response.content.strip(),
-                tool_calls=response.tool_calls,
-                steps=1,
-                duration_ms=response.latency_ms,
-                context_metrics={
-                    "vm_steps": vm_execution.steps if vm_execution else 0,
-                    "frame_projection": projection_code,
-                },
-                model=response.model,
-            )
+            if condition == "direct":
+                output = await asyncio.wait_for(
+                    self._structured(FinalAnswerOutput, self._messages(task, condition, None, 1), model_name, seed, max_tokens),
+                    timeout=task.timeout_seconds,
+                )
+                response_text = output.answer
+            elif condition == "matched_compute":
+                notes: list[str] = []
+                for call_index in range(1, call_budget + 1):
+                    output = await asyncio.wait_for(
+                        self._structured(DeliberationOutput, self._deliberation_schema_message(task, call_index), model_name, seed, call_tokens),
+                        timeout=task.timeout_seconds,
+                    )
+                    notes.append(output.note)
+                    if output.candidate_answer:
+                        response_text = output.candidate_answer
+                if not response_text and notes:
+                    response_text = notes[-1]
+            else:
+                vm_execution = await asyncio.wait_for(
+                    CognitiveVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=call_budget, repair_attempts=0).execute(task.objective, program),
+                    timeout=task.timeout_seconds * call_budget,
+                )
+                if not vm_execution.valid:
+                    failure_category = "VM_ERROR"
+                else:
+                    response_text = vm_execution.frame.candidate_answer or ""
         except TimeoutError:
-            execution = TaskExecution(
-                task_id=task.id,
-                mode="baseline",
-                failure_category="TIMEOUT",
-                steps=1,
-                duration_ms=int((perf_counter() - started) * 1000),
-                model=effective_model,
-            )
+            failure_category = "TIMEOUT"
         except Exception as exc:
-            execution = TaskExecution(
-                task_id=task.id,
-                mode="baseline",
-                response=str(exc),
-                failure_category="TOOL_ERROR",
-                steps=1,
-                duration_ms=int((perf_counter() - started) * 1000),
-                model=effective_model,
-            )
+            failure_category = "TOOL_ERROR"
+            response_text = str(exc)[:500]
+        execution = TaskExecution(
+            task_id=task.id,
+            mode="baseline",
+            response=response_text,
+            failure_category=failure_category,
+            steps=call_budget,
+            duration_ms=int((perf_counter() - started) * 1000),
+            context_metrics={
+                "call_budget": call_budget,
+                "call_tokens": call_tokens,
+                "vm_steps": vm_execution.steps if vm_execution else 0,
+                "model_calls": vm_execution.model_calls if vm_execution else call_budget,
+                "output_tokens": usage_output_tokens,
+            },
+            model=effective_model,
+        )
         evaluation = evaluate_public_task(task, execution)
         manifest = RunManifest(
             run_id=f"{run_id}:{condition}:{task.id}",
             git_commit="runtime",
-            model=execution.model,
-            runtime="local-public-genesis-vm",
+            model=effective_model,
+            runtime="local-public-genesis-v022",
             benchmark="genesis_public",
-            benchmark_version="v0.2",
+            benchmark_version="v0.2.2",
             mode="baseline",
             seed=seed,
-            config_hash=self._config_hash(model_name=model_name, seed=seed, max_tokens=max_tokens),
-            started_at=now,
+            config_hash=config_hash,
+            started_at=started_at,
             completed_at=datetime.now(UTC),
-            platform={"public_only": True, "condition": condition, "vm": True, "frame_projection": frame_projection},
+            platform={
+                "public_only": True,
+                "condition": condition,
+                "vm": condition == "program",
+                "call_budget": call_budget,
+                "max_tokens_total": max_tokens,
+                "call_tokens": call_tokens,
+            },
         )
         return GenesisTaskResult(task, condition, manifest, execution, evaluation, vm_execution)
 
@@ -258,7 +290,7 @@ class GenesisPublicRunner:
             recovery_rate=0.0,
             first_attempt_success_rate=float(result.evaluation.success),
             average_steps=float(result.execution.steps),
-            average_tool_calls=float(len(result.execution.tool_calls)),
+            average_tool_calls=float(result.execution.context_metrics.get("model_calls", 0)),
             average_latency_ms=float(result.execution.duration_ms),
             memory_reuse_rate=0.0,
             skill_reuse_rate=0.0,
@@ -284,7 +316,7 @@ class GenesisPublicRunner:
                 summary.average_latency_ms,
                 self.db.json(result.manifest.model_dump(mode="json")),
                 self.db.json(summary.model_dump(exclude={"results"}, mode="json")),
-                str(self.settings.artifacts_dir / "genesis"),
+                str(self.settings.artifacts_dir / "genesis-v022"),
                 result.manifest.completed_at.isoformat() if result.manifest.completed_at else result.manifest.started_at.isoformat(),
             ),
         )

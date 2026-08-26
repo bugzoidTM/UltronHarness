@@ -185,6 +185,7 @@ class GenesisController:
                 seed=seed,
                 max_tokens=max_tokens,
                 program=program,
+                call_budget=4 if condition == "program" else 1,
             )
             self.runner.persist_result(result)
             results.append(result)
@@ -233,7 +234,7 @@ class GenesisController:
             async with asyncio.timeout(max_runtime):
                 baseline_diagnosis = await self._run_tasks(
                     diagnosis_tasks,
-                    condition="baseline",
+                    condition="direct",
                     run_id=run_id,
                     model_name=model_name,
                     seed=seed,
@@ -262,7 +263,7 @@ class GenesisController:
                 )[1]
                 baseline_holdout = await self._run_tasks(
                     holdout_tasks,
-                    condition="baseline",
+                    condition="direct",
                     run_id=run_id,
                     model_name=model_name,
                     seed=seed,

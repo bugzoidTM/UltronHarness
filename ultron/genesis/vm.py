@@ -1,10 +1,16 @@
 from __future__ import annotations
 
-import re
-from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
-from ultron.genesis.schemas import CognitiveFrame, CognitiveProgram
+from ultron.genesis.schemas import (
+    CognitiveFrame,
+    CognitiveProgram,
+    DeductionOutput,
+    HypothesisOutput,
+    RepresentationOutput,
+    VerificationOutput,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -14,118 +20,116 @@ class VMExecution:
     valid: bool
     error: str | None
     steps: int
+    model_calls: int = 0
 
 
 class CognitiveVM:
-    """Interpretador determinístico de programas Genesis sobre CognitiveFrame."""
+    """VM não solucionadora: cada operador delega ao mesmo modelo via schema."""
 
-    def __init__(self, *, max_steps: int = 12) -> None:
+    def __init__(
+        self,
+        gateway: Any,
+        *,
+        model_name: str,
+        seed: int,
+        max_tokens: int,
+        max_steps: int = 4,
+        repair_attempts: int = 0,
+    ) -> None:
+        self.gateway = gateway
+        self.model_name = model_name
+        self.seed = seed
+        self.max_tokens = max(1, int(max_tokens))
         self.max_steps = max(1, int(max_steps))
-        self._operators: dict[str, Callable[[CognitiveFrame], None]] = {
-            "REPRESENT": self._represent,
-            "DECOMPOSE": self._decompose,
-            "HYPOTHESIZE": self._hypothesize,
-            "DEDUCT": self._deduct,
-            "VERIFY": self._verify,
-            "BACKTRACK": self._backtrack,
-        }
+        self.repair_attempts = max(0, int(repair_attempts))
 
-    def execute(self, problem: str, program: CognitiveProgram) -> VMExecution:
+    async def execute(self, problem: str, program: CognitiveProgram) -> VMExecution:
         frame = CognitiveFrame(problem=problem)
         steps = 0
+        model_calls = 0
         for operator in program.operators:
             if steps >= self.max_steps:
-                return VMExecution(frame, halted=True, valid=False, error="vm_step_budget_exceeded", steps=steps)
-            action = self._operators.get(operator)
-            if action is None:
-                return VMExecution(frame, halted=True, valid=False, error=f"unknown_operator:{operator}", steps=steps)
+                return VMExecution(frame, halted=True, valid=False, error="vm_step_budget_exceeded", steps=steps, model_calls=model_calls)
             try:
-                action(frame)
-            except ValueError as exc:
-                return VMExecution(frame, halted=True, valid=False, error=str(exc), steps=steps)
+                model_calls += 1
+                await self._apply_operator(frame, operator)
+            except Exception as exc:
+                return VMExecution(frame, halted=True, valid=False, error=f"operator_error:{type(exc).__name__}:{str(exc)[:200]}", steps=steps, model_calls=model_calls)
             frame.trace.append({"operator": operator, "state": self._state_digest(frame)})
             steps += 1
-        if not frame.candidate_answer:
-            return VMExecution(frame, halted=True, valid=False, error="vm_no_candidate_answer", steps=steps)
-        return VMExecution(frame, halted=True, valid=True, error=None, steps=steps)
+        return VMExecution(frame, halted=True, valid=True, error=None, steps=steps, model_calls=model_calls)
+
+    async def _apply_operator(self, frame: CognitiveFrame, operator: str) -> None:
+        if operator == "REPRESENT":
+            output = await self._structured(
+                RepresentationOutput,
+                "Transforme o problema em uma representação factual. Extraia entidades, fatos, restrições e incógnitas sem resolver a tarefa.",
+                frame,
+            )
+            frame.entities = output.entities
+            frame.facts = output.facts
+            frame.constraints = output.constraints
+            frame.unknowns = output.unknowns
+            return
+        if operator == "HYPOTHESIZE":
+            output = await self._structured(
+                HypothesisOutput,
+                "Proponha hipóteses candidatas e previsões testáveis a partir do frame atual. Não escolha nem anuncie uma resposta final.",
+                frame,
+            )
+            frame.hypotheses = output.hypotheses
+            frame.predictions = output.predictions
+            return
+        if operator == "DEDUCT":
+            output = await self._structured(
+                DeductionOutput,
+                "Dado o frame atual, derive a próxima conclusão justificada. Retorne somente uma conclusão curta; não use ferramentas nem conhecimento de gabarito.",
+                frame,
+            )
+            frame.candidate_answer = output.conclusion
+            return
+        if operator == "VERIFY":
+            output = await self._structured(
+                VerificationOutput,
+                "Avalie a conclusão candidata contra o problema, os fatos e as restrições disponíveis. Classifique apenas como supported, contradicted ou uncertain.",
+                frame,
+            )
+            frame.verification = {"status": output.status, "explanation": output.explanation}
+            return
+        raise ValueError(f"unknown_operator:{operator}")
+
+    async def _structured(self, schema: type[Any], instruction: str, frame: CognitiveFrame) -> Any:
+        return await self.gateway.structured(
+            schema,
+            self._messages(instruction, frame),
+            self.model_name,
+            seed=self.seed,
+            max_tokens=self.max_tokens,
+            temperature=0.2,
+            repair_attempts=self.repair_attempts,
+        )
+
+    @staticmethod
+    def _messages(instruction: str, frame: CognitiveFrame) -> list[dict[str, str]]:
+        visible_frame = frame.model_dump(mode="json", exclude={"trace"})
+        return [
+            {
+                "role": "system",
+                "content": (
+                    "Você é um operador cognitivo não solucionador. Trabalhe somente sobre o frame fornecido, "
+                    "retorne exclusivamente o schema estruturado solicitado e não use ferramentas, arquivos, internet ou gabaritos."
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Operação: {instruction}\nFrame atual: {visible_frame}",
+            },
+        ]
 
     @staticmethod
     def _state_digest(frame: CognitiveFrame) -> str:
         return (
-            f"facts={len(frame.facts)};unknowns={len(frame.unknowns)};hypotheses={len(frame.hypotheses)};"
-            f"predictions={len(frame.predictions)};candidate={frame.candidate_answer or ''};"
-            f"verified={frame.verification.get('candidate', '')}"
+            f"entities={len(frame.entities)};facts={len(frame.facts)};unknowns={len(frame.unknowns)};"
+            f"constraints={len(frame.constraints)};hypotheses={len(frame.hypotheses)};predictions={len(frame.predictions)};"
+            f"candidate_present={bool(frame.candidate_answer)};verification_status={frame.verification.get('status', '')}"
         )
-
-    @staticmethod
-    def _represent(frame: CognitiveFrame) -> None:
-        expression = frame.problem.strip()
-        frame.facts.append(expression)
-        frame.constraints.append("derive a concise answer from explicit problem structure")
-        frame.unknowns.append("candidate answer")
-
-    @staticmethod
-    def _decompose(frame: CognitiveFrame) -> None:
-        if not frame.facts:
-            raise ValueError("decompose_requires_representation")
-        numbers = re.findall(r"\d+", frame.problem)
-        if numbers:
-            frame.facts.extend(f"number_{index + 1}={value}" for index, value in enumerate(numbers))
-        if "sequência" in frame.problem.casefold() or "sequence" in frame.problem.casefold():
-            frame.facts.append("ordered sequence relation")
-        frame.unknowns = [item for item in frame.unknowns if item != "candidate answer"] + ["operation or relation"]
-
-    @staticmethod
-    def _hypothesize(frame: CognitiveFrame) -> None:
-        if not frame.facts:
-            raise ValueError("hypothesize_requires_facts")
-        frame.hypotheses.append("use the explicit arithmetic or sequence relation in the problem")
-        frame.predictions.append("derived answer will satisfy the public task verifier")
-
-    @staticmethod
-    def _deduct(frame: CognitiveFrame) -> None:
-        if not frame.facts:
-            raise ValueError("deduct_requires_representation")
-        objective = frame.problem.casefold()
-        arithmetic = re.search(
-            r"calcule\s+(\d+)\s+(?:multiplicado por|vezes)\s+(\d+)\s+e\s+some\s+(\d+)",
-            objective,
-        )
-        division = re.search(r"calcule\s+(\d+)\s+dividido por\s+(\d+)\s+e\s+some\s+(\d+)", objective)
-        sequence = re.search(r"sequência é\s+([\d,\s]+)", objective)
-        if arithmetic:
-            left, right, addend = (int(value) for value in arithmetic.groups())
-            frame.candidate_answer = str(left * right + addend)
-        elif division:
-            dividend, divisor, addend = (int(value) for value in division.groups())
-            if not divisor or dividend % divisor:
-                raise ValueError("deduction_division_not_exact")
-            frame.candidate_answer = str(dividend // divisor + addend)
-        elif sequence:
-            values = [int(item) for item in re.findall(r"\d+", sequence.group(1))]
-            if len(values) < 3 or not values[0] or values[1] % values[0]:
-                raise ValueError("deduction_sequence_relation_unknown")
-            ratio = values[1] // values[0]
-            if not all(values[index] == values[index - 1] * ratio for index in range(2, len(values))):
-                raise ValueError("deduction_sequence_not_geometric")
-            frame.candidate_answer = str(values[-1] * ratio)
-        else:
-            raise ValueError("deduction_problem_shape_unknown")
-        frame.unknowns = [item for item in frame.unknowns if item != "candidate answer"]
-
-    @staticmethod
-    def _verify(frame: CognitiveFrame) -> None:
-        if not frame.candidate_answer:
-            raise ValueError("verify_requires_candidate_answer")
-        frame.verification["candidate"] = "verified_against_explicit_public_formula"
-        frame.unknowns = [item for item in frame.unknowns if item != "operation or relation"]
-
-    @staticmethod
-    def _backtrack(frame: CognitiveFrame) -> None:
-        if frame.candidate_answer:
-            frame.predictions.append("retain previous candidate after backtrack check")
-            frame.verification["backtrack"] = "no_alternative_required"
-            return
-        if frame.hypotheses:
-            frame.hypotheses.pop()
-        frame.predictions.append("reconsider representation")

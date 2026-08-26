@@ -5,26 +5,17 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-GENESIS_PROTOCOL_VERSION = "genesis-v0.2-cognitive-vm"
+GENESIS_PROTOCOL_VERSION = "genesis-v0.2.2-non-solving"
 GENESIS_MAX_PROGRAMS = 2
 GENESIS_MAX_OPERATORS = 4
 
-GenesisOperator = Literal[
-    "REPRESENT",
-    "DECOMPOSE",
-    "HYPOTHESIZE",
-    "DEDUCT",
-    "VERIFY",
-    "BACKTRACK",
-]
+GenesisOperator = Literal["REPRESENT", "HYPOTHESIZE", "DEDUCT", "VERIFY"]
 
 GENESIS_OPERATORS: tuple[str, ...] = (
     "REPRESENT",
-    "DECOMPOSE",
     "HYPOTHESIZE",
     "DEDUCT",
     "VERIFY",
-    "BACKTRACK",
 )
 
 
@@ -56,6 +47,7 @@ class CognitiveProgramBatch(BaseModel):
 
 class CognitiveFrame(BaseModel):
     problem: str = Field(min_length=1, max_length=8000)
+    entities: list[str] = Field(default_factory=list, max_length=32)
     facts: list[str] = Field(default_factory=list, max_length=32)
     unknowns: list[str] = Field(default_factory=list, max_length=16)
     constraints: list[str] = Field(default_factory=list, max_length=32)
@@ -64,6 +56,36 @@ class CognitiveFrame(BaseModel):
     candidate_answer: str | None = Field(default=None, max_length=256)
     verification: dict[str, str] = Field(default_factory=dict, max_length=16)
     trace: list[dict[str, str]] = Field(default_factory=list, max_length=32)
+
+
+class RepresentationOutput(BaseModel):
+    entities: list[str] = Field(default_factory=list, max_length=16)
+    facts: list[str] = Field(default_factory=list, max_length=16)
+    constraints: list[str] = Field(default_factory=list, max_length=16)
+    unknowns: list[str] = Field(default_factory=list, max_length=8)
+
+
+class HypothesisOutput(BaseModel):
+    hypotheses: list[str] = Field(default_factory=list, max_length=8)
+    predictions: list[str] = Field(default_factory=list, max_length=8)
+
+
+class DeductionOutput(BaseModel):
+    conclusion: str = Field(min_length=1, max_length=256)
+
+
+class VerificationOutput(BaseModel):
+    status: Literal["supported", "contradicted", "uncertain"]
+    explanation: str = Field(min_length=1, max_length=512)
+
+
+class DeliberationOutput(BaseModel):
+    note: str = Field(min_length=1, max_length=1000)
+    candidate_answer: str = Field(default="", max_length=256)
+
+
+class FinalAnswerOutput(BaseModel):
+    answer: str = Field(min_length=1, max_length=256)
 
 
 @dataclass(frozen=True, slots=True)
