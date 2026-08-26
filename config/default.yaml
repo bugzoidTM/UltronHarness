@@ -88,6 +88,21 @@ life:
     estimated_cost: 0.10
     estimated_risk: 0.20
 
+genesis:
+  enabled: false
+  model: local-fallback
+  seed: 42
+  max_runtime_seconds: 540
+  max_programs: 3
+  max_operators: 6
+  max_tokens: 1024
+  diagnosis_task_ids: [reasoning_01, reasoning_02]
+  holdout_task_ids: [reasoning_06, reasoning_07]
+  feature_flags:
+    synthesis: false
+    holdout: false
+    writeback: false
+
 learning:
   minimum_experience_quality: 0.60
   verified_writeback_minimum_authority: task_registered_verifier

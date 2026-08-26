@@ -121,6 +121,14 @@ O protocolo congelado usa uma seed, um modelo efetivo, a mesma allowlist, o mesm
 
 O v0.2 permanece desligado por padrão, inclusive fora do perfil explicitamente opt in. O protocolo e o microprobe determinístico estão em [`LIFE_V0_2_PROTOCOL.md`](LIFE_V0_2_PROTOCOL.md) e [`scripts/run_life_sdcg_probe.py`](scripts/run_life_sdcg_probe.py). Um resultado positivo nesse microprobe demonstra apenas que o encadeamento bounded de gap, hipótese, comparação, gate e writeback funciona na fixture pública; não sustenta alegações de AGI, generalização, transferência ou autoaperfeiçoamento geral.
 
+### Project Genesis v0.1 — Cognitive Programs
+
+O Genesis é o próximo experimento qualitativo e permanece desligado por padrão. Ele fornece uma lista pequena de primitivas cognitivas interpretáveis, mas não fornece um catálogo fechado de estratégias. O modelo recebe somente as observações de duas tarefas públicas de diagnóstico e pode gerar até três programas temporários, cada um com no máximo seis operadores. A seleção é automática pelo desempenho diagnóstico; nenhum humano fornece ou escolhe o programa intermediário.
+
+Depois da seleção, o mesmo modelo, seed, budget, timeout, allowlist e limite de passos executa duas tarefas públicas holdout que não participaram da síntese. O holdout não é devolvido ao sintetizador. NCPG positivo, ausência de regressão, evidência suficiente e a autoridade final do verificador são necessários para writeback. Programas inválidos, saídas inválidas, divergências de contrato e empate são rejeitados. Cognitive Programs são sequências textuais e nunca são executados como Python, shell, Git ou permissões.
+
+O probe está em [`scripts/run_genesis_probe.py`](scripts/run_genesis_probe.py), com modo `fixture` para validar o mecanismo e modo `live` para exploração local bounded. O protocolo está em [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md). Mesmo um NCPG positivo live será apenas evidência exploratória de um experimento pequeno; não demonstrará AGI, generalização estatística ou autoaperfeiçoamento aberto.
+
 ## Segurança e autonomia
 
 O UltronPro começa em **Mode 2 — Supervised Agent**. Ações R0 e R1 permitidas podem ser executadas dentro do workspace; modificações R2 aguardam aprovação. As ações R3/R4 requerem aprovação e as R5 são bloqueadas. O diretório permitido é:
