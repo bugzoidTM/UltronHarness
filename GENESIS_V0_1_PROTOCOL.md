@@ -115,3 +115,46 @@ A v0.2.2 substitui a semântica solucionadora da VM por operadores cognitivos qu
 A igualdade do orçamento é definida por tarefa: A recebe uma chamada de até 1024 tokens; B e C recebem quatro chamadas de até 256 tokens, totalizando 1024 tokens solicitados por condição. Os códigos `call_budget`, `call_tokens`, `model_calls` e `max_tokens_total` são registrados na telemetria. O `config_hash` é comum às condições pareadas; a condição experimental fica no manifesto e no registro da execução.
 
 A fixture do v0.2.2 é somente validação de encadeamento, schema, paridade e invariantes. Seu resultado não deve ser interpretado como capacidade live. Um resultado live com `C > B` ainda seria exploratório; exigiria replicação independente antes de qualquer transferência. Um resultado `C <= B` mantém a hipótese arquitetural sem suporte e encerra a linha para revisão.
+
+
+## Genesis v1 — Adaptive Cognitive Policy
+
+A v1 testa a hipótese de que a organização cognitiva precisa controlar dinamicamente a próxima operação a partir do estado produzido pela operação anterior. O programa deixa de ser uma lista linear e passa a ser uma política finita de regras `condições -> operador`, interpretada deterministicamente pelo Harness sobre o `CognitiveFrame`.
+
+A v1 reutiliza exatamente as quatro primitivas não solucionadoras da v0.2.2: `REPRESENT`, `HYPOTHESIZE`, `DEDUCT` e `VERIFY`. Não são adicionados operadores, ferramentas, memória paralela, multiagentes, benchmark privado, transferência ou autoedição.
+
+| Elemento | Regra congelada |
+|---|---|
+| Diagnóstico | Exatamente `reasoning_01` e `reasoning_02`; somente estas observações públicas podem entrar na síntese. |
+| Holdout | Exatamente `reasoning_06` e `reasoning_07`; o holdout não entra no prompt do sintetizador. |
+| Condição A | `DIRECT`: uma chamada estruturada com até `1024` tokens. |
+| Condição B | `GENERIC CLOSED LOOP`: controlador fixo, estado acumulativo, até seis decisões e sem política aprendida. |
+| Condição C | `SELF-GENERATED ADAPTIVE POLICY`: política sintetizada no diagnóstico, mesmo estado, mesmas quatro primitivas e até seis decisões. |
+| Predicados | Somente `no_representation`, `has_facts`, `no_hypothesis`, `has_hypothesis`, `no_candidate`, `has_candidate`, `verification_supported`, `verification_contradicted` e `verification_uncertain`. |
+| Política | De 1 a 8 regras, prioridades únicas, máximo de 6 decisões; a política deve iniciar com `priority=0`, `no_representation -> REPRESENT`, cobrir progresso e tratar `contradicted` e `uncertain`. |
+| Terminação | `verification_supported` com candidato válido encerra fora da lista de operadores; ausência de regra, erro de operador ou excesso de decisões falha fechado. |
+| Compute | B e C usam até `6 x 170` tokens solicitados por tarefa, total máximo de 1020; A usa até 1024. A diferença residual de 4 tokens fica abaixo do teto para preservar o limite bounded. |
+| Métrica primária | `Δ(C−B)`, com `Δ(C−A)` como leitura secundária. |
+| Tempo | Timeout global máximo de 540 segundos, inferior a 10 minutos. |
+| Escrita | O probe não faz writeback, promoção ou alteração automática de código. |
+
+A política gerada não é aceita apenas por ser JSON válido. O schema rejeita políticas sem transição inicial, sem condições de progresso, sem estados de feedback ou com mapeamentos incoerentes entre predicado e operador. O interpretador não executa texto da rationale, comandos, código, rede ou ações externas.
+
+### Resultado live v1
+
+A primeira execução produziu uma política sem transição inicial e foi descartada. Após reforço estrutural do schema, a execução seguinte produziu uma política com início válido, mas sem cobertura operacional dos estados posteriores: em parte das tarefas ela não encontrou regra aplicável e, em outras, excedeu o budget de seis decisões. A tentativa final também foi rejeitada pelo schema durante a síntese, antes de um A/B/C completo. O artefato completo disponível registra `A=0,000`, `B=0,000` e `C=0,000`, mas B/C contêm execuções inválidas (`policy_no_matching_rule` ou `decision_budget_exceeded`); portanto, **não é uma medição científica válida de `C−B`** e o delta não deve ser interpretado como resultado de capacidade.
+
+| Invariante | Estado observado |
+|---|---|
+| Modelo efetivo | `qwen2.5:3b` em todas as chamadas concluídas |
+| Seed | `42` |
+| Tasks | Diagnóstico público `reasoning_01`/`reasoning_02`; holdout público `reasoning_06`/`reasoning_07` |
+| Config hash | Único nas linhas completas do artefato |
+| Holdout enviado à síntese | `false` |
+| Rationale usada na execução | `false` |
+| Writeback | `false` |
+| Resultado do gate | `REJECTED_INVALID`; nenhum suporte para transferência |
+
+O achado válido desta etapa é de engenharia: a política adaptativa exige validação de alcançabilidade e progresso além da validação de forma. O modelo pequeno não produziu, nesta única rodada bounded, uma política operacionalmente válida sob o contrato reforçado. Isso não prova que a hipótese adaptativa seja falsa, mas também não fornece evidência positiva. A linha permanece bloqueada para transferência, tuning aberto, novos operadores e Genesis v1.1 sem nova autorização experimental.
+
+A fixture e os testes unitários cobrem reação a `contradicted`, terminação em `supported`, estado acumulativo do controle genérico, paridade de budget e fail-closed. Fixture não é evidência de capacidade live.

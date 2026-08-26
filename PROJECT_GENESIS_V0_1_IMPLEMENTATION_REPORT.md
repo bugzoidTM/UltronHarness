@@ -204,3 +204,52 @@ O Genesis v0.2.2 cumpre o objetivo de remover o solver determinístico da VM e m
 | Writeback e transferência | não executados |
 
 Os arquivos novos ou modificados para a v0.2.2 são [`scripts/run_genesis_v022.py`](scripts/run_genesis_v022.py), os wrappers históricos [`scripts/run_genesis_probe.py`](scripts/run_genesis_probe.py) e [`scripts/run_genesis_ablation.py`](scripts/run_genesis_ablation.py), os schemas estruturados em [`ultron/genesis/schemas.py`](ultron/genesis/schemas.py), a VM em [`ultron/genesis/vm.py`](ultron/genesis/vm.py), o runner em [`ultron/genesis/public_runner.py`](ultron/genesis/public_runner.py), o sintetizador em [`ultron/genesis/synthesizer.py`](ultron/genesis/synthesizer.py), o controlador com budget explícito em [`ultron/genesis/controller.py`](ultron/genesis/controller.py), as exportações do pacote e os testes correspondentes. O JSON raw live permanece fora do commit por ser dado gerado do experimento.
+
+
+## Genesis v1 — Adaptive Cognitive Policy
+
+A v1 implementa uma política finita de transições adaptativas sobre o `CognitiveFrame`. Em vez de executar uma lista fixa, o Harness avalia predicados estruturais do estado atual, escolhe deterministicamente a regra de menor prioridade aplicável e executa uma das quatro primitivas não solucionadoras já existentes: `REPRESENT`, `HYPOTHESIZE`, `DEDUCT` ou `VERIFY`. A política pode reutilizar operações, recebe feedback de `supported`, `contradicted` e `uncertain` e termina somente quando há candidato e verificação `supported`; ausência de regra, erro ou excesso de seis decisões falha fechado.
+
+O schema exige prioridades únicas, uma transição inicial `priority=0: no_representation -> REPRESENT`, cobertura de progresso (`no_hypothesis`, `no_candidate`, `has_candidate`), tratamento de `verification_contradicted` e `verification_uncertain`, e mapeamentos coerentes entre predicado e operador. Esse contrato foi incluído porque uma política JSON formalmente válida, mas sem transição inicial ou sem caminho de progresso, não constitui um programa executável. A `rationale` continua sendo metadado de auditoria e não é executada.
+
+A condição B tornou-se um controle `GENERIC CLOSED LOOP`: usa o mesmo frame acumulativo e as mesmas quatro primitivas, mas com a política fixa determinística. A condição C usa uma `CognitivePolicy` gerada pelo modelo apenas a partir do diagnóstico. A comparação primária continua sendo `C−B`; A é `DIRECT` com uma chamada de até 1024 tokens, enquanto B/C têm até seis decisões com até 170 tokens solicitados por decisão, teto de 1020 tokens por tarefa. O holdout permanece ausente da síntese e não há writeback no probe.
+
+### Probe live v1 e validade científica
+
+A rodada inicial produziu uma política sem transição aplicável ao estado inicial e foi rejeitada. Depois do reforço do schema, uma rodada completa produziu uma política com início válido, mas ela não cobriu adequadamente os estados posteriores: houve `policy_no_matching_rule` e `decision_budget_exceeded` em execuções B/C. A tentativa posterior foi rejeitada pelo schema durante a síntese. Essas execuções são úteis como diagnóstico de engenharia, mas **não constituem um A/B/C científico válido**.
+
+O artefato completo que chegou a registrar holdout apresenta `A=0,000`, `B=0,000` e `C=0,000`; porém B/C contêm linhas inválidas e o protocolo não permite computar `C−B` a partir de pares inválidos. Portanto, o valor zero não é tratado como evidência de ausência de ganho. O resultado correto é `REJECTED_INVALID_POLICY`, sem inferência de capacidade.
+
+| Invariante | Observação |
+|---|---|
+| Modelo efetivo | `qwen2.5:3b` |
+| Seed | `42` |
+| Diagnóstico | `reasoning_01`, `reasoning_02` |
+| Holdout | `reasoning_06`, `reasoning_07` |
+| Config hash | Único nas linhas completas do artefato |
+| Holdout enviado à síntese | `false` |
+| Rationale usada para execução | `false` |
+| Writeback | `false` |
+| Segurança | Nenhum operador acessa ferramentas, rede, shell, arquivos ou Git |
+| Gate | Rejeitado por validade operacional da política; transferência bloqueada |
+
+O microprobe não responde se políticas adaptativas podem superar o controle. Ele mostra que o modelo pequeno não produziu, sob este contrato reforçado e nesta execução bounded, uma política operacionalmente válida para o holdout. O resultado não deve ser promovido a `C<=B`, porque a comparação não satisfez os invariantes de execução. Também não há base para avançar a transferência, adicionar operadores, fazer tuning aberto ou iniciar Genesis v1.1.
+
+## Validação Genesis v1
+
+| Gate | Resultado |
+|---|---:|
+| Testes Genesis v1 direcionados | 16 passed |
+| Ruff | aprovado |
+| Suíte completa Linux com `ULTRON_VECTOR_ENABLED=false` | 247 passed, 1 warning |
+| Fixture determinística A/B/C | executada com sucesso; development-only |
+| Reação a `contradicted` e terminação em `supported` | cobertas |
+| Estado acumulativo do controle genérico | coberto |
+| Fail-closed sem regra aplicável | coberto |
+| Execução de novos operadores | não existe |
+| Benchmark privado/unseen/transferência | não executados |
+
+
+A validação final após a compatibilidade com os entrypoints históricos foi concluída sem regressões: Ruff aprovado; 16 testes Genesis v1 direcionados passaram; a suíte Linux completa passou com 247 testes e 1 warning; a suíte Windows de segurança passou com 12 testes, 1 skip e 1 warning; as fixtures do probe v1 e do probe histórico v0.2.2 foram executadas com sucesso. O JSON raw live permanece fora do commit por ser dado experimental gerado.
+
+Os arquivos públicos específicos da v1 são `scripts/run_genesis_v1.py`, as extensões em `ultron/genesis/{schemas.py,vm.py,synthesizer.py,public_runner.py,controller.py,__init__.py}`, `config/default.yaml` com os budgets bounded e os testes `tests/test_genesis.py` e `tests/test_genesis_ablation.py`. O protocolo, este relatório e o README documentam a decisão `REJECTED_INVALID_POLICY`; nenhuma promoção foi feita.

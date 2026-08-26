@@ -22,21 +22,26 @@ from ultron.benchmarks.models import (
 from ultron.configuration import Settings
 from ultron.db import Database
 from ultron.genesis.schemas import (
+    GENESIS_PROTOCOL_VERSION,
+    GENESIS_V1_PROTOCOL_VERSION,
+    CognitivePolicy,
     CognitiveProgram,
     DeliberationOutput,
     FinalAnswerOutput,
 )
-from ultron.genesis.vm import CognitiveVM, VMExecution
+from ultron.genesis.vm import AdaptiveCognitiveVM, CognitiveVM, GenericClosedLoopVM, VMExecution
 from ultron.models.gateway import ModelGateway
 
 GENESIS_PUBLIC_TASK_IDS = ("reasoning_01", "reasoning_02", "reasoning_06", "reasoning_07")
-GenesisCondition = Literal["direct", "matched_compute", "program"]
+GenesisCondition = Literal["direct", "generic_closed_loop", "adaptive_policy"]
+LegacyGenesisCondition = Literal["matched_compute", "program"]
+AnyGenesisCondition = GenesisCondition | LegacyGenesisCondition
 
 
 @dataclass(frozen=True, slots=True)
 class GenesisTaskResult:
     task: BenchmarkTask
-    condition: GenesisCondition
+    condition: AnyGenesisCondition
     manifest: RunManifest
     execution: TaskExecution
     evaluation: EvaluationResult
@@ -119,49 +124,23 @@ class GenesisPublicRunner:
         return str(config.get("model", model_name))
 
     @staticmethod
-    def _messages(task: BenchmarkTask, condition: GenesisCondition, frame: dict[str, object] | None, call_index: int = 1) -> list[dict[str, str]]:
+    def _messages(task: BenchmarkTask, condition: AnyGenesisCondition, frame: dict[str, object] | None, call_index: int = 1) -> list[dict[str, str]]:
         system = (
             "Você é um executor de tarefa pública. Responda somente conforme o schema solicitado. "
             "Não use internet, ferramentas ou arquivos."
         )
         if condition == "direct":
             instruction = "Resolva diretamente o objetivo e retorne o schema final."
-        elif condition == "matched_compute":
-            instruction = f"Faça uma etapa genérica de deliberação ({call_index}/4), sem Cognitive Program específico, e mantenha uma hipótese provisória."
+        elif condition == "generic_closed_loop":
+            instruction = f"Execute a etapa {call_index}/6 de uma política fixa de feedback, usando o frame acumulado."
         else:
-            instruction = f"Use o estado cognitivo produzido pelo operador ({call_index}/4) para avançar sem inventar campos fora do frame."
+            instruction = f"Execute a etapa {call_index}/6 escolhida pela política adaptativa, usando o frame acumulado."
         context = f"Condição={condition}. {instruction}"
         if frame is not None:
             context += f"\nCognitiveFrame atual: {json.dumps(frame, ensure_ascii=False, sort_keys=True)}"
         return [
             {"role": "system", "content": system},
             {"role": "user", "content": f"{context}\n\nObjetivo público:\n{task.objective}"},
-        ]
-
-    @staticmethod
-    def _deliberation_schema_message(task: BenchmarkTask, call_index: int) -> list[dict[str, str]]:
-        return [
-            {
-                "role": "system",
-                "content": "Você é uma etapa genérica de deliberação. Retorne somente o schema JSON, sem ferramentas, gabaritos ou código.",
-            },
-            {
-                "role": "user",
-                "content": f"Etapa {call_index}/4. Registre uma nota provisória e, se houver, uma resposta candidata para o objetivo público:\n{task.objective}",
-            },
-        ]
-
-    @staticmethod
-    def _final_schema_message(task: BenchmarkTask, notes: list[str]) -> list[dict[str, str]]:
-        return [
-            {
-                "role": "system",
-                "content": "Você é o executor final de uma deliberação pareada. Retorne somente a resposta final no schema JSON; não use ferramentas ou gabaritos.",
-            },
-            {
-                "role": "user",
-                "content": f"Objetivo público:\n{task.objective}\nNotas das quatro etapas:\n{notes}",
-            },
         ]
 
     async def _structured(self, schema: type[Any], messages: list[dict[str, str]], model_name: str, seed: int, max_tokens: int) -> Any:
@@ -179,27 +158,39 @@ class GenesisPublicRunner:
         self,
         *,
         task: BenchmarkTask,
-        condition: GenesisCondition,
+        condition: AnyGenesisCondition,
         run_id: str,
         model_name: str,
         seed: int,
         max_tokens: int,
         program: CognitiveProgram | None = None,
-        call_budget: int = 1,
+        policy: CognitivePolicy | None = None,
+        decision_budget: int = 1,
+        call_budget: int | None = None,
     ) -> GenesisTaskResult:
+        if call_budget is not None:
+            decision_budget = int(call_budget)
+        legacy_condition = condition in {"matched_compute", "program"}
+        if condition == "adaptive_policy" and policy is None:
+            raise ValueError("adaptive_policy_condition_requires_policy")
+        if condition != "adaptive_policy" and policy is not None:
+            raise ValueError("non_adaptive_condition_rejects_policy")
         if condition == "program" and program is None:
             raise ValueError("program_condition_requires_program")
         if condition != "program" and program is not None:
             raise ValueError("non_program_condition_rejects_program")
-        if condition == "direct" and call_budget != 1:
-            raise ValueError("direct_call_budget_must_be_one")
-        if condition in {"matched_compute", "program"} and call_budget != 4:
-            raise ValueError("structured_condition_call_budget_must_be_four")
+        if condition == "direct" and decision_budget != 1:
+            raise ValueError("direct_decision_budget_must_be_one")
+        if condition in {"generic_closed_loop", "adaptive_policy"} and decision_budget != 6:
+            raise ValueError("closed_loop_decision_budget_must_be_six")
+        if condition in {"matched_compute", "program"} and decision_budget != 4:
+            raise ValueError("legacy_call_budget_must_be_four")
         started_at = datetime.now(UTC)
         effective_model = self._effective_model(model_name)
-        workspace = self.settings.artifacts_dir / "genesis-v022" / run_id / condition / task.id
+        workspace_name = "genesis-v0.2.2" if legacy_condition else "genesis-v1"
+        workspace = self.settings.artifacts_dir / workspace_name / run_id / condition / task.id
         workspace.mkdir(parents=True, exist_ok=True)
-        call_tokens = max(1, int(max_tokens) // call_budget)
+        call_tokens = max(1, int(max_tokens) // decision_budget)
         config_hash = self._config_hash(model_name=model_name, seed=seed, max_tokens=max_tokens)
         started = perf_counter()
         vm_execution: VMExecution | None = None
@@ -213,11 +204,20 @@ class GenesisPublicRunner:
                     timeout=task.timeout_seconds,
                 )
                 response_text = output.answer
+            elif condition == "generic_closed_loop":
+                vm_execution = await asyncio.wait_for(
+                    GenericClosedLoopVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0).execute_closed_loop(task.objective, max_decisions=decision_budget),
+                    timeout=task.timeout_seconds * decision_budget,
+                )
+                if not vm_execution.valid:
+                    failure_category = "VM_ERROR"
+                else:
+                    response_text = vm_execution.frame.candidate_answer or ""
             elif condition == "matched_compute":
                 notes: list[str] = []
-                for call_index in range(1, call_budget + 1):
+                for call_index in range(1, decision_budget + 1):
                     output = await asyncio.wait_for(
-                        self._structured(DeliberationOutput, self._deliberation_schema_message(task, call_index), model_name, seed, call_tokens),
+                        self._structured(DeliberationOutput, self._messages(task, condition, None, call_index), model_name, seed, call_tokens),
                         timeout=task.timeout_seconds,
                     )
                     notes.append(output.note)
@@ -225,10 +225,19 @@ class GenesisPublicRunner:
                         response_text = output.candidate_answer
                 if not response_text and notes:
                     response_text = notes[-1]
+            elif condition == "program":
+                vm_execution = await asyncio.wait_for(
+                    CognitiveVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0).execute(task.objective, program),
+                    timeout=task.timeout_seconds * decision_budget,
+                )
+                if not vm_execution.valid:
+                    failure_category = "VM_ERROR"
+                else:
+                    response_text = vm_execution.frame.candidate_answer or ""
             else:
                 vm_execution = await asyncio.wait_for(
-                    CognitiveVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=call_budget, repair_attempts=0).execute(task.objective, program),
-                    timeout=task.timeout_seconds * call_budget,
+                    AdaptiveCognitiveVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0).execute_policy(task.objective, policy),
+                    timeout=task.timeout_seconds * decision_budget,
                 )
                 if not vm_execution.valid:
                     failure_category = "VM_ERROR"
@@ -244,13 +253,14 @@ class GenesisPublicRunner:
             mode="baseline",
             response=response_text,
             failure_category=failure_category,
-            steps=call_budget,
+            steps=vm_execution.decisions if vm_execution else decision_budget,
             duration_ms=int((perf_counter() - started) * 1000),
             context_metrics={
-                "call_budget": call_budget,
+                "decision_budget": decision_budget,
+                "call_budget": decision_budget,
                 "call_tokens": call_tokens,
                 "vm_steps": vm_execution.steps if vm_execution else 0,
-                "model_calls": vm_execution.model_calls if vm_execution else call_budget,
+                "model_calls": vm_execution.model_calls if vm_execution else decision_budget,
                 "output_tokens": usage_output_tokens,
             },
             model=effective_model,
@@ -260,9 +270,9 @@ class GenesisPublicRunner:
             run_id=f"{run_id}:{condition}:{task.id}",
             git_commit="runtime",
             model=effective_model,
-            runtime="local-public-genesis-v022",
+            runtime="local-public-genesis-v0.2.2" if legacy_condition else "local-public-genesis-v1",
             benchmark="genesis_public",
-            benchmark_version="v0.2.2",
+            benchmark_version=GENESIS_PROTOCOL_VERSION if legacy_condition else GENESIS_V1_PROTOCOL_VERSION,
             mode="baseline",
             seed=seed,
             config_hash=config_hash,
@@ -271,8 +281,8 @@ class GenesisPublicRunner:
             platform={
                 "public_only": True,
                 "condition": condition,
-                "vm": condition == "program",
-                "call_budget": call_budget,
+                "vm": condition != "direct",
+                "decision_budget": decision_budget,
                 "max_tokens_total": max_tokens,
                 "call_tokens": call_tokens,
             },

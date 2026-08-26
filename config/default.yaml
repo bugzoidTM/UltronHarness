@@ -96,6 +96,8 @@ genesis:
   max_programs: 2
   max_operators: 4
   max_tokens: 1024
+  max_decisions: 6
+  max_rules: 8
   diagnosis_task_ids: [reasoning_01, reasoning_02]
   holdout_task_ids: [reasoning_06, reasoning_07]
   feature_flags:

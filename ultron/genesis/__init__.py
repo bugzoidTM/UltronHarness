@@ -1,6 +1,8 @@
 from ultron.genesis.controller import GenesisController
 from ultron.genesis.schemas import (
     CognitiveFrame,
+    CognitivePolicy,
+    CognitivePolicyRule,
     CognitiveProgram,
     CognitiveProgramBatch,
     DeductionOutput,
@@ -11,13 +13,17 @@ from ultron.genesis.schemas import (
     RepresentationOutput,
     VerificationOutput,
 )
-from ultron.genesis.vm import CognitiveVM, VMExecution
+from ultron.genesis.vm import AdaptiveCognitiveVM, CognitiveVM, GenericClosedLoopVM, VMExecution
 
 __all__ = [
+    "AdaptiveCognitiveVM",
     "CognitiveFrame",
+    "CognitivePolicy",
+    "CognitivePolicyRule",
     "CognitiveProgram",
     "CognitiveProgramBatch",
     "CognitiveVM",
+    "GenericClosedLoopVM",
     "DeductionOutput",
     "DeliberationOutput",
     "FinalAnswerOutput",

@@ -143,6 +143,18 @@ No único probe live válido, com `qwen2.5:3b`, seed `42` e holdouts públicos `
 
 A ablação anterior mostrou `B=A=0,500` e `C=1,000`, sendo consistente com o confound de `candidate_answer` calculado pelo solver. A v0.2.2 removeu essa semântica solucionadora e repetiu a avaliação sob paridade explícita de chamadas e orçamento solicitado.
 
+### Project Genesis v1 — Adaptive Cognitive Policy
+
+A v1 substitui a sequência linear por uma política finita de transições `condições → operador`. O Harness observa o `CognitiveFrame` acumulado, escolhe a regra de menor prioridade aplicável e reutiliza somente `REPRESENT`, `HYPOTHESIZE`, `DEDUCT` e `VERIFY`. `verification_supported` encerra a execução; `contradicted` e `uncertain` devem conduzir a nova hipótese ou dedução. Ausência de regra, erro ou excesso de seis decisões falha fechado.
+
+A política é aceita somente quando cobre a transição inicial `no_representation → REPRESENT`, os predicados de progresso `no_hypothesis`, `no_candidate` e `has_candidate`, e ambos os estados de feedback `verification_contradicted` e `verification_uncertain`, com mapeamentos seguros. Não há `STOP` como operador, nem código, ferramenta, rede, benchmark privado, autoedição ou writeback no probe.
+
+O teste bounded mantém dois diagnósticos públicos (`reasoning_01`/`reasoning_02`), dois holdouts públicos (`reasoning_06`/`reasoning_07`), uma seed (`42`), `qwen2.5:3b`, timeout global inferior a dez minutos e no máximo seis decisões por tarefa. A — `DIRECT`; B — `GENERIC CLOSED LOOP` com política fixa e estado acumulativo; C — `SELF-GENERATED ADAPTIVE POLICY` com o mesmo frame, budget e primitivas. A métrica primária é `C−B`.
+
+O probe está em [`scripts/run_genesis_v1.py`](scripts/run_genesis_v1.py). O modo `fixture` valida a mecânica sem alegação de capacidade; o modo `live` registra um JSON rejeitado quando a síntese ou a execução falha nos invariantes. Na rodada live disponível, o modelo gerou uma política inicializável, mas ela não cobriu os estados posteriores: ocorreram `policy_no_matching_rule` e `decision_budget_exceeded`. Tentativas posteriores foram rejeitadas pelo schema. Assim, o resultado é **`REJECTED_INVALID_POLICY`**; os zeros observados no artefato não são uma medição válida de `C−B`.
+
+A decisão operacional é não iniciar transferência, não adicionar operadores e não abrir tuning de prompts. A hipótese adaptativa permanece sem confirmação e sem refutação neste microprobe: o modelo pequeno não produziu uma política operacionalmente válida sob o contrato reforçado.
+
 ## Segurança e autonomia
 
 O UltronPro começa em **Mode 2 — Supervised Agent**. Ações R0 e R1 permitidas podem ser executadas dentro do workspace; modificações R2 aguardam aprovação. As ações R3/R4 requerem aprovação e as R5 são bloqueadas. O diretório permitido é:
