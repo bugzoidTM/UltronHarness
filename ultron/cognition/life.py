@@ -2,14 +2,28 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import json
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 from uuid import uuid4
 
+from ultron.benchmarks.models import BenchmarkTask
+from ultron.cognition.outcome_authority import OutcomeAuthority
 from ultron.cognition.self_model import EmpiricalSelfModel
+from ultron.cognition.task_signature import TaskSignatureClassifier
 from ultron.configuration import Settings
 from ultron.core.events import EventBus
 from ultron.db import Database
+from ultron.learning.experience_signature import ExperienceSignature, ExperienceSignatureBuilder
+from ultron.learning.experience_utility import ExperienceUtilityModel
+from ultron.learning.negative_transfer import NegativeTransferFirewall
+from ultron.learning.verified_writeback import VerifiedWritebackGate
+from ultron.research.cycle import SkillService
+
+if TYPE_CHECKING:
+    from ultron.benchmarks.runner import UGIBLiteRunner
+
 from ultron.schemas import (
     CognitiveTension,
     EpistemicState,
@@ -45,6 +59,45 @@ _FORBIDDEN_GOAL_MARKERS = (
     "autoimplant",
     "self-deploy",
 )
+
+SDCG_PUBLIC_TASK_IDS = ("reasoning_06", "reasoning_07", "reasoning_08")
+SDCG_PROTOCOL_VERSION = "life-sdcg-v0.2"
+SDCG_MAX_EXECUTIONS = 6
+SDCG_MAX_RUNTIME_SECONDS = 600
+
+
+@dataclass(frozen=True, slots=True)
+class StrategyHypothesis:
+    id: str
+    gap_domain: str
+    gap_task_type: str
+    statement: str
+    intervention: str
+    selection_source: str = "life_gap_policy"
+    protocol_version: str = SDCG_PROTOCOL_VERSION
+
+
+@dataclass(frozen=True, slots=True)
+class LifeSDCGSummary:
+    run_id: str
+    status: str
+    reason: str
+    tension_id: str | None = None
+    goal_id: str | None = None
+    hypothesis_id: str | None = None
+    experiment_id: str | None = None
+    task_ids: tuple[str, ...] = ()
+    baseline_score: float | None = None
+    candidate_score: float | None = None
+    gain: float | None = None
+    executions: int = 0
+    writeback_id: str | None = None
+    reusable: bool = False
+
+    @property
+    def promoted(self) -> bool:
+        return bool(self.writeback_id and self.status == "promoted")
+
 
 _DEFAULT_WEIGHTS = {
     "expected_information_gain": 0.30,
@@ -92,6 +145,478 @@ class LifeAgencyController:
 
     def _enabled(self, flag: str) -> bool:
         return bool(self.config.get("enabled", False) and self.flags.get(flag, False))
+
+    def _sdcg_enabled(self) -> bool:
+        return self._enabled("sdcg")
+
+    @staticmethod
+    def _sdcg_task_fingerprint(task: BenchmarkTask) -> str:
+        contract = {
+            "id": task.id,
+            "category": task.category,
+            "objective": task.objective,
+            "allowed_tools": list(task.allowed_tools),
+            "timeout_seconds": task.timeout_seconds,
+            "max_steps": task.max_steps,
+            "evaluator": task.evaluator,
+            "expected_artifacts": list(task.expected_artifacts),
+        }
+        return hashlib.sha256(json.dumps(contract, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _sdcg_result_record(manifest: Any, item: Any, task_fingerprint: str) -> dict[str, Any]:
+        evidence_digest = hashlib.sha256(
+            json.dumps(list(item.evaluation.evidence), sort_keys=True, ensure_ascii=False).encode("utf-8")
+        ).hexdigest()
+        return {
+            "task_id": str(item.task.id),
+            "model": str(manifest.model),
+            "seed": int(manifest.seed),
+            "config_hash": str(manifest.config_hash),
+            "mode": str(manifest.mode),
+            "task_fingerprint": task_fingerprint,
+            "score": float(item.evaluation.score),
+            "success": bool(item.evaluation.success),
+            "failure_category": item.execution.failure_category,
+            "output_valid": bool(item.execution.failure_category is None and item.execution.response.strip()),
+            "evidence_count": len(item.evaluation.evidence),
+            "evidence_digest": evidence_digest,
+            "duration_ms": int(item.execution.duration_ms),
+        }
+
+    @staticmethod
+    def _sdcg_gap_metadata(tension: CognitiveTension) -> tuple[str, str] | None:
+        for reference in tension.evidence_refs:
+            prefix = "capability_estimate:"
+            if reference.startswith(prefix):
+                payload = reference.removeprefix(prefix)
+                if ":" in payload:
+                    domain, task_type = payload.split(":", 1)
+                    if domain and task_type:
+                        return domain, task_type
+        return None
+
+    def formulate_strategy_hypothesis(self, tension: CognitiveTension) -> StrategyHypothesis | None:
+        """Deriva uma única hipótese segura do tipo de lacuna, sem entrada humana intermediária."""
+        if tension.kind != "COMPETENCE_GAP":
+            return None
+        metadata = self._sdcg_gap_metadata(tension)
+        if metadata is None:
+            return None
+        domain, task_type = metadata
+        interventions = {
+            "representation": (
+                "Representação explícita pode reduzir erros neste tipo de tarefa.",
+                "Antes de responder, represente explicitamente o estado inicial, a transformação ou restrição principal e o estado desejado; depois verifique a consistência e respeite o formato solicitado.",
+            ),
+            "decomposition": (
+                "Decomposição explícita pode reduzir erros neste tipo de tarefa.",
+                "Antes de responder, divida o objetivo em passos mínimos verificáveis, resolva cada passo e confira a resposta final contra o objetivo.",
+            ),
+            "verification": (
+                "Uma verificação final explícita pode reduzir erros neste tipo de tarefa.",
+                "Resolva o objetivo e, antes de responder, faça uma verificação final independente da consistência, das restrições e do formato solicitado.",
+            ),
+            "memory": (
+                "Uma recuperação seletiva de procedimento pode reduzir erros neste tipo de tarefa.",
+                "Antes de responder, identifique o procedimento relevante já disponível, aplique somente os passos compatíveis com o objetivo e verifique o resultado.",
+            ),
+            "reasoning_order": (
+                "Ordenar premissas antes da conclusão pode reduzir erros neste tipo de tarefa.",
+                "Antes de responder, liste as premissas e restrições relevantes, derive a conclusão passo a passo e verifique se nenhuma premissa foi alterada.",
+            ),
+        }
+        statement, intervention = interventions.get(
+            task_type,
+            (
+                "Uma representação explícita do problema seguida de verificação pode reduzir erros neste tipo de tarefa.",
+                "Antes de responder, represente explicitamente os dados, restrições e estado desejado; derive a resposta e verifique a consistência e o formato solicitado.",
+            ),
+        )
+        return StrategyHypothesis(
+            id=f"strategy-{uuid4()}",
+            gap_domain=domain,
+            gap_task_type=task_type,
+            statement=statement,
+            intervention=intervention,
+        )
+
+    def _persist_sdcg_experiment(
+        self,
+        *,
+        experiment_id: str,
+        hypothesis: StrategyHypothesis,
+        benchmark: str,
+        status: str,
+        report: dict[str, Any],
+        baseline_score: float | None = None,
+        candidate_score: float | None = None,
+    ) -> None:
+        timestamp = _now()
+        self.db.execute(
+            "INSERT INTO experiments (id,hypothesis,baseline_version,candidate_version,benchmark,baseline_score,candidate_score,regression_score,status,report,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                experiment_id,
+                hypothesis.statement,
+                "public_baseline_no_intervention",
+                hypothesis.id,
+                benchmark,
+                baseline_score,
+                candidate_score,
+                None,
+                status,
+                self.db.json(report),
+                timestamp,
+                timestamp,
+            ),
+        )
+
+    def _update_sdcg_experiment(
+        self,
+        experiment_id: str,
+        *,
+        status: str,
+        report: dict[str, Any],
+        baseline_score: float | None = None,
+        candidate_score: float | None = None,
+    ) -> None:
+        self.db.execute(
+            "UPDATE experiments SET baseline_score=?,candidate_score=?,status=?,report=?,updated_at=? WHERE id=?",
+            (baseline_score, candidate_score, status, self.db.json(report), _now(), experiment_id),
+        )
+
+    def _sdcg_public_tasks(self, runner: UGIBLiteRunner, domain: str) -> tuple[BenchmarkTask, ...]:
+        tasks = {task.id: task for task in runner.load_tasks()}
+        missing = [task_id for task_id in SDCG_PUBLIC_TASK_IDS if task_id not in tasks]
+        if missing:
+            raise ValueError(f"public_tasks_missing:{','.join(missing)}")
+        selected = tuple(tasks[task_id] for task_id in SDCG_PUBLIC_TASK_IDS)
+        if any(task.category != domain for task in selected):
+            raise ValueError("public_task_domain_mismatch")
+        if any(task.hidden for task in selected):
+            raise ValueError("public_task_hidden")
+        return selected
+
+    @staticmethod
+    def _sdcg_pair_validation(
+        baseline_records: dict[str, dict[str, Any]],
+        candidate_records: dict[str, dict[str, Any]],
+        *,
+        baseline_manifests: list[Any],
+        candidate_manifests: list[Any],
+        expected_task_ids: tuple[str, ...],
+        expected_seed: int,
+    ) -> str | None:
+        manifests = [*baseline_manifests, *candidate_manifests]
+        if not manifests or len(manifests) != SDCG_MAX_EXECUTIONS:
+            return "execution_count_mismatch"
+        if {str(manifest.model) for manifest in manifests} != {str(baseline_manifests[0].model)}:
+            return "model_mismatch"
+        if any(int(manifest.seed) != expected_seed for manifest in manifests):
+            return "seed_mismatch"
+        if len({str(manifest.config_hash) for manifest in manifests}) != 1:
+            return "config_mismatch"
+        if any(str(baseline.mode) != str(candidate.mode) for baseline, candidate in zip(baseline_manifests, candidate_manifests, strict=True)):
+            return "mode_mismatch"
+        if tuple(sorted(baseline_records)) != tuple(sorted(expected_task_ids)) or tuple(sorted(candidate_records)) != tuple(sorted(expected_task_ids)):
+            return "task_set_mismatch"
+        for task_id in expected_task_ids:
+            baseline = baseline_records[task_id]
+            candidate = candidate_records[task_id]
+            if baseline["task_fingerprint"] != candidate["task_fingerprint"]:
+                return f"budget_or_allowlist_mismatch:{task_id}"
+            if not baseline["output_valid"] or not candidate["output_valid"]:
+                return f"invalid_output:{task_id}"
+            if baseline["failure_category"] or candidate["failure_category"]:
+                return f"execution_failure:{task_id}"
+            if baseline["evidence_count"] < 1 or candidate["evidence_count"] < 1:
+                return f"insufficient_evidence:{task_id}"
+            if not 0.0 <= baseline["score"] <= 1.0 or not 0.0 <= candidate["score"] <= 1.0:
+                return f"invalid_score:{task_id}"
+            if candidate["score"] < baseline["score"]:
+                return f"candidate_regression:{task_id}"
+        return None
+
+    def _sdcg_experience_id(self, experiment_id: str) -> str:
+        return f"experience-{experiment_id}"
+
+    def _persist_sdcg_experience(
+        self,
+        *,
+        experience_id: str,
+        task_type: str,
+        hypothesis: StrategyHypothesis,
+        result: str,
+        success: bool,
+        quality: float,
+        verification_state: str,
+    ) -> None:
+        self.db.execute(
+            "INSERT INTO experiences (id,task_id,strategy,actions_json,result,success,errors_json,lessons_json,quality,verification_state,verified_writeback_id,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                experience_id,
+                None,
+                f"LIFE SDCG {hypothesis.gap_domain}/{task_type}",
+                self.db.json([{"kind": "bounded_behavioral_intervention", "protocol": SDCG_PROTOCOL_VERSION}]),
+                result,
+                int(success),
+                self.db.json([] if success else ["sdcg_gain_not_verified"]),
+                self.db.json([hypothesis.intervention]),
+                quality,
+                verification_state,
+                None,
+                _now(),
+            ),
+        )
+
+    def _persist_sdcg_pairs(
+        self,
+        *,
+        experiment_id: str,
+        experience_id: str,
+        tasks: tuple[BenchmarkTask, ...],
+        baseline_records: dict[str, dict[str, Any]],
+        candidate_records: dict[str, dict[str, Any]],
+        hypothesis: StrategyHypothesis,
+        seed: int,
+    ) -> None:
+        for task in tasks:
+            task_signature = TaskSignatureClassifier.classify(task.model_dump(mode="json"))
+            signature_id = TaskSignatureClassifier.persist(self.db, task_signature, task_id=None)
+            ExperienceUtilityModel.record_pair_outcome(
+                self.db,
+                task_signature_id=signature_id,
+                experience_id=experience_id,
+                fresh_score=baseline_records[task.id]["score"],
+                experienced_score=candidate_records[task.id]["score"],
+                run_id=experiment_id,
+                task_id=task.id,
+                task_family=task_signature.family,
+                experience_family="unknown",
+                source_domain=hypothesis.gap_domain,
+                target_domain=hypothesis.gap_domain,
+                seed=seed,
+                model_name=baseline_records[task.id]["model"],
+                prompt_version=SDCG_PROTOCOL_VERSION,
+                dataset_split="calibration",
+            )
+
+    async def _sdcg_condition_runs(
+        self,
+        *,
+        runner: UGIBLiteRunner,
+        tasks: tuple[BenchmarkTask, ...],
+        mode: str,
+        model_name: str,
+        seed: int,
+        experiment_id: str,
+        extra_context: dict[str, str] | None = None,
+    ) -> list[tuple[Any, Any]]:
+        runs: list[tuple[Any, Any]] = []
+        for task in tasks:
+            manifest, summary = await runner.run_async(
+                mode=mode, model_name=model_name, seed=seed, task_id=task.id, extra_context=extra_context
+            )
+            if len(summary.results) != 1 or summary.results[0].task.id != task.id:
+                raise ValueError(f"unexpected_task_result:{task.id}")
+            report_dir = self.settings.artifacts_dir / "life_sdcg" / experiment_id / mode / task.id
+            report_dir.mkdir(parents=True, exist_ok=True)
+            runner.persist_run(manifest, summary, report_dir)
+            runs.append((manifest, summary))
+        return runs
+
+    async def run_sdcg(self, *, run_id: str | None = None) -> LifeSDCGSummary:
+        """Executa uma única investigação pública de ganho de capacidade, estritamente bounded."""
+        run_id = run_id or f"life-sdcg-{uuid4()}"
+        if not self._sdcg_enabled():
+            return LifeSDCGSummary(run_id, "rejected", "sdcg_disabled")
+        tensions = [item for item in self.detect_tensions(run_id) if item.kind == "COMPETENCE_GAP"]
+        if not tensions:
+            return LifeSDCGSummary(run_id, "rejected", "no_competence_gap")
+        tension = tensions[0]
+        self._persist_tension(run_id, tension)
+        candidates = self.generate_goal_candidates([tension])
+        goal = self.select_goal(candidates)
+        if goal is None:
+            return LifeSDCGSummary(run_id, "rejected", "goal_selection_unavailable", tension_id=tension.id)
+        self._persist_candidate(run_id, goal, selected=True)
+        hypothesis = self.formulate_strategy_hypothesis(tension)
+        if hypothesis is None:
+            return LifeSDCGSummary(run_id, "rejected", "gap_type_not_supported", tension_id=tension.id, goal_id=goal.id)
+        experiment_id = f"experiment-{run_id}"
+        benchmark = "ugib_lite_public"
+        model_name = str(self.config.get("sdcg_model") or self.settings.raw.get("models", {}).get("research_primary", "local-fallback"))
+        seed = int(self.config.get("sdcg_seed", 42))
+        self._persist_sdcg_experiment(
+            experiment_id=experiment_id,
+            hypothesis=hypothesis,
+            benchmark=benchmark,
+            status="running",
+            report={
+                "protocol_version": SDCG_PROTOCOL_VERSION,
+                "run_id": run_id,
+                "tension_id": tension.id,
+                "goal_id": goal.id,
+                "hypothesis": asdict(hypothesis),
+                "model_requested": model_name,
+                "seed": seed,
+                "max_executions": SDCG_MAX_EXECUTIONS,
+                "candidate_context": {"strategy": hypothesis.intervention},
+            },
+        )
+        configured_timeout = int(self.config.get("sdcg_max_runtime_seconds", 540))
+        if configured_timeout < 1 or configured_timeout > SDCG_MAX_RUNTIME_SECONDS:
+            reason = "invalid_runtime_budget"
+            self._update_sdcg_experiment(experiment_id, status="rejected", report={"reason": reason})
+            return LifeSDCGSummary(run_id, "rejected", reason, tension.id, goal.id, hypothesis.id, experiment_id)
+        runner = getattr(self, "_sdcg_runner", None)
+        if runner is None:
+            from ultron.benchmarks.runner import UGIBLiteRunner
+
+            runner = UGIBLiteRunner(self.settings)
+        try:
+            tasks = self._sdcg_public_tasks(runner, hypothesis.gap_domain)
+            async with asyncio.timeout(configured_timeout):
+                baseline_runs = await self._sdcg_condition_runs(
+                    runner=runner,
+                    tasks=tasks,
+                    mode="baseline",
+                    model_name=model_name,
+                    seed=seed,
+                    experiment_id=experiment_id,
+                )
+                candidate_runs = await self._sdcg_condition_runs(
+                    runner=runner,
+                    tasks=tasks,
+                    mode="baseline",
+                    model_name=model_name,
+                    seed=seed,
+                    experiment_id=experiment_id,
+                    extra_context={"strategy": hypothesis.intervention},
+                )
+            baseline_manifests = [manifest for manifest, _ in baseline_runs]
+            candidate_manifests = [manifest for manifest, _ in candidate_runs]
+            baseline_records = {
+                item.task.id: self._sdcg_result_record(manifest, item, self._sdcg_task_fingerprint(item.task))
+                for manifest, summary in baseline_runs
+                for item in summary.results
+            }
+            candidate_records = {
+                item.task.id: self._sdcg_result_record(manifest, item, self._sdcg_task_fingerprint(item.task))
+                for manifest, summary in candidate_runs
+                for item in summary.results
+            }
+            reason = self._sdcg_pair_validation(
+                baseline_records,
+                candidate_records,
+                baseline_manifests=baseline_manifests,
+                candidate_manifests=candidate_manifests,
+                expected_task_ids=tuple(task.id for task in tasks),
+                expected_seed=seed,
+            )
+            baseline_score = round(sum(item["score"] for item in baseline_records.values()) / len(tasks), 6)
+            candidate_score = round(sum(item["score"] for item in candidate_records.values()) / len(tasks), 6)
+            gain = round(candidate_score - baseline_score, 6)
+            report = {
+                "protocol_version": SDCG_PROTOCOL_VERSION,
+                "run_id": run_id,
+                "tension": {"id": tension.id, "kind": tension.kind, "evidence_refs": tension.evidence_refs},
+                "goal_id": goal.id,
+                "hypothesis": {"id": hypothesis.id, "statement": hypothesis.statement, "intervention": hypothesis.intervention, "selection_source": hypothesis.selection_source},
+                "model": baseline_manifests[0].model,
+                "seed": seed,
+                "task_ids": [task.id for task in tasks],
+                "baseline": baseline_records,
+                "candidate": candidate_records,
+                "baseline_score": baseline_score,
+                "candidate_score": candidate_score,
+                "gain": gain,
+                "validation_reason": reason,
+                "candidate_received_baseline_results": False,
+            }
+            experience_id = self._sdcg_experience_id(experiment_id)
+            if reason is not None:
+                self._update_sdcg_experiment(experiment_id, status="rejected", report=report, baseline_score=baseline_score, candidate_score=candidate_score)
+                return LifeSDCGSummary(run_id, "rejected", reason, tension.id, goal.id, hypothesis.id, experiment_id, tuple(task.id for task in tasks), baseline_score, candidate_score, gain, SDCG_MAX_EXECUTIONS)
+            self._persist_sdcg_experience(
+                experience_id=experience_id,
+                task_type=hypothesis.gap_task_type,
+                hypothesis=hypothesis,
+                result=f"Ganho pareado verificado no probe público: {gain:.6f}.",
+                success=gain > 0,
+                quality=candidate_score,
+                verification_state="pending",
+            )
+            self._persist_sdcg_pairs(
+                experiment_id=experiment_id,
+                experience_id=experience_id,
+                tasks=tasks,
+                baseline_records=baseline_records,
+                candidate_records=candidate_records,
+                hypothesis=hypothesis,
+                seed=seed,
+            )
+            if gain <= 0:
+                outcome = OutcomeAuthority().decide(task_verifier={"accepted": False, "evidence": [f"sdcg:{experiment_id}:no_gain"]})
+                decision = VerifiedWritebackGate(self.db).evaluate(task_id=None, target_type="experience", target_id=experience_id, outcome_result=outcome)
+                self.db.execute("UPDATE experiences SET verification_state='rejected' WHERE id=?", (experience_id,))
+                report["writeback"] = asdict(decision)
+                self._update_sdcg_experiment(experiment_id, status="rejected", report=report, baseline_score=baseline_score, candidate_score=candidate_score)
+                return LifeSDCGSummary(run_id, "rejected", "no_verified_gain", tension.id, goal.id, hypothesis.id, experiment_id, tuple(task.id for task in tasks), baseline_score, candidate_score, gain, SDCG_MAX_EXECUTIONS, None, False)
+            evidence_refs = [f"sdcg:{experiment_id}:baseline", f"sdcg:{experiment_id}:candidate", f"sdcg:{experiment_id}:paired_gain"]
+            outcome = OutcomeAuthority().decide(task_verifier={"accepted": True, "evidence": evidence_refs, "confidence": 1.0})
+            experience_decision = VerifiedWritebackGate(self.db).evaluate(task_id=None, target_type="experience", target_id=experience_id, outcome_result=outcome)
+            strategy_name = f"sdcg_{hypothesis.gap_domain}_{hypothesis.gap_task_type}_{experiment_id[-8:]}"
+            skill_decision = VerifiedWritebackGate(self.db).evaluate(task_id=None, target_type="skill", target_id=strategy_name, outcome_result=outcome)
+            if not experience_decision.allowed or not skill_decision.allowed:
+                self.db.execute("UPDATE experiences SET verification_state='rejected' WHERE id=?", (experience_id,))
+                report["writeback"] = {"experience": asdict(experience_decision), "skill": asdict(skill_decision)}
+                self._update_sdcg_experiment(experiment_id, status="rejected", report=report, baseline_score=baseline_score, candidate_score=candidate_score)
+                return LifeSDCGSummary(run_id, "rejected", "writeback_denied", tension.id, goal.id, hypothesis.id, experiment_id, tuple(task.id for task in tasks), baseline_score, candidate_score, gain, SDCG_MAX_EXECUTIONS, None, False)
+            self.db.execute(
+                "UPDATE experiences SET verification_state='verified',verified_writeback_id=? WHERE id=?",
+                (experience_decision.audit_id, experience_id),
+            )
+            signature = ExperienceSignature(
+                category=hypothesis.gap_domain,
+                family="unknown",
+                domain=hypothesis.gap_domain,
+                abstraction_level=0.7,
+                verified=True,
+                historical_utility=gain,
+                sample_count=len(tasks),
+                source="life_sdcg_verified",
+            )
+            ExperienceSignatureBuilder.persist(self.db, signature, experience_id)
+            skills = SkillService(self.db)
+            for task_id in SDCG_PUBLIC_TASK_IDS:
+                skills.observe(
+                    strategy_name,
+                    trigger=[f"COMPETENCE_GAP:{hypothesis.gap_domain}:{hypothesis.gap_task_type}"],
+                    procedure=[hypothesis.intervention],
+                    success=bool(candidate_records[task_id]["success"]),
+                    verification_state="verified",
+                    verified_writeback_id=skill_decision.audit_id,
+                )
+            utility = NegativeTransferFirewall.recalculate(self.db, "unknown", "unknown")
+            reusable = skills.status(strategy_name) == "validated"
+            report["writeback"] = {
+                "experience_audit_id": experience_decision.audit_id,
+                "skill_audit_id": skill_decision.audit_id,
+                "skill_name": strategy_name,
+                "family_utility_state": utility.state.value,
+                "reusable": reusable,
+            }
+            self._update_sdcg_experiment(experiment_id, status="promoted", report=report, baseline_score=baseline_score, candidate_score=candidate_score)
+            return LifeSDCGSummary(run_id, "promoted", "verified_gain", tension.id, goal.id, hypothesis.id, experiment_id, tuple(task.id for task in tasks), baseline_score, candidate_score, gain, SDCG_MAX_EXECUTIONS, experience_decision.audit_id, reusable)
+        except TimeoutError:
+            report = {"protocol_version": SDCG_PROTOCOL_VERSION, "reason": "total_timeout", "max_executions": SDCG_MAX_EXECUTIONS, "max_runtime_seconds": configured_timeout}
+            self._update_sdcg_experiment(experiment_id, status="rejected", report=report)
+            return LifeSDCGSummary(run_id, "rejected", "total_timeout", tension.id, goal.id, hypothesis.id, experiment_id)
+        except Exception as exc:
+            reason = f"execution_error:{type(exc).__name__}"
+            self._update_sdcg_experiment(experiment_id, status="rejected", report={"protocol_version": SDCG_PROTOCOL_VERSION, "reason": reason, "error": str(exc)[:500]})
+            return LifeSDCGSummary(run_id, "rejected", reason, tension.id, goal.id, hypothesis.id, experiment_id)
 
     @staticmethod
     def forbidden_goal(objective: str) -> bool:

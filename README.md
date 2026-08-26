@@ -113,6 +113,14 @@ O LIFE permanece desligado por padrão. Para uma execução local de desenvolvim
 A API expõe `POST /api/life/runs` e `GET /api/life/runs/{run_id}`. O perfil impõe no máximo dois objetivos distintos, duas tentativas por intenção e duas ações por tentativa, registra tensões, candidatos, intenções, ciclos e métricas AGC/IPR/EGGR no SQLite, e rejeita objetivos proibidos de forma determinística. Uma tarefa concluída sem nova evidência verificável permanece `ACTIVE` até o limite de tentativas; ela não é promovida artificialmente a `SATISFIED`.
  O LIFE não é um score de AGI, não cria metas de autopreservação, expansão de acesso, credenciais, replicação, evasão de política ou autoimplantação, e não deve ser usado para executar o benchmark privado ou o split unseen.
 
+### LIFE v0.2 — Self Directed Capability Gain
+
+O v0.2 adiciona um único mecanismo experimental e opt in: diante de um `COMPETENCE_GAP` persistido no self model, o LIFE escolhe uma investigação, formula exatamente uma hipótese de estratégia comportamental, executa três microtarefas públicas em condições baseline e candidate pareadas e solicita promoção apenas depois de validar o ganho. A intervenção altera somente o contexto comportamental do candidate; ela não edita código, permissões, política, modelo, avaliador ou benchmark.
+
+O protocolo congelado usa uma seed, um modelo efetivo, a mesma allowlist, o mesmo timeout e o mesmo limite de passos nas seis execuções. Empate, regressão, timeout, saída inválida, evidência insuficiente ou divergência de contrato resultam em `rejected`. O `VerifiedWritebackGate` continua sendo a única autoridade para marcar a experiência e a skill como verificadas. O reuso procedural só aparece após a evidência pareada e o limiar existente de três usos.
+
+O v0.2 permanece desligado por padrão, inclusive fora do perfil explicitamente opt in. O protocolo e o microprobe determinístico estão em [`LIFE_V0_2_PROTOCOL.md`](LIFE_V0_2_PROTOCOL.md) e [`scripts/run_life_sdcg_probe.py`](scripts/run_life_sdcg_probe.py). Um resultado positivo nesse microprobe demonstra apenas que o encadeamento bounded de gap, hipótese, comparação, gate e writeback funciona na fixture pública; não sustenta alegações de AGI, generalização, transferência ou autoaperfeiçoamento geral.
+
 ## Segurança e autonomia
 
 O UltronPro começa em **Mode 2 — Supervised Agent**. Ações R0 e R1 permitidas podem ser executadas dentro do workspace; modificações R2 aguardam aprovação. As ações R3/R4 requerem aprovação e as R5 são bloqueadas. O diretório permitido é:

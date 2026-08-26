@@ -109,6 +109,7 @@ def load_settings(root_dir: Path | None = None) -> Settings:
                     "goal_selection": True,
                     "intention_persistence": True,
                     "autonomous_continuation": True,
+                    "sdcg": True,
                 },
             },
         }

@@ -70,11 +70,15 @@ life:
   max_actions_per_goal: 2
   competence_min_sample: 2
   competence_max_success_rate: 0.5
+  sdcg_model: local-fallback
+  sdcg_seed: 42
+  sdcg_max_runtime_seconds: 540
   feature_flags:
     tension_detection: false
     goal_selection: false
     intention_persistence: false
     autonomous_continuation: false
+    sdcg: false
   goal_value_weights:
     expected_information_gain: 0.30
     expected_capability_gain: 0.30
