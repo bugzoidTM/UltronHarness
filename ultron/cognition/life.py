@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 from typing import Any, Literal
 from uuid import uuid4
 
-from ultron.cognition.epistemic import record_unknown
 from ultron.cognition.self_model import EmpiricalSelfModel
 from ultron.configuration import Settings
 from ultron.core.events import EventBus
@@ -115,7 +114,13 @@ class LifeAgencyController:
             - weights["estimated_risk"] * candidate.estimated_risk
         )
 
-    def detect_tensions(self, run_id: str, state: EpistemicState | None = None) -> list[CognitiveTension]:
+    def detect_tensions(
+        self,
+        run_id: str,
+        state: EpistemicState | None = None,
+        *,
+        task_ids: set[str] | None = None,
+    ) -> list[CognitiveTension]:
         """Detecta somente sinais persistidos ou claims tipados com referência de evidência."""
         if not self._enabled("tension_detection"):
             return []
@@ -135,10 +140,25 @@ class LifeAgencyController:
                         created_at=created_at,
                     )
                 )
-        for row in self.db.all(
-            "SELECT prediction_id,classification,evidence_refs_json,observed_at FROM prediction_observations "
-            "WHERE classification IN ('reject','weaken') ORDER BY observed_at DESC LIMIT 50"
-        ):
+        scoped_task_ids = set(task_ids or set())
+        scoped_task_ids.update(
+            str(row["task_id"])
+            for row in self.db.all(
+                "SELECT task_id FROM life_intentions WHERE run_id=? AND task_id IS NOT NULL "
+                "UNION SELECT task_id FROM life_cycles WHERE run_id=? AND task_id IS NOT NULL",
+                (run_id, run_id),
+            )
+        )
+        prediction_rows: list[dict[str, Any]] = []
+        if scoped_task_ids:
+            placeholders = ",".join("?" for _ in scoped_task_ids)
+            prediction_rows = self.db.all(
+                "SELECT prediction_id,classification,evidence_refs_json,observed_at,task_id FROM prediction_observations "
+                f"WHERE classification IN ('reject','weaken') AND task_id IN ({placeholders}) "
+                "ORDER BY observed_at DESC LIMIT 50",
+                tuple(sorted(scoped_task_ids)),
+            )
+        for row in prediction_rows:
             evidence_refs = self.db.parse_json(row["evidence_refs_json"], [])
             evidence_refs = [str(item) for item in evidence_refs if str(item).strip()]
             if evidence_refs:
@@ -189,7 +209,8 @@ class LifeAgencyController:
                 )
         for row in self.db.all(
             "SELECT id,goal_id,objective,evidence_refs_json FROM life_intentions "
-            "WHERE status='ACTIVE' ORDER BY updated_at ASC"
+            "WHERE status='ACTIVE' AND run_id=? ORDER BY updated_at ASC",
+            (run_id,),
         ):
             evidence_refs = self.db.parse_json(row["evidence_refs_json"], [])
             if evidence_refs:
@@ -270,15 +291,79 @@ class LifeAgencyController:
 
     def _persist_intention(self, run_id: str, intention_id: str, intention: PersistentIntention, task_id: str | None) -> None:
         self.db.execute(
-            "INSERT OR REPLACE INTO life_intentions (id,run_id,goal_id,task_id,objective,status,started_at,cycle_budget,evidence_refs_json,completed_at,blocked_reason,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-            (intention_id, run_id, intention.goal_id, task_id, intention.objective, intention.status, intention.started_at, intention.cycle_budget, self.db.json(intention.evidence_refs), intention.completed_at, intention.blocked_reason, _now()),
+            "INSERT OR REPLACE INTO life_intentions (id,run_id,goal_id,task_id,objective,status,started_at,cycle_budget,evidence_refs_json,new_evidence_refs_json,completed_at,blocked_reason,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (intention_id, run_id, intention.goal_id, task_id, intention.objective, intention.status, intention.started_at, intention.cycle_budget, self.db.json(intention.evidence_refs), self.db.json(intention.new_evidence_refs), intention.completed_at, intention.blocked_reason, _now()),
         )
 
-    def _update_intention(self, run_id: str, intention_id: str, status: str, *, reason: str | None = None, evidence_refs: list[str] | None = None) -> PersistentIntention:
+    def _new_verified_evidence(self, task_id: str, baseline_refs: list[str]) -> list[str]:
+        baseline = set(baseline_refs)
+        rows = self.db.all(
+            "SELECT prediction_id,evidence_refs_json,verification_passed,result_status,observed_at FROM prediction_observations "
+            "WHERE task_id=? AND verification_passed=1 AND result_status NOT IN ('waiting_approval','waiting_outcome') ORDER BY observed_at",
+            (task_id,),
+        )
+        evidence: list[str] = []
+        for row in rows:
+            refs = [str(item) for item in self.db.parse_json(row["evidence_refs_json"], []) if str(item).strip()]
+            evidence.extend(refs or [f"prediction_observation:{row['prediction_id']}"])
+        return list(dict.fromkeys(item for item in evidence if item not in baseline))
+
+    def _active_intention(self, run_id: str) -> dict[str, Any] | None:
+        return self.db.one(
+            "SELECT * FROM life_intentions WHERE run_id=? AND status='ACTIVE' ORDER BY updated_at LIMIT 1",
+            (run_id,),
+        )
+
+    def _candidate_from_row(self, row: dict[str, Any]) -> LifeGoalCandidate:
+        return LifeGoalCandidate(
+            id=str(row["id"]),
+            tension_id=str(row["tension_id"]),
+            objective=str(row["objective"]),
+            expected_information_gain=float(row["expected_information_gain"]),
+            expected_capability_gain=float(row["expected_capability_gain"]),
+            importance=float(row["importance"]),
+            tractability=float(row["tractability"]),
+            expected_transfer=float(row["expected_transfer"]),
+            estimated_cost=float(row["estimated_cost"]),
+            estimated_risk=float(row["estimated_risk"]),
+            goal_value=float(row["goal_value"]),
+        )
+
+    def _intention_from_row(self, row: dict[str, Any]) -> PersistentIntention:
+        return PersistentIntention(
+            goal_id=str(row["goal_id"]),
+            objective=str(row["objective"]),
+            status=str(row["status"]),  # type: ignore[arg-type]
+            started_at=str(row["started_at"]),
+            cycle_budget=int(row["cycle_budget"]),
+            evidence_refs=[str(item) for item in self.db.parse_json(row["evidence_refs_json"], [])],
+            new_evidence_refs=[str(item) for item in self.db.parse_json(row.get("new_evidence_refs_json"), [])],
+            completed_at=row["completed_at"],
+            blocked_reason=row["blocked_reason"],
+        )
+
+    def _intention_attempts(self, run_id: str, intention_id: str) -> int:
+        row = self.db.one(
+            "SELECT COUNT(*) AS count FROM life_cycles WHERE run_id=? AND intention_id=?",
+            (run_id, intention_id),
+        )
+        return int(row["count"]) if row else 0
+
+    def _update_intention(
+        self,
+        run_id: str,
+        intention_id: str,
+        status: str,
+        *,
+        reason: str | None = None,
+        evidence_refs: list[str] | None = None,
+        new_evidence_refs: list[str] | None = None,
+    ) -> PersistentIntention:
         row = self.db.one("SELECT * FROM life_intentions WHERE id=? AND run_id=?", (intention_id, run_id))
         if not row:
             raise KeyError("Intenção LIFE não encontrada.")
         refs = evidence_refs or self.db.parse_json(row["evidence_refs_json"], [])
+        fresh_refs = new_evidence_refs or self.db.parse_json(row.get("new_evidence_refs_json"), [])
         intention = PersistentIntention(
             goal_id=str(row["goal_id"]),
             objective=str(row["objective"]),
@@ -286,11 +371,55 @@ class LifeAgencyController:
             started_at=str(row["started_at"]),
             cycle_budget=int(row["cycle_budget"]),
             evidence_refs=refs,
+            new_evidence_refs=fresh_refs,
             completed_at=_now() if status != "ACTIVE" else None,
             blocked_reason=reason,
         )
         self._persist_intention(run_id, intention_id, intention, row["task_id"])
         return intention
+
+    def _metrics_from_records(self, run_id: str) -> dict[str, float | int]:
+        tension_row = self.db.one("SELECT COUNT(*) AS count FROM life_tensions WHERE run_id=?", (run_id,))
+        tensions = int(tension_row["count"]) if tension_row else 0
+        goals_row = self.db.one("SELECT COUNT(DISTINCT goal_id) AS count FROM life_cycles WHERE run_id=?", (run_id,))
+        goals_created = int(goals_row["count"]) if goals_row else 0
+        completed_row = self.db.one(
+            "SELECT COUNT(*) AS count FROM life_intentions WHERE run_id=? AND status='SATISFIED'",
+            (run_id,),
+        )
+        completed = int(completed_row["count"]) if completed_row else 0
+        intention_row = self.db.one("SELECT COUNT(*) AS count FROM life_intentions WHERE run_id=?", (run_id,))
+        intentions = int(intention_row["count"]) if intention_row else 0
+        resolved_row = self.db.one(
+            "SELECT COUNT(*) AS count FROM life_intentions WHERE run_id=? AND status IN ('SATISFIED','ABANDONED','BLOCKED')",
+            (run_id,),
+        )
+        resolved = int(resolved_row["count"]) if resolved_row else 0
+        fresh_row = self.db.one(
+            "SELECT COUNT(*) AS count FROM life_intentions WHERE run_id=? AND new_evidence_refs_json <> '[]'",
+            (run_id,),
+        )
+        fresh = int(fresh_row["count"]) if fresh_row else 0
+        prompt_row = self.db.one(
+            "SELECT COUNT(*) AS count FROM events WHERE event_type='life.human_prompt.received' AND payload_json LIKE ?",
+            (f'%"run_id":"{run_id}"%',),
+        )
+        prompt_count = int(prompt_row["count"]) if prompt_row else 0
+        tool_row = self.db.one(
+            "SELECT COUNT(*) AS count FROM tool_executions te JOIN life_cycles lc ON lc.task_id=te.task_id WHERE lc.run_id=?",
+            (run_id,),
+        )
+        tool_calls = int(tool_row["count"]) if tool_row else 0
+        return {
+            "tensions_detected": tensions,
+            "goals_created": goals_created,
+            "goals_completed": completed,
+            "agc": max(0, goals_created - 1),
+            "ipr": resolved / intentions if intentions else 1.0,
+            "eggr": fresh / intentions if intentions else 0.0,
+            "human_prompts_after_initial_goal": prompt_count,
+            "tool_calls": tool_calls,
+        }
 
     async def _emit(self, event_type: str, run_id: str, payload: dict[str, Any], task_id: str | None = None) -> None:
         await self.events.emit(event_type, {"run_id": run_id, **payload}, task_id)
@@ -308,11 +437,10 @@ class LifeAgencyController:
             row["selected"] = bool(row["selected"])
         for row in intentions:
             row["evidence_refs"] = self.db.parse_json(row.pop("evidence_refs_json"), [])
+            row["new_evidence_refs"] = self.db.parse_json(row.pop("new_evidence_refs_json", "[]"), [])
         for row in cycles:
             row["result"] = self.db.parse_json(row.pop("result_json"), {})
-        total_intentions = len(intentions)
-        resolved = sum(row["status"] != "ACTIVE" for row in intentions)
-        goals_created = len(cycles)
+        metrics = self._metrics_from_records(run_id)
         return {
             "run_id": run_id,
             "superior_goal": cycles[0]["superior_goal"] if cycles else None,
@@ -321,11 +449,7 @@ class LifeAgencyController:
             "candidates": candidates,
             "intentions": intentions,
             "cycles": cycles,
-            "metrics": {
-                "agc": max(0, goals_created - 1),
-                "ipr": resolved / total_intentions if total_intentions else 1.0,
-                "eggr": sum(bool(row["evidence_refs"]) for row in intentions) / total_intentions if total_intentions else 0.0,
-            },
+            "metrics": metrics,
         }
 
     async def _pursue(self, task: dict[str, Any]) -> dict[str, Any]:
@@ -381,14 +505,14 @@ class LifeAgencyController:
         max_actions = min(2, int(self.config.get("max_actions_per_goal", 2)))
         state = initial_state or EpistemicState()
         goals_created = 0
-        goals_completed = 0
-        tool_calls = 0
-        tensions_seen = 0
-        intentions_started = 0
-        resolved_intentions = 0
-        status: Literal["completed", "blocked", "abandoned", "no_tension"] = "no_tension"
+
+        status: Literal["completed", "blocked", "abandoned", "no_tension", "active"] = "no_tension"
         consumed_tensions: set[str] = set()
-        for cycle_index in range(max_goals):
+        max_cycles = max_goals * max(2, max_actions) + 1
+        for cycle_index in range(max_cycles):
+            active_row = self._active_intention(run_id)
+            if goals_created >= max_goals and active_row is None:
+                break
             if cycle_index > 0 and not self._enabled("autonomous_continuation"):
                 break
             tensions = [
@@ -398,39 +522,69 @@ class LifeAgencyController:
                 if cycle_index == 0:
                     await self._emit("life.cycle.completed", run_id, {"cycle_index": cycle_index, "status": "no_tension"})
                 break
-            tensions_seen += len(tensions)
+            if active_row is not None:
+                active_intention = self._intention_from_row(active_row)
+                if self._intention_attempts(run_id, str(active_row["id"])) >= active_intention.cycle_budget:
+                    status = "active"
+                    await self._emit(
+                        "life.cycle.budget_exhausted",
+                        run_id,
+                        {"cycle_index": cycle_index, "intention_id": active_row["id"], "reason": "intention_attempt_budget_exhausted"},
+                    )
+                    break
             for tension in tensions:
                 self._persist_tension(run_id, tension)
                 await self._emit("life.tension.detected", run_id, {"tension": tension.model_dump(mode="json")})
-            candidates = self.generate_goal_candidates(tensions)
-            for candidate in candidates:
-                self._persist_candidate(run_id, candidate)
-            await self._emit(
-                "life.goal_candidates.generated",
-                run_id,
-                {"count": len(candidates), "candidate_ids": [candidate.id for candidate in candidates]},
-            )
-            selected = self.select_goal(candidates)
-            if selected is None:
-                status = "blocked"
-                await self._emit("life.cycle.budget_exhausted", run_id, {"cycle_index": cycle_index, "reason": "goal_selection_disabled"})
-                break
-            self._persist_candidate(run_id, selected, selected=True)
-            consumed_tensions.add(selected.tension_id)
-            await self._emit("life.goal.selected", run_id, {"goal": selected.model_dump(mode="json"), "cycle_index": cycle_index})
-            if not self._enabled("intention_persistence"):
-                status = "blocked"
-                await self._emit("life.cycle.budget_exhausted", run_id, {"cycle_index": cycle_index, "reason": "intention_persistence_disabled"})
-                break
-            intention_id = f"intention-{uuid4()}"
-            intention = PersistentIntention(
-                goal_id=selected.id,
-                objective=selected.objective,
-                status="ACTIVE",
-                started_at=_now(),
-                cycle_budget=max_actions,
-                evidence_refs=list(next(item for item in tensions if item.id == selected.tension_id).evidence_refs),
-            )
+            resumed = active_row is not None
+            if resumed:
+                intention_id = str(active_row["id"])
+                candidate_row = self.db.one(
+                    "SELECT * FROM life_goal_candidates WHERE run_id=? AND id=?",
+                    (run_id, active_row["goal_id"]),
+                )
+                if candidate_row is None:
+                    status = "blocked"
+                    await self._emit("life.cycle.budget_exhausted", run_id, {"cycle_index": cycle_index, "reason": "active_intention_candidate_missing"})
+                    break
+                selected = self._candidate_from_row(candidate_row)
+                intention = self._intention_from_row(active_row)
+                consumed_tensions.add(selected.tension_id)
+                await self._emit(
+                    "life.intention.updated",
+                    run_id,
+                    {"intention_id": intention_id, "status": "ACTIVE", "attempt": self._intention_attempts(run_id, intention_id) + 1},
+                    active_row["task_id"],
+                )
+            else:
+                candidates = self.generate_goal_candidates(tensions)
+                for candidate in candidates:
+                    self._persist_candidate(run_id, candidate)
+                await self._emit(
+                    "life.goal_candidates.generated",
+                    run_id,
+                    {"count": len(candidates), "candidate_ids": [candidate.id for candidate in candidates]},
+                )
+                selected = self.select_goal(candidates)
+                if selected is None:
+                    status = "blocked"
+                    await self._emit("life.cycle.budget_exhausted", run_id, {"cycle_index": cycle_index, "reason": "goal_selection_disabled"})
+                    break
+                self._persist_candidate(run_id, selected, selected=True)
+                consumed_tensions.add(selected.tension_id)
+                await self._emit("life.goal.selected", run_id, {"goal": selected.model_dump(mode="json"), "cycle_index": cycle_index})
+                if not self._enabled("intention_persistence"):
+                    status = "blocked"
+                    await self._emit("life.cycle.budget_exhausted", run_id, {"cycle_index": cycle_index, "reason": "intention_persistence_disabled"})
+                    break
+                intention_id = f"intention-{uuid4()}"
+                intention = PersistentIntention(
+                    goal_id=selected.id,
+                    objective=selected.objective,
+                    status="ACTIVE",
+                    started_at=_now(),
+                    cycle_budget=max_actions,
+                    evidence_refs=list(next(item for item in tensions if item.id == selected.tension_id).evidence_refs),
+                )
             task_payload = TaskCreate(
                 title=f"LIFE: {selected.objective[:170]}",
                 objective=selected.objective,
@@ -442,36 +596,52 @@ class LifeAgencyController:
             )
             child_task = await self.orchestrator.create_task(task_payload)
             self._persist_intention(run_id, intention_id, intention, str(child_task["id"]))
-            intentions_started += 1
-            goals_created += 1
-            await self._emit("life.intention.started", run_id, {"intention_id": intention_id, "intention": intention.model_dump(mode="json")}, str(child_task["id"]))
+            if not resumed:
+                goals_created += 1
+                await self._emit("life.intention.started", run_id, {"intention_id": intention_id, "intention": intention.model_dump(mode="json")}, str(child_task["id"]))
+            else:
+                await self._emit(
+                    "life.intention.updated",
+                    run_id,
+                    {"intention_id": intention_id, "status": "ACTIVE", "attempt": self._intention_attempts(run_id, intention_id) + 1},
+                    str(child_task["id"]),
+                )
             final_task = await self._pursue(child_task)
             actions = self.db.all("SELECT status FROM tool_executions WHERE task_id=?", (str(child_task["id"]),))
             action_count = len(actions)
-            tool_calls += action_count
             final_status = str(final_task.get("status", "failed"))
-            if final_status == "completed":
-                updated = self._update_intention(run_id, intention_id, "SATISFIED", evidence_refs=[*intention.evidence_refs, f"task:{child_task['id']}:completed"])
-                goals_completed += 1
-                resolved_intentions += 1
+            fresh_evidence = self._new_verified_evidence(str(child_task["id"]), intention.evidence_refs)
+            if final_status == "completed" and fresh_evidence:
+                updated = self._update_intention(
+                    run_id,
+                    intention_id,
+                    "SATISFIED",
+                    evidence_refs=[*intention.evidence_refs, *fresh_evidence],
+                    new_evidence_refs=fresh_evidence,
+                )
                 status = "completed"
-                await self._emit("life.intention.satisfied", run_id, {"intention_id": intention_id, "evidence_refs": updated.evidence_refs}, str(child_task["id"]))
+                await self._emit("life.intention.satisfied", run_id, {"intention_id": intention_id, "evidence_refs": updated.evidence_refs, "new_evidence_refs": fresh_evidence}, str(child_task["id"]))
+            elif final_status == "completed" and self._intention_attempts(run_id, intention_id) + 1 <= intention.cycle_budget:
+                updated = self._update_intention(run_id, intention_id, "ACTIVE", reason="completed_without_new_verified_evidence")
+                status = "active"
+                await self._emit("life.intention.updated", run_id, {"intention_id": intention_id, "status": updated.status, "reason": updated.blocked_reason}, str(child_task["id"]))
             elif final_status in {"waiting_approval", "waiting_outcome", "paused"}:
                 updated = self._update_intention(run_id, intention_id, "BLOCKED", reason=f"task_status:{final_status}")
-                resolved_intentions += 1
                 status = "blocked"
                 await self._emit("life.intention.updated", run_id, {"intention_id": intention_id, "status": updated.status, "reason": updated.blocked_reason}, str(child_task["id"]))
             else:
                 updated = self._update_intention(run_id, intention_id, "ABANDONED", reason=str(final_task.get("error") or f"task_status:{final_status}"))
-                resolved_intentions += 1
                 status = "abandoned"
                 await self._emit("life.intention.abandoned", run_id, {"intention_id": intention_id, "reason": updated.blocked_reason}, str(child_task["id"]))
             await self._emit("life.intention.updated", run_id, {"intention_id": intention_id, "status": updated.status}, str(child_task["id"]))
             self.db.execute(
-                "INSERT INTO life_cycles (id,run_id,superior_goal,cycle_index,tension_id,goal_id,intention_id,status,action_count,result_json,started_at,completed_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                (f"cycle-{uuid4()}", run_id, superior_goal, cycle_index, selected.tension_id, selected.id, intention_id, status, action_count, self.db.json({"task_status": final_status, "task_id": child_task["id"]}), intention.started_at, _now()),
+                "INSERT INTO life_cycles (id,run_id,superior_goal,cycle_index,task_id,tension_id,goal_id,intention_id,status,action_count,result_json,started_at,completed_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (f"cycle-{uuid4()}", run_id, superior_goal, cycle_index, str(child_task["id"]), selected.tension_id, selected.id, intention_id, status, action_count, self.db.json({"task_status": final_status, "task_id": child_task["id"], "new_evidence_refs": fresh_evidence}), intention.started_at, _now()),
             )
-            await self._emit("life.cycle.completed", run_id, {"cycle_index": cycle_index, "status": status, "goal_id": selected.id, "action_count": action_count}, str(child_task["id"]))
+            cycle_event = "life.cycle.retrying" if status == "active" else "life.cycle.completed"
+            await self._emit(cycle_event, run_id, {"cycle_index": cycle_index, "status": status, "goal_id": selected.id, "action_count": action_count, "new_evidence_refs": fresh_evidence}, str(child_task["id"]))
+            if status == "active":
+                continue
             if status != "completed":
                 break
             try:
@@ -482,25 +652,21 @@ class LifeAgencyController:
                         state = latest.epistemic_state
             except Exception:
                 pass
-            if status == "completed":
-                state = record_unknown(
-                    state,
-                    "Verificar a transferência do resultado do ciclo para uma nova classe de problema.",
-                    evidence_ref=f"life_cycle:{run_id}:{cycle_index}:completed",
-                )
-        if goals_created == 0 and status == "completed":
-            status = "no_tension"
+        summary_metrics = self._metrics_from_records(run_id)
+        summary_status: Literal["completed", "blocked", "abandoned", "no_tension"] = "blocked" if status == "active" else status
+        if int(summary_metrics["goals_created"]) == 0 and summary_status == "completed":
+            summary_status = "no_tension"
         summary = LifeRunSummary(
             run_id=run_id,
             superior_goal=superior_goal,
-            status=status,
-            tensions_detected=tensions_seen,
-            goals_created=goals_created,
-            goals_completed=goals_completed,
-            human_prompts_after_initial_goal=0,
-            tool_calls=tool_calls,
-            agc=max(0, goals_created - 1),
-            ipr=(resolved_intentions / intentions_started) if intentions_started else 1.0,
-            eggr=(goals_created / goals_created) if goals_created else 0.0,
+            status=summary_status,
+            tensions_detected=int(summary_metrics["tensions_detected"]),
+            goals_created=int(summary_metrics["goals_created"]),
+            goals_completed=int(summary_metrics["goals_completed"]),
+            human_prompts_after_initial_goal=int(summary_metrics["human_prompts_after_initial_goal"]),
+            tool_calls=int(summary_metrics["tool_calls"]),
+            agc=int(summary_metrics["agc"]),
+            ipr=float(summary_metrics["ipr"]),
+            eggr=float(summary_metrics["eggr"]),
         )
         return summary

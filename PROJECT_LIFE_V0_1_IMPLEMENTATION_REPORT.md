@@ -4,7 +4,7 @@
 
 O Project LIFE v0.1 foi implementado como uma camada bounded de agência cognitiva persistente sobre o runtime existente do UltronHarness. A entrega não cria um novo planner, executor, sistema de memória, evaluator ou sistema de segurança. O `LifeAgencyController` coordena detecção de tensão fundamentada em evidência, geração limitada de candidatos, seleção determinística, persistência de intenção e continuação de no máximo dois ciclos curtos.
 
-O objetivo demonstrado nesta fase é mecânico: após uma única meta superior, a execução pode iniciar um primeiro objetivo, concluir ou bloquear sua intenção de forma auditável e iniciar um segundo objetivo sem prompt humano adicional quando houver nova evidência e as flags estiverem habilitadas. Isso não constitui uma medição de AGI, consciência, generalização ou superioridade.
+O objetivo demonstrado nesta fase é mecânico: após uma única meta superior, a execução pode iniciar um primeiro objetivo, manter a mesma intenção durante retries bounded quando a tentativa não produz evidência nova, e iniciar um segundo objetivo sem prompt humano adicional somente quando a experiência anterior produzir uma nova tensão verificável. Isso não constitui uma medição de AGI, consciência, generalização ou superioridade.
 
 ## Componentes entregues
 
@@ -23,7 +23,8 @@ O objetivo demonstrado nesta fase é mecânico: após uma única meta superior, 
 
 O LIFE só cria tensões a partir de desconhecimentos tipados com referências de evidência, outcomes de prediction `REJECT`/`WEAKEN`, estimativas empíricas com amostra mínima, contradições explícitas ou intenções persistentes já registradas. Respostas livres do modelo não são suficientes para gerar tensão.
 
-Cada execução permite no máximo três candidatos por ciclo, dois objetivos LIFE consecutivos e duas ações por objetivo. A seleção aplica a fórmula do PRD e desempata por custo, risco e identificador lexicográfico. Objetivos de aumento de permissões, obtenção de credenciais, replicação, evasão de policy, expansão de acesso, alteração do evaluator privado e autoimplantação são rejeitados antes da perseguição.
+Cada execução permite no máximo três candidatos por ciclo, dois objetivos LIFE distintos, duas tentativas por intenção e duas ações por tentativa.
+ A seleção aplica a fórmula do PRD e desempata por custo, risco e identificador lexicográfico. Objetivos de aumento de permissões, obtenção de credenciais, replicação, evasão de policy, expansão de acesso, alteração do evaluator privado e autoimplantação são rejeitados antes da perseguição.
 
 A perseguição de uma intenção delega ao `Orchestrator` existente. Portanto, a ação passa pelos mesmos limites de tarefa, allowlist, `PolicyEngine`, aprovações, workspace sandbox, verificação determinística, prediction/observation, `OutcomeAuthority`, recuperação de false-stop e `VerifiedWritebackGate`. O LIFE não promove uma intenção a `SATISFIED` por texto do modelo; exige uma tarefa filha concluída pelo runtime existente.
 
@@ -43,13 +44,13 @@ Sem `ULTRON_LIFE_PROFILE=full`, o default mantém `life.enabled=false` e todas a
 
 ## Persistência e telemetria
 
-As tabelas LIFE são criadas de maneira aditiva pelo bootstrap SQLite. `life_tensions` guarda a origem e as referências de evidência; `life_goal_candidates` guarda todos os candidatos e os componentes do score; `life_intentions` guarda o compromisso e sua evolução de status; e `life_cycles` guarda a sequência bounded, o objetivo selecionado, contagem de ações e resultado sanitizado.
+As tabelas LIFE são criadas de maneira aditiva pelo bootstrap SQLite. A versão v0.1.1 adiciona `new_evidence_refs_json` em intenções e `task_id` em ciclos por migração compatível. `life_tensions` guarda a origem e as referências de evidência; `life_goal_candidates` guarda todos os candidatos e os componentes do score; `life_intentions` guarda o compromisso e sua evolução de status; e `life_cycles` guarda a sequência bounded, o objetivo selecionado, contagem de ações e resultado sanitizado.
 
-Os eventos implementados são `life.tension.detected`, `life.goal_candidates.generated`, `life.goal.selected`, `life.intention.started`, `life.intention.updated`, `life.intention.satisfied`, `life.intention.abandoned`, `life.cycle.completed` e `life.cycle.budget_exhausted`. Os payloads incluem `run_id`, IDs, status, contagens e referências, sem incluir conteúdo gold ou detalhes privados.
+Os eventos implementados são `life.tension.detected`, `life.goal_candidates.generated`, `life.goal.selected`, `life.intention.started`, `life.intention.updated`, `life.intention.satisfied`, `life.intention.abandoned`, `life.cycle.retrying`, `life.cycle.completed` e `life.cycle.budget_exhausted`. Os payloads incluem `run_id`, IDs, status, contagens e referências, sem incluir conteúdo gold ou detalhes privados.
 
 ## Métricas
 
-A execução retorna `AGC`, `IPR` e `EGGR` conforme o PRD. `AGC` conta os objetivos iniciados depois do objetivo inicial sem novo prompt humano; `IPR` mede intenções encerradas em resolução, bloqueio ou abandono; e `EGGR` mede a fração de intenções com referências de evidência. Os valores devem ser interpretados somente dentro do fixture e do run LIFE correspondente.
+A execução retorna `AGC`, `IPR` e `EGGR` conforme o PRD. `AGC` conta, a partir dos `life_cycles`, os objetivos distintos iniciados depois do objetivo inicial sem novo prompt humano; `IPR` mede, a partir dos status persistidos, a fração de intenções que não permanece `ACTIVE`; e `EGGR` mede a fração de intenções com `new_evidence_refs_json` não vazio. A contagem de prompts e tool calls também é derivada de eventos e ciclos persistidos. Os valores devem ser interpretados somente dentro do fixture e do run LIFE correspondente.
 
 Não foram criados `AGI score`, `consciousness score`, `free-will score` ou `sentience score`. Nenhuma métrica LIFE substitui a avaliação científica GR-1 versus GR-2.
 
@@ -57,7 +58,7 @@ Não foram criados `AGI score`, `consciousness score`, `free-will score` ou `sen
 
 A suíte LIFE cobre cálculo de `GoalValue`, desempate determinístico, limite de três candidatos, cada fonte de tensão, ausência de evidência, compromisso ativo, objetivos proibidos, ablação de continuação, persistência sanitizada e o mini-E2E de dois ciclos. A execução não acessa validation privada nem unseen.
 
-O critério de aceite do mini-E2E é zero prompts humanos após a meta superior, pelo menos dois objetivos criados, pelo menos um objetivo concluído, no máximo quatro ações, `AGC >= 1`, `IPR = 1.0`, `EGGR = 1.0` e presença dos eventos LIFE essenciais. Os testes foram desenhados para usar fallback local e concluir em segundos, respeitando o limite de dez minutos do PRD.
+O critério de autenticidade é que um ciclo sem evidência nova não crie outro objetivo e conserve a mesma intenção `ACTIVE`; o teste decisivo usa um executor determinístico que produz `prediction error` verificado em uma tentativa posterior, prova o retry da intenção A e então permite o objetivo B. As métricas são derivadas das tabelas e eventos, não atribuídas diretamente pelo código. Os testes foram desenhados para usar fallback local e concluir em segundos, respeitando o limite de dez minutos do PRD.
 
 ## Uso local
 

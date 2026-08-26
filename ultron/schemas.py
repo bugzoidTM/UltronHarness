@@ -169,6 +169,7 @@ class PersistentIntention(BaseModel):
     started_at: str = Field(min_length=1, max_length=80)
     cycle_budget: int = Field(ge=1, le=10)
     evidence_refs: list[str] = Field(default_factory=list, max_length=20)
+    new_evidence_refs: list[str] = Field(default_factory=list, max_length=20)
     completed_at: str | None = Field(default=None, max_length=80)
     blocked_reason: str | None = Field(default=None, max_length=500)
 

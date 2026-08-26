@@ -717,6 +717,7 @@ CREATE TABLE IF NOT EXISTS life_intentions (
     started_at TEXT NOT NULL,
     cycle_budget INTEGER NOT NULL,
     evidence_refs_json TEXT NOT NULL DEFAULT '[]',
+    new_evidence_refs_json TEXT NOT NULL DEFAULT '[]',
     completed_at TEXT,
     blocked_reason TEXT,
     updated_at TEXT NOT NULL
@@ -728,6 +729,7 @@ CREATE TABLE IF NOT EXISTS life_cycles (
     run_id TEXT NOT NULL,
     superior_goal TEXT NOT NULL,
     cycle_index INTEGER NOT NULL,
+    task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
     tension_id TEXT,
     goal_id TEXT,
     intention_id TEXT,
@@ -770,6 +772,14 @@ SKILL_VERIFICATION_MIGRATIONS = {
 
 STRUCTURED_DECISION_MIGRATIONS = {
     "error_category": "TEXT",
+}
+
+LIFE_INTENTION_MIGRATIONS = {
+    "new_evidence_refs_json": "TEXT NOT NULL DEFAULT '[]'",
+}
+
+LIFE_CYCLE_MIGRATIONS = {
+    "task_id": "TEXT REFERENCES tasks(id) ON DELETE SET NULL",
 }
 
 COGNITIVE_SNAPSHOT_MIGRATIONS = {
@@ -842,6 +852,14 @@ class Database:
             for name, definition in SKILL_VERIFICATION_MIGRATIONS.items():
                 if name not in skill_columns:
                     connection.execute(f"ALTER TABLE skills ADD COLUMN {name} {definition}")
+            life_intention_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(life_intentions)")}
+            for name, definition in LIFE_INTENTION_MIGRATIONS.items():
+                if name not in life_intention_columns:
+                    connection.execute(f"ALTER TABLE life_intentions ADD COLUMN {name} {definition}")
+            life_cycle_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(life_cycles)")}
+            for name, definition in LIFE_CYCLE_MIGRATIONS.items():
+                if name not in life_cycle_columns:
+                    connection.execute(f"ALTER TABLE life_cycles ADD COLUMN {name} {definition}")
             pair_utility_columns = {str(row[1]) for row in connection.execute("PRAGMA table_info(experience_pair_utility)")}
             for name, definition in PAIR_UTILITY_MIGRATIONS.items():
                 if name not in pair_utility_columns:

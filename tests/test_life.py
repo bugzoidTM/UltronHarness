@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from copy import deepcopy
 from pathlib import Path
 
@@ -14,7 +15,7 @@ from ultron.db import Database
 from ultron.memory.service import MemoryService
 from ultron.models.gateway import ModelGateway
 from ultron.policy.engine import PolicyEngine
-from ultron.schemas import CognitiveTension, EpistemicState, PersistentIntention
+from ultron.schemas import CognitiveTension, EpistemicState, PersistentIntention, TaskCreate
 from ultron.tools.registry import ToolRegistry
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -190,14 +191,14 @@ async def test_life_two_autonomous_goal_cycles(tmp_path: Path) -> None:
         initial_state=state,
     )
     assert summary.human_prompts_after_initial_goal == 0
-    assert summary.goals_created >= 2
-    assert summary.goals_completed >= 1
-    assert summary.tool_calls <= 4
-    assert summary.agc >= 1
-    assert summary.ipr == pytest.approx(1.0)
-    assert summary.eggr == pytest.approx(1.0)
+    assert summary.goals_created == 1
+    assert summary.goals_completed == 0
+    assert summary.tool_calls == 0
+    assert summary.agc == 0
+    assert summary.ipr == pytest.approx(0.0)
+    assert summary.eggr == pytest.approx(0.0)
     assert db.one("SELECT COUNT(*) AS count FROM life_cycles WHERE run_id=?", (summary.run_id,))["count"] == 2
-    assert db.one("SELECT COUNT(*) AS count FROM life_intentions WHERE run_id=?", (summary.run_id,))["count"] == 2
+    assert db.one("SELECT COUNT(*) AS count FROM life_intentions WHERE run_id=?", (summary.run_id,))["count"] == 1
     events = db.all("SELECT event_type,payload_json FROM events WHERE payload_json LIKE ?", (f'%{summary.run_id}%',))
     event_types = {row["event_type"] for row in events}
     assert {
@@ -205,9 +206,8 @@ async def test_life_two_autonomous_goal_cycles(tmp_path: Path) -> None:
         "life.goal_candidates.generated",
         "life.goal.selected",
         "life.intention.started",
-        "life.intention.satisfied",
         "life.intention.updated",
-        "life.cycle.completed",
+        "life.cycle.retrying",
     } <= event_types
 
 
@@ -231,3 +231,127 @@ def test_life_inspect_returns_sanitized_persistent_rows(tmp_path: Path) -> None:
     assert result["tensions"][0]["evidence_refs"] == ["fixture:competence-gap"]
     assert "evidence_refs_json" not in result["tensions"][0]
     assert result["candidates"][0]["selected"] is False
+
+
+class _AuthenticFakeOrchestrator:
+    def __init__(self, db: Database):
+        self.db = db
+        self.tasks: dict[str, dict[str, str]] = {}
+        self.create_count = 0
+
+    async def create_task(self, payload) -> dict[str, str]:
+        self.create_count += 1
+        task_id = f"fake-task-{self.create_count}"
+        task = {"id": task_id, "status": "created", "objective": payload.objective}
+        self.tasks[task_id] = task
+        return task
+
+    async def run(self, task_id: str) -> None:
+        attempt = int(task_id.rsplit("-", 1)[-1])
+        action_id = f"{task_id}-action"
+        self.db.execute(
+            "INSERT INTO cognitive_actions (id,action_id,task_id,iteration,tool,arguments_json,expected_evidence_json,status,created_at,executed_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+            (f"row-{action_id}", action_id, task_id, 1, "fixture.observe", "{}", "{}", "completed", "2026-01-01T00:00:00+00:00", "2026-01-01T00:00:01+00:00"),
+        )
+        self.db.execute(
+            "INSERT INTO tool_executions (id,task_id,tool_name,arguments_json,status,risk,output,created_at,completed_at) VALUES (?,?,?,?,?,?,?,?,?)",
+            (f"tool-{task_id}", task_id, "fixture.observe", "{}", "completed", "R0", "deterministic observation", "2026-01-01T00:00:00+00:00", "2026-01-01T00:00:01+00:00"),
+        )
+        if attempt % 2 == 0:
+            prediction_id = f"prediction-{task_id}"
+            self.db.execute(
+                "INSERT INTO cognitive_predictions (id,prediction_id,task_id,action_id,iteration,hypothesis,expected_observation,confidence_before,action_json,predicted_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (f"row-{prediction_id}", prediction_id, task_id, action_id, 1, "a hipótese da fixture será confirmada", "observação verificável", 0.8, "{}", "2026-01-01T00:00:00+00:00"),
+            )
+            self.db.execute(
+                "INSERT INTO prediction_observations (id,prediction_id,task_id,action_id,observed_output,result_status,verification_passed,confidence_after,classification,evidence_refs_json,observed_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (f"observation-{task_id}", prediction_id, task_id, action_id, "resultado contradiz a previsão", "completed", 1, 0.1, "reject", self.db.json([f"fixture:prediction-error:{task_id}"]), "2026-01-01T00:00:02+00:00"),
+            )
+        self.tasks[task_id]["status"] = "completed"
+
+    def get_task(self, task_id: str) -> dict[str, str] | None:
+        return self.tasks.get(task_id)
+
+
+@pytest.mark.asyncio
+async def test_life_authentic_agency_uses_new_prediction_error_for_second_goal(tmp_path: Path) -> None:
+    settings, db, _, life = _runtime(tmp_path)
+    fake = _AuthenticFakeOrchestrator(db)
+    life.orchestrator = fake
+    state = record_unknown(EpistemicState(), "lacuna inicial verificável", evidence_ref="fixture:unknown-A")
+
+    summary = await life.run("Melhorar a resolução de problemas", initial_state=state)
+
+    assert summary.goals_created == 2
+    assert summary.goals_completed == 2
+    assert summary.agc == 1
+    assert summary.human_prompts_after_initial_goal == 0
+    assert summary.tool_calls == 4
+    assert summary.ipr == pytest.approx(1.0)
+    assert summary.eggr == pytest.approx(1.0)
+    assert db.one("SELECT COUNT(DISTINCT goal_id) AS count FROM life_cycles WHERE run_id=?", (summary.run_id,))["count"] == 2
+    assert db.one("SELECT COUNT(*) AS count FROM life_cycles WHERE run_id=? AND status='active'", (summary.run_id,))["count"] == 2
+    tensions = db.all("SELECT kind,description FROM life_tensions WHERE run_id=? ORDER BY created_at", (summary.run_id,))
+    assert {row["kind"] for row in tensions} == {"UNKNOWN_IMPORTANT", "UNFINISHED_COMMITMENT", "PREDICTION_ERROR"}
+    assert any(row["kind"] == "PREDICTION_ERROR" for row in tensions)
+    assert all("Verificar a transferência" not in row["description"] for row in tensions)
+
+
+def test_life_sources_are_scoped_to_run_provenance(tmp_path: Path) -> None:
+    _, db, orchestrator, life = _runtime(tmp_path)
+    old_intention = PersistentIntention(
+        goal_id="old-goal",
+        objective="Compromisso de outro run",
+        status="ACTIVE",
+        started_at="2026-01-01T00:00:00+00:00",
+        cycle_budget=2,
+        evidence_refs=["fixture:old-run"],
+    )
+    life._persist_intention("old-run", "old-intention", old_intention, None)
+    assert life.detect_tensions("new-run") == []
+
+    task = asyncio.run(orchestrator.create_task(TaskCreate(title="fixture", objective="fixture", workspace="life")))
+    task_id = str(task["id"])
+    action_id = f"{task_id}-action"
+    db.execute(
+        "INSERT INTO cognitive_actions (id,action_id,task_id,iteration,tool,arguments_json,expected_evidence_json,status,created_at) VALUES (?,?,?,?,?,?,?,?,?)",
+        (f"row-{action_id}", action_id, task_id, 1, "fixture.observe", "{}", "{}", "completed", "2026-01-01T00:00:00+00:00"),
+    )
+    db.execute(
+        "INSERT INTO cognitive_predictions (id,prediction_id,task_id,action_id,iteration,hypothesis,expected_observation,confidence_before,action_json,predicted_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        ("prediction-row", "prediction-old", task_id, action_id, 1, "hipótese", "observação", 0.8, "{}", "2026-01-01T00:00:00+00:00"),
+    )
+    db.execute(
+        "INSERT INTO prediction_observations (id,prediction_id,task_id,action_id,observed_output,result_status,verification_passed,confidence_after,classification,evidence_refs_json,observed_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        ("observation-row", "prediction-old", task_id, action_id, "erro", "completed", 1, 0.1, "reject", db.json(["fixture:old-prediction"]), "2026-01-01T00:00:02+00:00"),
+    )
+    current_intention = PersistentIntention(
+        goal_id="current-goal",
+        objective="Compromisso deste run",
+        status="ACTIVE",
+        started_at="2026-01-01T00:00:00+00:00",
+        cycle_budget=2,
+        evidence_refs=["fixture:current-run"],
+    )
+    life._persist_intention("current-run", "current-intention", current_intention, task_id)
+    assert life.detect_tensions("other-run") == []
+    assert any(item.kind == "PREDICTION_ERROR" for item in life.detect_tensions("current-run"))
+
+
+def test_life_new_verified_evidence_is_required_for_satisfaction(tmp_path: Path) -> None:
+    _, db, _, life = _runtime(tmp_path)
+    tension = _tension("evidence")
+    life._persist_tension("evidence", tension)
+    candidate = life.generate_goal_candidates([tension])[0]
+    life._persist_candidate("evidence", candidate, selected=True)
+    intention = PersistentIntention(
+        goal_id=candidate.id,
+        objective=candidate.objective,
+        status="ACTIVE",
+        started_at="2026-01-01T00:00:00+00:00",
+        cycle_budget=2,
+        evidence_refs=tension.evidence_refs,
+    )
+    life._persist_intention("evidence", "intention-evidence", intention, "task-no-evidence")
+    assert life._new_verified_evidence("task-no-evidence", intention.evidence_refs) == []
+    assert db.one("SELECT new_evidence_refs_json FROM life_intentions WHERE id=?", ("intention-evidence",))["new_evidence_refs_json"] == "[]"

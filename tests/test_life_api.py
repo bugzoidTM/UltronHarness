@@ -40,10 +40,11 @@ def test_life_api_runs_two_bounded_cycles_without_new_prompt(tmp_path: Path, mon
         assert response.status_code == 200, response.text
         summary = response.json()
         assert summary["human_prompts_after_initial_goal"] == 0
-        assert summary["goals_created"] == 2
-        assert summary["agc"] == 1
-        assert summary["ipr"] == 1.0
-        assert summary["eggr"] == 1.0
+        assert summary["goals_created"] == 1
+        assert summary["goals_completed"] == 0
+        assert summary["agc"] == 0
+        assert summary["ipr"] == 0.0
+        assert summary["eggr"] == 0.0
         inspected = client.get(f"/api/life/runs/{summary['run_id']}")
         assert inspected.status_code == 200
         assert len(inspected.json()["cycles"]) == 2
