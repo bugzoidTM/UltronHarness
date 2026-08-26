@@ -87,6 +87,10 @@ A contagem de oito execuções é compatível com um único programa: duas basel
 
 Os fingerprints das tarefas holdout foram iguais entre baseline e candidate. O modelo e a seed foram `qwen2.5:3b` e `42` em todos os pares; a allowlist permaneceu vazia. A evidência pública foi registrada como `derived_formula` e `exact_match`.
 
+O programa live selecionado foi `CP-01`, gerado pelo modelo, com a sequência `REPRESENT -> DECOMPOSE -> HYPOTHESIZE -> DEDUCT`. A VM executou quatro transformações de estado por tarefa candidate; o `rationale` longo associado ao programa não entrou na mensagem do executor. O programa não incluiu `VERIFY`, portanto este resultado não demonstra a cadeia completa de verificação proposta: demonstra especificamente a execução de representação, decomposição, hipótese e dedução dentro do contrato atual da VM.
+
+O baseline holdout acertou `reasoning_07` e falhou `reasoning_06`; o candidate com CP-01 acertou os dois. Assim, o NCPG foi `0,500` (`1,000 - 0,500`) em duas tarefas, com oito execuções totais porque apenas um programa foi gerado. O holdout permaneceu ausente do prompt de síntese, e o relatório registrou `rationale_used_for_execution=false` e `human_selected_program=false`.
+
 ## Interpretação
 
 O resultado é compatível com a hipótese operacional de que uma sequência de operadores criada pelo modelo pode produzir um estado intermediário útil para a chamada candidate e melhorar o desempenho em duas tarefas públicas holdout. Contudo, o microprobe é pequeno, usa uma única seed, uma única família pública e duas tarefas holdout. O próprio `DEDUCT` contém semântica determinística para as formas de tarefa públicas utilizadas; isso é uma VM verificável, não uma teoria geral de raciocínio.
