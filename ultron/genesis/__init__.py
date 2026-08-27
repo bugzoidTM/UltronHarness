@@ -13,10 +13,17 @@ from ultron.genesis.schemas import (
     RepresentationOutput,
     VerificationOutput,
 )
-from ultron.genesis.vm import AdaptiveCognitiveVM, CognitiveVM, GenericClosedLoopVM, VMExecution
+from ultron.genesis.vm import (
+    AdaptiveCognitiveVM,
+    CognitiveVM,
+    EndogenousExecutiveVM,
+    GenericClosedLoopVM,
+    VMExecution,
+)
 
 __all__ = [
     "AdaptiveCognitiveVM",
+    "EndogenousExecutiveVM",
     "CognitiveFrame",
     "CognitivePolicy",
     "CognitivePolicyRule",

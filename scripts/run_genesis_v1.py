@@ -60,13 +60,13 @@ class FixtureStructuredGateway:
                 rationale="Fixture mecânica de política; não representa descoberta do modelo.",
             )
         if schema is RepresentationOutput:
-            return RepresentationOutput(entities=["fixture"], facts=["fixture fact"], constraints=["fixture constraint"], unknowns=["fixture unknown"])
+            return RepresentationOutput(entities=["fixture"], facts=["fixture fact"], constraints=["fixture constraint"], unknowns=["fixture unknown"], next_operator="HYPOTHESIZE")
         if schema is HypothesisOutput:
-            return HypothesisOutput(hypotheses=["fixture hypothesis"], predictions=["fixture prediction"])
+            return HypothesisOutput(hypotheses=["fixture hypothesis"], predictions=["fixture prediction"], next_operator="DEDUCT")
         if schema is DeductionOutput:
-            return DeductionOutput(conclusion="11")
+            return DeductionOutput(conclusion="11", next_operator="VERIFY")
         if schema is VerificationOutput:
-            return VerificationOutput(status="supported", explanation="fixture verification")
+            return VerificationOutput(status="supported", explanation="fixture verification", next_operator="VERIFY")
         if schema is DeliberationOutput:
             return DeliberationOutput(note="fixture deliberation", candidate_answer="11")
         if schema is FinalAnswerOutput:

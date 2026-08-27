@@ -252,4 +252,44 @@ O microprobe não responde se políticas adaptativas podem superar o controle. E
 
 A validação final após a compatibilidade com os entrypoints históricos foi concluída sem regressões: Ruff aprovado; 16 testes Genesis v1 direcionados passaram; a suíte Linux completa passou com 247 testes e 1 warning; a suíte Windows de segurança passou com 12 testes, 1 skip e 1 warning; as fixtures do probe v1 e do probe histórico v0.2.2 foram executadas com sucesso. O JSON raw live permanece fora do commit por ser dado experimental gerado.
 
-Os arquivos públicos específicos da v1 são `scripts/run_genesis_v1.py`, as extensões em `ultron/genesis/{schemas.py,vm.py,synthesizer.py,public_runner.py,controller.py,__init__.py}`, `config/default.yaml` com os budgets bounded e os testes `tests/test_genesis.py` e `tests/test_genesis_ablation.py`. O protocolo, este relatório e o README documentam a decisão `REJECTED_INVALID_POLICY`; nenhuma promoção foi feita.
+Os arquivos públicos específicos da v1 são `scripts/run_genesis_v1.py`, e o entrypoint do v2 é `scripts/run_genesis_v2.py`; as extensões em `ultron/genesis/{schemas.py,vm.py,synthesizer.py,public_runner.py,controller.py,__init__.py}`, `config/default.yaml` com os budgets bounded e os testes `tests/test_genesis.py` e `tests/test_genesis_ablation.py`. O protocolo, este relatório e o README documentam a decisão `REJECTED_INVALID_POLICY`; nenhuma promoção foi feita.
+
+
+## Genesis v2 — Endogenous Executive Controller
+
+A v2 implementa controle executivo endógeno online. A VM inicia com `REPRESENT`; cada chamada cognitiva transforma o `CognitiveFrame` e retorna, no mesmo schema estruturado, um `next_operator` pertencente ao enum das quatro primitivas. O Harness respeita essa escolha na chamada seguinte, sem criar uma chamada adicional de roteamento. A condição B usa o mesmo estado acumulativo e o mesmo número máximo de chamadas, mas ignora `next_operator` e aplica o controlador fixo.
+
+O contrato mantém `REPRESENT`, `HYPOTHESIZE`, `DEDUCT` e `VERIFY` como únicas primitivas. `next_operator` é obrigatório em `RepresentationOutput`, `HypothesisOutput`, `DeductionOutput` e `VerificationOutput`. A saída `VERIFY` registra `supported`, `contradicted` ou `uncertain`; uma recuperação é contada quando C sai de `contradicted` ou `uncertain`, escolhe uma nova operação e termina posteriormente em `supported` dentro do budget.
+
+O probe v2 usa dois diagnósticos públicos e dois holdouts públicos, seed `42`, `qwen2.5:3b`, no máximo seis chamadas por tarefa em B/C e 170 tokens solicitados por chamada. A condição A recebe até 1024 tokens em uma chamada; B e C recebem até seis chamadas de 170 tokens, sem chamada extra de roteamento. A métrica primária é `ECG=C−B`; ela somente é calculada quando todos os pares de holdout em A, B e C são válidos.
+
+### Resultado live v2
+
+Foi executada uma única rodada live bounded. A condição A terminou validamente nos dois holdouts, mas B e C tiveram falhas operacionais: respostas estruturadas truncadas, `decision_budget_exceeded` e ausência de terminação válida em parte das tarefas. C completou uma linha de diagnóstico com recuperação observável de `contradicted` para `supported` em cinco chamadas, porém isso não valida o conjunto de holdout.
+
+| Condição | reasoning_06 | reasoning_07 | Agregado bruto | Validade |
+|---|---:|---:|---:|---|
+| A — DIRECT | 0/1 | 0/1 | 0,000 | válida |
+| B — FIXED EXECUTIVE | inválida | inválida | 0,000* | rejeitada |
+| C — ENDOGENOUS EXECUTIVE | inválida | inválida | 0,000* | rejeitada |
+
+`*` Os zeros de B/C são apenas agregados brutos, não scores científicos, porque as linhas contêm falhas operacionais. O artefato registra `ecg_C_minus_B=null`, como exige o gate. A Adaptive Recovery Rate também não é promovida a resultado comparativo; o caso de recuperação em diagnóstico é evidência de mecanismo, não evidência de generalização.
+
+A decisão correta é `REJECTED_INVALID_EXECUTION`. O teste não demonstra `C>B` nem `C<=B`: a comparação não atingiu a validade mínima. A arquitetura online e a telemetria de recuperação estão funcionando, mas o modelo-base não produziu execução completa sob o contrato bounded desta rodada. Não se autoriza transferência, novos operadores, tuning aberto ou Genesis v2.1.
+
+## Validação Genesis v2
+
+| Gate | Resultado |
+|---|---:|
+| Testes Genesis direcionados | 18 passed |
+| Ruff e `git diff --check` | aprovados |
+| Suíte Linux completa com `ULTRON_VECTOR_ENABLED=false` | 249 passed, 1 warning |
+| Fixtures v1, v0.2.2 e v2 | executadas com sucesso; development-only |
+| `next_operator` sem chamada extra de roteamento | coberto |
+| Recuperação após `contradicted` | coberta |
+| Paridade de budget e config hash | coberta |
+| Segurança Windows | 12 passed, 1 skipped, 1 warning |
+| Holdout privado/unseen/transferência | não executados |
+
+
+A validação final do v2 no staging Windows foi concluída com 12 testes de segurança aprovados, 1 teste ignorado e 1 warning não relacionado ao código Genesis. As três fixtures públicas (`run_genesis_v1.py`, `run_genesis_v022.py` e `run_genesis_v2.py`) permanecem executáveis; a suíte Linux completa passou com 249 testes e 1 warning. O resultado live bruto foi preservado fora do commit e a auditoria confirmou que `ecg_C_minus_B` é `null` quando os holdouts B/C não são válidos.

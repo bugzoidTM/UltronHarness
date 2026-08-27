@@ -155,6 +155,16 @@ O probe está em [`scripts/run_genesis_v1.py`](scripts/run_genesis_v1.py). O mod
 
 A decisão operacional é não iniciar transferência, não adicionar operadores e não abrir tuning de prompts. A hipótese adaptativa permanece sem confirmação e sem refutação neste microprobe: o modelo pequeno não produziu uma política operacionalmente válida sob o contrato reforçado.
 
+### Project Genesis v2 — Endogenous Executive Controller
+
+A v2 remove a política completa pré-compilada e faz cada operador cognitivo escolher `next_operator` na própria saída estruturada. O Harness começa com `REPRESENT`, transforma o `CognitiveFrame` e respeita a próxima operação retornada, sem uma chamada adicional de roteamento. As únicas primitivas continuam sendo `REPRESENT`, `HYPOTHESIZE`, `DEDUCT` e `VERIFY`.
+
+O protocolo compara A — `DIRECT`; B — `FIXED EXECUTIVE`, com o mesmo frame acumulativo e controlador fixo; e C — `ENDOGENOUS EXECUTIVE`, que respeita `next_operator`. B e C usam no máximo seis chamadas de 170 tokens por tarefa, enquanto A usa uma chamada de até 1024 tokens. A métrica primária é **Executive Control Gain (`ECG = C − B`)**. A taxa de recuperação adaptativa conta transições de `contradicted`/`uncertain` para `supported` em C.
+
+O probe está em [`scripts/run_genesis_v2.py`](scripts/run_genesis_v2.py). O diagnóstico e o holdout usam somente as tarefas públicas `reasoning_01`, `reasoning_02`, `reasoning_06` e `reasoning_07`, com seed `42`, `qwen2.5:3b`, timeout global bounded e sem writeback. A fixture valida o mecanismo; não é evidência de capacidade.
+
+Na única rodada live, A foi válido, mas B e C tiveram falhas de schema truncado, ausência de progresso e/ou excesso de decisões. C demonstrou uma recuperação em uma tarefa de diagnóstico, mas não completou validamente os dois holdouts. O resultado correto é **`REJECTED_INVALID_EXECUTION`**; `ECG` foi registrado como `null` e os zeros brutos do artefato não devem ser interpretados como `C ≤ B`. A hipótese de ganho executivo permanece sem confirmação e sem refutação.
+
 ## Segurança e autonomia
 
 O UltronPro começa em **Mode 2 — Supervised Agent**. Ações R0 e R1 permitidas podem ser executadas dentro do workspace; modificações R2 aguardam aprovação. As ações R3/R4 requerem aprovação e as R5 são bloqueadas. O diretório permitido é:

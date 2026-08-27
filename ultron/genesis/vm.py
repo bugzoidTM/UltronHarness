@@ -62,46 +62,46 @@ class CognitiveVM:
             steps += 1
         return VMExecution(frame, halted=True, valid=True, error=None, steps=steps, model_calls=model_calls)
 
-    async def _apply_operator(self, frame: CognitiveFrame, operator: str) -> None:
+    async def _apply_operator(self, frame: CognitiveFrame, operator: str) -> str:
         if operator == "REPRESENT":
             output = await self._structured(
                 RepresentationOutput,
-                "Transforme o problema em uma representação factual. Extraia entidades, fatos, restrições e incógnitas sem resolver a tarefa.",
+                "Transforme o problema em uma representação factual. Extraia entidades, fatos, restrições e incógnitas sem resolver a tarefa. Inclua next_operator com a próxima primitiva cognitiva desejada.",
                 frame,
             )
             frame.entities = output.entities
             frame.facts = output.facts
             frame.constraints = output.constraints
             frame.unknowns = output.unknowns
-            return
+            return output.next_operator
         if operator == "HYPOTHESIZE":
             frame.candidate_answer = None
             frame.verification = {}
             output = await self._structured(
                 HypothesisOutput,
-                "Proponha hipóteses candidatas e previsões testáveis a partir do frame atual. Não escolha nem anuncie uma resposta final.",
+                "Proponha hipóteses candidatas e previsões testáveis a partir do frame atual. Não escolha nem anuncie uma resposta final. Inclua next_operator com a próxima primitiva cognitiva desejada.",
                 frame,
             )
             frame.hypotheses = output.hypotheses
             frame.predictions = output.predictions
-            return
+            return output.next_operator
         if operator == "DEDUCT":
             frame.verification = {}
             output = await self._structured(
                 DeductionOutput,
-                "Dado o frame atual, derive a próxima conclusão justificada. Retorne somente uma conclusão curta; não use ferramentas nem conhecimento de gabarito.",
+                "Dado o frame atual, derive a próxima conclusão justificada. Retorne somente uma conclusão curta; não use ferramentas nem conhecimento de gabarito. Inclua next_operator com a próxima primitiva cognitiva desejada.",
                 frame,
             )
             frame.candidate_answer = output.conclusion
-            return
+            return output.next_operator
         if operator == "VERIFY":
             output = await self._structured(
                 VerificationOutput,
-                "Avalie a conclusão candidata contra o problema, os fatos e as restrições disponíveis. Classifique apenas como supported, contradicted ou uncertain.",
+                "Avalie a conclusão candidata contra o problema, os fatos e as restrições disponíveis. Classifique apenas como supported, contradicted ou uncertain. Inclua next_operator com a próxima primitiva cognitiva desejada; após contradicted ou uncertain escolha HYPOTHESIZE ou DEDUCT para tentar recuperação.",
                 frame,
             )
             frame.verification = {"status": output.status, "explanation": output.explanation}
-            return
+            return output.next_operator
         raise ValueError(f"unknown_operator:{operator}")
 
     async def _structured(self, schema: type[Any], instruction: str, frame: CognitiveFrame) -> Any:
@@ -138,6 +138,85 @@ class CognitiveVM:
             f"entities={len(frame.entities)};facts={len(frame.facts)};unknowns={len(frame.unknowns)};"
             f"constraints={len(frame.constraints)};hypotheses={len(frame.hypotheses)};predictions={len(frame.predictions)};"
             f"candidate_present={bool(frame.candidate_answer)};verification_status={frame.verification.get('status', '')}"
+        )
+
+
+class EndogenousExecutiveVM(CognitiveVM):
+    """Controlador online: o último operador escolhe o próximo sem chamada adicional."""
+
+    async def execute_online(self, problem: str, max_decisions: int = 6) -> VMExecution:
+        frame = CognitiveFrame(problem=problem)
+        decisions = 0
+        model_calls = 0
+        next_operator = "REPRESENT"
+        while decisions < max_decisions:
+            if frame.verification.get("status") == "supported" and frame.candidate_answer:
+                return VMExecution(
+                    frame,
+                    halted=True,
+                    valid=True,
+                    error=None,
+                    steps=decisions,
+                    model_calls=model_calls,
+                    decisions=decisions,
+                    termination_reason="verification_supported",
+                )
+            if next_operator not in {"REPRESENT", "HYPOTHESIZE", "DEDUCT", "VERIFY"}:
+                return VMExecution(
+                    frame,
+                    halted=True,
+                    valid=False,
+                    error=f"invalid_next_operator:{next_operator}",
+                    steps=decisions,
+                    model_calls=model_calls,
+                    decisions=decisions,
+                    termination_reason="invalid_next_operator",
+                )
+            operator = next_operator
+            try:
+                model_calls += 1
+                next_operator = await self._apply_operator(frame, operator)
+            except Exception as exc:
+                return VMExecution(
+                    frame,
+                    halted=True,
+                    valid=False,
+                    error=f"operator_error:{type(exc).__name__}:{str(exc)[:200]}",
+                    steps=decisions,
+                    model_calls=model_calls,
+                    decisions=decisions,
+                    termination_reason="operator_error",
+                )
+            frame.trace.append(
+                {
+                    "operator": operator,
+                    "controller": "endogenous_online",
+                    "next_operator": next_operator,
+                    "verification_status": frame.verification.get("status", ""),
+                    "state": self._state_digest(frame),
+                }
+            )
+            decisions += 1
+            if frame.verification.get("status") == "supported" and frame.candidate_answer:
+                return VMExecution(
+                    frame,
+                    halted=True,
+                    valid=True,
+                    error=None,
+                    steps=decisions,
+                    model_calls=model_calls,
+                    decisions=decisions,
+                    termination_reason="verification_supported",
+                )
+        return VMExecution(
+            frame,
+            halted=True,
+            valid=False,
+            error="endogenous_decision_budget_exceeded",
+            steps=decisions,
+            model_calls=model_calls,
+            decisions=decisions,
+            termination_reason="decision_budget_exceeded",
         )
 
 

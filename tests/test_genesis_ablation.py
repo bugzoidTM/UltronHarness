@@ -9,6 +9,7 @@ from ultron.benchmarks.models import BenchmarkTask
 from ultron.configuration import Settings, load_settings
 from ultron.genesis.public_runner import GenesisPublicRunner
 from ultron.genesis.schemas import (
+    GENESIS_V2_PROTOCOL_VERSION,
     CognitivePolicy,
     CognitivePolicyRule,
     DeductionOutput,
@@ -17,7 +18,7 @@ from ultron.genesis.schemas import (
     RepresentationOutput,
     VerificationOutput,
 )
-from ultron.genesis.vm import AdaptiveCognitiveVM, GenericClosedLoopVM
+from ultron.genesis.vm import AdaptiveCognitiveVM, EndogenousExecutiveVM, GenericClosedLoopVM
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -32,16 +33,17 @@ class _FeedbackGateway:
     async def structured(self, schema: type[object], messages: list[dict[str, str]], model_name: str, **kwargs: object) -> object:
         self.calls.append({"schema": schema.__name__, "messages": messages, "model": model_name, **kwargs})
         if schema is RepresentationOutput:
-            return RepresentationOutput(entities=["numbers"], facts=["explicit relation"], constraints=["derive answer"], unknowns=["next value"])
+            return RepresentationOutput(entities=["numbers"], facts=["explicit relation"], constraints=["derive answer"], unknowns=["next value"], next_operator="HYPOTHESIZE")
         if schema is HypothesisOutput:
-            return HypothesisOutput(hypotheses=["test the relation"], predictions=["a justified conclusion exists"])
+            return HypothesisOutput(hypotheses=["test the relation"], predictions=["a justified conclusion exists"], next_operator="DEDUCT")
         if schema is DeductionOutput:
             self.deduction_index += 1
-            return DeductionOutput(conclusion="wrong" if self.deduction_index == 1 and len(self.verification_statuses) > 1 else "11")
+            return DeductionOutput(conclusion="wrong" if self.deduction_index == 1 and len(self.verification_statuses) > 1 else "11", next_operator="VERIFY")
         if schema is VerificationOutput:
             status = self.verification_statuses[min(self.verification_index, len(self.verification_statuses) - 1)]
             self.verification_index += 1
-            return VerificationOutput(status=status, explanation=f"feedback={status}")
+            next_operator = "DEDUCT" if status in {"contradicted", "uncertain"} else "VERIFY"
+            return VerificationOutput(status=status, explanation=f"feedback={status}", next_operator=next_operator)
         if schema is FinalAnswerOutput:
             return FinalAnswerOutput(answer="11")
         raise AssertionError(f"unexpected_schema:{schema}")
@@ -111,6 +113,36 @@ def test_adaptive_policy_fails_closed_when_no_rule_matches_new_state() -> None:
     assert result.termination_reason == "no_matching_rule"
 
 
+def test_endogenous_executive_uses_next_operator_without_router_call() -> None:
+    gateway = _FeedbackGateway(["supported"])
+    result = asyncio.run(
+        EndogenousExecutiveVM(gateway, model_name="fake", seed=42, max_tokens=170, max_steps=6).execute_online(
+            "Calcule 24 dividido por 6 e some 7.", max_decisions=6
+        )
+    )
+    assert result.valid is True
+    assert result.termination_reason == "verification_supported"
+    assert result.decisions == 4
+    assert result.model_calls == 4
+    assert [entry["operator"] for entry in result.frame.trace] == ["REPRESENT", "HYPOTHESIZE", "DEDUCT", "VERIFY"]
+    assert [entry["next_operator"] for entry in result.frame.trace] == ["HYPOTHESIZE", "DEDUCT", "VERIFY", "VERIFY"]
+    assert len(gateway.calls) == result.model_calls
+
+
+def test_endogenous_executive_recovers_from_contradicted_feedback() -> None:
+    gateway = _FeedbackGateway(["contradicted", "supported"])
+    result = asyncio.run(
+        EndogenousExecutiveVM(gateway, model_name="fake", seed=42, max_tokens=170, max_steps=6).execute_online(
+            "Calcule 24 dividido por 6 e some 7.", max_decisions=6
+        )
+    )
+    assert result.valid is True
+    assert result.termination_reason == "verification_supported"
+    assert result.decisions == 6
+    assert [entry["operator"] for entry in result.frame.trace] == ["REPRESENT", "HYPOTHESIZE", "DEDUCT", "VERIFY", "DEDUCT", "VERIFY"]
+    assert any(entry["verification_status"] == "contradicted" for entry in result.frame.trace)
+
+
 def test_generic_closed_loop_is_accumulative_and_uses_same_four_primitives() -> None:
     gateway = _FeedbackGateway(["supported"])
     result = asyncio.run(
@@ -135,6 +167,7 @@ def test_runner_parity_uses_same_total_budget_for_direct_and_closed_loop(tmp_pat
     direct = asyncio.run(runner.run_one(task=task, condition="direct", run_id="a", model_name="fake", seed=42, max_tokens=TOTAL_BUDGET, decision_budget=1))
     generic = asyncio.run(runner.run_one(task=task, condition="generic_closed_loop", run_id="b", model_name="fake", seed=42, max_tokens=TOTAL_BUDGET, decision_budget=MAX_DECISIONS))
     adaptive = asyncio.run(runner.run_one(task=task, condition="adaptive_policy", run_id="c", model_name="fake", seed=42, max_tokens=TOTAL_BUDGET, policy=policy, decision_budget=MAX_DECISIONS))
+    endogenous = asyncio.run(runner.run_one(task=task, condition="endogenous_executive", run_id="d", model_name="fake", seed=42, max_tokens=TOTAL_BUDGET, decision_budget=MAX_DECISIONS))
 
     assert direct.execution.context_metrics["decision_budget"] == 1
     assert direct.execution.context_metrics["call_tokens"] == 1024
@@ -142,7 +175,10 @@ def test_runner_parity_uses_same_total_budget_for_direct_and_closed_loop(tmp_pat
     assert generic.execution.context_metrics["call_tokens"] == 170
     assert adaptive.execution.context_metrics["decision_budget"] == 6
     assert adaptive.execution.context_metrics["call_tokens"] == 170
-    assert {direct.manifest.config_hash, generic.manifest.config_hash, adaptive.manifest.config_hash}.__len__() == 1
+    assert endogenous.execution.context_metrics["decision_budget"] == 6
+    assert endogenous.execution.context_metrics["call_tokens"] == 170
+    assert endogenous.manifest.benchmark_version == GENESIS_V2_PROTOCOL_VERSION
+    assert {direct.manifest.config_hash, generic.manifest.config_hash, adaptive.manifest.config_hash, endogenous.manifest.config_hash}.__len__() == 1
 
 
 def test_policy_source_has_no_external_execution_path() -> None:

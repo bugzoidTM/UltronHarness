@@ -158,3 +158,44 @@ A primeira execução produziu uma política sem transição inicial e foi desca
 O achado válido desta etapa é de engenharia: a política adaptativa exige validação de alcançabilidade e progresso além da validação de forma. O modelo pequeno não produziu, nesta única rodada bounded, uma política operacionalmente válida sob o contrato reforçado. Isso não prova que a hipótese adaptativa seja falsa, mas também não fornece evidência positiva. A linha permanece bloqueada para transferência, tuning aberto, novos operadores e Genesis v1.1 sem nova autorização experimental.
 
 A fixture e os testes unitários cobrem reação a `contradicted`, terminação em `supported`, estado acumulativo do controle genérico, paridade de budget e fail-closed. Fixture não é evidência de capacidade live.
+
+
+## Genesis v2 — Endogenous Executive Controller
+
+A v2 substitui a política adaptativa pré-compilada por decisão executiva online. O Harness inicia com `REPRESENT`; cada chamada cognitiva transforma o frame e, na mesma saída estruturada, fornece `next_operator`. Não existe chamada adicional de roteamento. A decisão seguinte é produzida pelo próprio operador que acabou de observar o estado, de modo análogo a um controle em horizonte recedente aplicado ao processo cognitivo.
+
+A v2 reutiliza as quatro primitivas não solucionadoras da v0.2.2. O campo `next_operator` é obrigatório em `RepresentationOutput`, `HypothesisOutput`, `DeductionOutput` e `VerificationOutput`, limitado ao enum `REPRESENT`, `HYPOTHESIZE`, `DEDUCT` ou `VERIFY`. O interpretador aceita a sugestão somente se ela pertence ao enum; qualquer saída inválida, erro de schema ou ausência de terminação falha fechado.
+
+| Elemento | Regra congelada |
+|---|---|
+| Diagnóstico | Exatamente `reasoning_01` e `reasoning_02`, públicos. |
+| Holdout | Exatamente `reasoning_06` e `reasoning_07`, públicos e não usados para calibrar a execução. |
+| Condição A | `DIRECT`: uma chamada estruturada de até `1024` tokens. |
+| Condição B | `FIXED EXECUTIVE`: estado acumulativo, até seis chamadas de `170` tokens, controlador fixo; `next_operator` é ignorado pelo controlador. |
+| Condição C | `ENDOGENOUS EXECUTIVE`: mesmo frame, até seis chamadas de `170` tokens; cada saída escolhe o próximo operador sem chamada extra. |
+| Modelo | `qwen2.5:3b`, gateway local, mesma seed `42`. |
+| Operadores | Somente `REPRESENT`, `HYPOTHESIZE`, `DEDUCT` e `VERIFY`. |
+| Budget | Máximo de seis chamadas por tarefa em B/C; A mantém teto de 1024 tokens. |
+| Escrita | Nenhum writeback, promoção, ferramenta, rede, shell, arquivo ou autoedição. |
+| Métrica primária | `ECG = score(C, holdout) - score(B, holdout)`. |
+| Recuperação | `Adaptive Recovery Rate = recuperações C de contradicted/uncertain para supported / tentativas C com contradicted/uncertain`. |
+| Validade | `ECG` só é calculado se todas as linhas de holdout em A, B e C forem válidas e terminarem por chamada direta ou `verification_supported`. |
+| Tempo | Timeout global máximo de 540 segundos, inferior a 10 minutos. |
+
+A condição B é um controle de compute e de estado: recebe as mesmas primitivas e o mesmo frame acumulativo, mas escolhe o operador com a regra fixa do Harness. A condição C difere somente por respeitar `next_operator` retornado na mesma chamada cognitiva. Assim, o desenho não adiciona chamadas de roteamento exclusivamente à condição experimental.
+
+### Resultado live v2
+
+Foi executada uma única rodada live bounded com `qwen2.5:3b`, seed `42` e as quatro tarefas públicas congeladas. A condição A terminou validamente em todas as tarefas. B e C tiveram falhas de schema JSON truncado, ausência de progresso e/ou excesso do budget de decisões em holdout. C terminou validamente apenas em uma tarefa e demonstrou uma recuperação observável de `contradicted` para `supported` nessa linha; isso não torna a condição completa válida.
+
+| Condição | reasoning_06 | reasoning_07 | Média reportada | Validade de holdout |
+|---|---:|---:|---:|---|
+| A — DIRECT | 0/1 | 0/1 | 0,000 | válida |
+| B — FIXED EXECUTIVE | inválida | inválida | 0,000* | rejeitada |
+| C — ENDOGENOUS EXECUTIVE | inválida | inválida | 0,000* | rejeitada |
+
+`*` Os zeros são agregados brutos do artefato e não constituem score científico quando a linha contém falha operacional. Como B e C não satisfizeram a validade de holdout, `ECG` foi corretamente registrado como `null`, e a Adaptive Recovery Rate agregada não deve ser promovida como resultado comparativo. O gate é `REJECTED_INVALID_EXECUTION`, não `ECG <= 0`.
+
+O único resultado positivo observável foi de mecanismo: em uma tarefa de diagnóstico de C, o modelo produziu `REPRESENT -> DEDUCT -> VERIFY(contradicted) -> DEDUCT -> VERIFY(supported)` em cinco chamadas, sem roteador extra. Isso confirma que o contrato online e o trace de recuperação funcionam na fixture live, mas não fornece evidência de ganho em holdout.
+
+A conclusão é limitada ao modelo, seed, timeout e tarefas desta rodada. A engenharia do controlador endógeno está implementada; a hipótese de ganho executivo permanece sem teste científico válido porque a execução não completou todos os pares necessários. Não se autoriza transferência, novos operadores ou tuning aberto. Qualquer comparação com modelo maior deve repetir exatamente este protocolo em execução separada e somente após autorização explícita.
