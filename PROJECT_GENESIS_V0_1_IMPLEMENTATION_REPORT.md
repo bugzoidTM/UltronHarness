@@ -327,3 +327,40 @@ A conclusão permanece estritamente limitada: a v2-R não confirmou nem refutou 
 | Fixture v2-R | aprovada; development-only |
 | Segurança Windows | 12 passed, 1 skipped, 1 warning |
 | Writeback, transferência e benchmark privado | não executados |
+
+
+## Genesis v2-FINAL — Executive Control Gate
+
+A v2-FINAL implementa somente a correção experimental autorizada após a v2-R. O controlador fixo B e o controlador endógeno C permanecem inalterados; continuam ativos apenas os quatro operadores `REPRESENT`, `HYPOTHESIZE`, `DEDUCT` e `VERIFY`, com schemas compactos, `repair_attempts=0`, sem solver, síntese, writeback, transferência ou chamada extra de roteamento. A única alteração causal é o orçamento: sete decisões de 256 tokens por chamada, ou 1792 tokens solicitados por tarefa para cada condição.
+
+O probe final usa somente `reasoning_06` e `reasoning_07`, ambas tarefas públicas de holdout. A condição A foi deixada fora do entrypoint final, pois não participa da decisão principal `ECG=C−B`. B e C usam a mesma seed `42`, o mesmo alias `ollama_research` resolvido para `qwen2.5:3b`, o mesmo conjunto de tarefas e o mesmo orçamento; C apenas respeita o `next_operator` retornado pela própria saída estruturada.
+
+### Resultado live v2-FINAL no 3B
+
+Foi executada exatamente uma rodada live no clone Windows limpo, sem download de modelo. O catálogo local foi verificado antes da execução e continha `qwen2.5:3b`, `qwen2.5:0.5b` e `nomic-embed-text`, sem 7B/8B. As quatro linhas B/C consumiram `7/7` decisões e terminaram por `decision_budget_exceeded`, registradas como `VM_ERROR`.
+
+| Condição | reasoning_06 | reasoning_07 | Chamadas por linha | Decisões por linha | Agregado bruto | Validade |
+|---|---:|---:|---:|---:|---:|---|
+| B — FIXED EXECUTIVE | inválida | inválida | 7 | 7 | 0,000* | rejeitada |
+| C — ENDOGENOUS EXECUTIVE | inválida | inválida | 7 | 7 | 0,000* | rejeitada |
+
+C registrou duas tentativas de recuperação e zero recuperações completas até `supported`. Como B e C não alcançaram validade integral, `ecg_C_minus_B=null`. O gate serializado foi `RUN_7B8_ONCE`, que significa apenas o ramo operacional previsto pelo protocolo; não deve ser reinterpretado como `C≤B` nem como um resultado científico de score zero.
+
+O maior avanço desta rodada é de validade experimental: o protocolo agora concede espaço temporal suficiente para o ciclo mínimo `REPRESENT → HYPOTHESIZE → DEDUCT → VERIFY → HYPOTHESIZE → DEDUCT → VERIFY`. O modelo 3B, porém, não completou esse ciclo nos dois holdouts nesta execução. Não é permitido corrigir novamente o protocolo no 3B, criar Genesis v2.1, alterar prompts, adicionar operadores ou executar novas seeds.
+
+Como nenhum 7B/8B estava disponível e não houve autorização para download, o ramo opcional de uma execução maior não foi realizado. Portanto, a conclusão honesta é `REJECTED_INVALID_EXECUTION` no 3B, com o gate 7B/8B pendente de disponibilidade e autorização separadas. Não há evidência suficiente para declarar GO ou NO-GO científico; também não há evidência para afirmar que o 3B seja incapaz de recuperação executiva em um protocolo válido.
+
+### Validação após o patch
+
+| Gate | Resultado |
+|---|---:|
+| Ruff nos módulos Genesis, entrypoint e testes alterados | aprovado |
+| `git diff --check` | aprovado |
+| Testes Genesis Linux direcionados | 21 passed |
+| Suíte Linux completa com `ULTRON_VECTOR_ENABLED=false` | 252 passed, 1 warning |
+| Testes Genesis no clone Windows | 21 passed, 1 warning de configuração |
+| Segurança Windows (`tests_security_windows`) | 12 passed, 1 skipped, 1 warning de configuração |
+| Fixture v2-FINAL | aprovada; development-only |
+| Benchmark privado, unseen, transferência e writeback | não executados |
+
+O artefato JSON bruto live permanece fora do commit. A fixture validou o encadeamento e o pareamento de budget, mas não constitui evidência de capacidade ou generalização.

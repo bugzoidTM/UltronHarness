@@ -9,6 +9,7 @@ GENESIS_PROTOCOL_VERSION = "genesis-v0.2.2-non-solving"
 GENESIS_V1_PROTOCOL_VERSION = "genesis-v1-adaptive-policy"
 GENESIS_V2_PROTOCOL_VERSION = "genesis-v2-endogenous-executive"
 GENESIS_V2R_PROTOCOL_VERSION = "genesis-v2r-executive-validity-closure"
+GENESIS_V2FINAL_PROTOCOL_VERSION = "genesis-v2-final-executive-control"
 GENESIS_MAX_PROGRAMS = 2
 GENESIS_MAX_OPERATORS = 4
 

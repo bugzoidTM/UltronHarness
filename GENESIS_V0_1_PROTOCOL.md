@@ -232,3 +232,44 @@ Foi executada uma única rodada live com o protocolo congelado. A condição A t
 O catálogo local disponível no Windows continha `qwen2.5:3b`, `qwen2.5:0.5b` e `nomic-embed-text`; não havia 7B/8B. Nenhum modelo foi baixado ou substituído automaticamente. Dessa forma, a etapa opcional posterior em 7B/8B permanece bloqueada por disponibilidade e requer autorização/modelo fornecido separadamente; não foi executada.
 
 A v2-R eliminou a hipótese imediata de que o problema era somente JSON truncado em 170 tokens, mas não produziu um A/B/C válido com quatro decisões. O resultado não permite concluir se o controle endógeno supera o fixo. Não se deve acrescentar v2.1, novos operadores ou tuning aberto. A linha permanece parada até eventual execução independente em um modelo 7B/8B disponível.
+
+
+## Genesis v2-FINAL — Executive Control Gate
+
+A v2-FINAL é o patch experimental final definido após a v2-R. Não introduz arquitetura, operador, memória, solver, síntese, roteador ou capacidade adicional. Ela somente corrige o orçamento que impedia observar a recuperação executiva: B e C recebem o mesmo teto de sete decisões, com 256 tokens solicitados por chamada. O teste final omite A e usa exclusivamente os dois holdouts públicos; a pergunta causal é `ECG = C − B`.
+
+| Elemento | Regra congelada v2-FINAL |
+|---|---|
+| Condição B | `FIXED EXECUTIVE`, controlador fixo, `next_operator` ignorado |
+| Condição C | `ENDOGENOUS EXECUTIVE`, respeita `next_operator` produzido na própria chamada |
+| Tarefas | Somente `reasoning_06` e `reasoning_07`, públicas |
+| Modelo e seed | `qwen2.5:3b`, gateway Ollama local, seed `42` |
+| Budget por tarefa B/C | `7 × 256 = 1792` tokens solicitados |
+| Reparos | `repair_attempts=0`; nenhuma chamada escondida |
+| Operadores | Somente `REPRESENT`, `HYPOTHESIZE`, `DEDUCT` e `VERIFY` |
+| Síntese e writeback | Desativados; nenhum resultado é promovido ou usado para calibrar outro resultado |
+| Métrica | `ECG = score(C, holdout) − score(B, holdout)` |
+| Gate de validade | ECG é `null` se qualquer linha B/C não terminar validamente por `verification_supported` |
+
+### Resultado live v2-FINAL
+
+Foi executada exatamente uma rodada live no modelo local `qwen2.5:3b`, com B/C perfeitamente pareados em seed, modelo, tarefas e budget. As quatro linhas chegaram a sete decisões, mas terminaram por `decision_budget_exceeded` e foram marcadas `VM_ERROR`; portanto, B e C permaneceram inválidas. A execução não foi convertida em score científico zero.
+
+| Condição | reasoning_06 | reasoning_07 | Chamadas/decisões | Agregado bruto | Validade |
+|---|---:|---:|---:|---:|---|
+| B — FIXED EXECUTIVE | inválida | inválida | 7/7 em cada linha | 0,000* | rejeitada |
+| C — ENDOGENOUS EXECUTIVE | inválida | inválida | 7/7 em cada linha | 0,000* | rejeitada |
+
+O resultado registrou duas tentativas de recuperação em C e nenhuma recuperação completa até `supported`. Como as condições não foram válidas, `ECG=C−B` foi corretamente registrado como `null`. O gate operacional é `RUN_7B8_ONCE`: isso não significa `C≤B`, não significa desempenho zero científico e não autoriza uma nova correção no 3B.
+
+O catálogo local Windows foi verificado antes da rodada e continha apenas `qwen2.5:3b`, `qwen2.5:0.5b` e `nomic-embed-text`; nenhum modelo 7B/8B estava instalado. Como o protocolo proíbe download automático e não há modelo maior disponível, a execução única opcional 7B/8B não foi realizada. Assim, a linha Genesis fica encerrada em `REJECTED_INVALID_EXECUTION` no 3B, com o ramo 7B/8B apenas pendente de disponibilidade/autorização, sem base honesta para declarar GO ou NO-GO científico.
+
+`*` Os agregados brutos são mantidos apenas para auditoria do artefato. Linhas inválidas não devem ser interpretadas como comparação de desempenho. Não serão criados Genesis v2.1, novos operadores, tuning de prompt, novas rodadas no 3B ou transferência a partir deste resultado.
+
+A fixture v2-FINAL confirmou o contrato de quatro primitivas, sete decisões e 256 tokens por chamada, mas permanece evidência de engenharia, não de capacidade live.
+
+## Referências
+
+[1]: https://github.com/bugzoidTM/UltronHarness "UltronHarness — repositório público do projeto"
+
+O commit anterior publicado é `331ccd29055ea20a9a61eca6fbf53f7b34661378`; o commit que contém este protocolo v2-FINAL será informado após a validação e publicação.

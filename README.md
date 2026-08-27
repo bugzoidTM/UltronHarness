@@ -175,6 +175,16 @@ Na única rodada 3B, A terminou validamente mas acertou `0/2`. B e C chegaram ao
 
 O catálogo local não possui modelo 7B/8B — somente `qwen2.5:3b`, `qwen2.5:0.5b` e `nomic-embed-text`. Nenhum modelo foi baixado automaticamente. A linha fica parada: não haverá v2.1, novos operadores ou tuning aberto; uma eventual execução única em 7B/8B requer disponibilidade e autorização separadas.
 
+### Project Genesis v2-FINAL — Executive Control Gate
+
+A v2-FINAL é o patch experimental final, sem nova arquitetura ou capacidade. Ela altera somente o budget para permitir o ciclo de recuperação que a v2-R não conseguia completar: B e C recebem o mesmo teto de sete decisões, com 256 tokens por chamada, totalizando 1792 tokens solicitados por tarefa. O teste usa somente os holdouts públicos `reasoning_06` e `reasoning_07`; A não é executado neste entrypoint porque a decisão causal é **`ECG = C − B`**.
+
+O entrypoint é [`scripts/run_genesis_v2final.py`](scripts/run_genesis_v2final.py). B usa o controlador fixo e ignora `next_operator`; C respeita `next_operator` produzido na própria chamada, sem roteador adicional. O modelo, seed, tarefas, schemas compactos, quatro primitivas, ausência de retries, ausência de síntese e ausência de writeback permanecem controlados e pareados.
+
+Na única rodada live 3B, todas as quatro linhas B/C chegaram a `7/7` decisões e terminaram por `decision_budget_exceeded`, com `VM_ERROR`. Portanto, B e C foram inválidos, os agregados brutos foram `0,000` e **`ECG` foi corretamente `null`**. C registrou duas tentativas de recuperação e nenhuma recuperação completa até `supported`; os zeros não são score científico e não significam `C ≤ B`.
+
+O gate registrado foi `RUN_7B8_ONCE`, mas não havia modelo 7B/8B instalado e nenhum download foi autorizado. Assim, não há base para declarar GO ou NO-GO científico: o resultado final disponível é **`REJECTED_INVALID_EXECUTION` no 3B**, sem novas correções no 3B e sem criação de Genesis v2.1. Uma eventual execução 7B/8B deve ser exatamente uma, reproduzir este protocolo e depender de modelo disponível e autorização separada.
+
 ## Segurança e autonomia
 
 O UltronPro começa em **Mode 2 — Supervised Agent**. Ações R0 e R1 permitidas podem ser executadas dentro do workspace; modificações R2 aguardam aprovação. As ações R3/R4 requerem aprovação e as R5 são bloqueadas. O diretório permitido é:

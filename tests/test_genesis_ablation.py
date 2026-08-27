@@ -7,11 +7,16 @@ from pathlib import Path
 import pytest
 
 from scripts.run_genesis_v1 import DIAGNOSIS_IDS, HOLDOUT_IDS, MAX_DECISIONS, TOTAL_BUDGET
+from scripts.run_genesis_v2final import CALL_TOKENS as V2FINAL_CALL_TOKENS
+from scripts.run_genesis_v2final import HOLDOUT_IDS as V2FINAL_HOLDOUT_IDS
+from scripts.run_genesis_v2final import MAX_DECISIONS as V2FINAL_MAX_DECISIONS
+from scripts.run_genesis_v2final import TOTAL_BUDGET as V2FINAL_TOTAL_BUDGET
 from ultron.benchmarks.models import BenchmarkTask
 from ultron.configuration import Settings, load_settings
 from ultron.genesis.public_runner import GenesisPublicRunner
 from ultron.genesis.schemas import (
     GENESIS_V2_PROTOCOL_VERSION,
+    GENESIS_V2FINAL_PROTOCOL_VERSION,
     GENESIS_V2R_PROTOCOL_VERSION,
     CognitivePolicy,
     CognitivePolicyRule,
@@ -172,6 +177,8 @@ def test_runner_parity_uses_same_total_budget_for_direct_and_closed_loop(tmp_pat
     adaptive = asyncio.run(runner.run_one(task=task, condition="adaptive_policy", run_id="c", model_name="fake", seed=42, max_tokens=TOTAL_BUDGET, policy=policy, decision_budget=MAX_DECISIONS))
     endogenous = asyncio.run(runner.run_one(task=task, condition="endogenous_executive", run_id="d", model_name="fake", seed=42, max_tokens=TOTAL_BUDGET, decision_budget=MAX_DECISIONS))
     v2r = asyncio.run(runner.run_one(task=task, condition="endogenous_executive_v2r", run_id="e", model_name="fake", seed=42, max_tokens=TOTAL_BUDGET, decision_budget=4))
+    v2final_fixed = asyncio.run(runner.run_one(task=task, condition="generic_closed_loop_v2final", run_id="f", model_name="fake", seed=42, max_tokens=V2FINAL_TOTAL_BUDGET, decision_budget=V2FINAL_MAX_DECISIONS))
+    v2final_endogenous = asyncio.run(runner.run_one(task=task, condition="endogenous_executive_v2final", run_id="g", model_name="fake", seed=42, max_tokens=V2FINAL_TOTAL_BUDGET, decision_budget=V2FINAL_MAX_DECISIONS))
 
     assert direct.execution.context_metrics["decision_budget"] == 1
     assert direct.execution.context_metrics["call_tokens"] == 1024
@@ -185,7 +192,31 @@ def test_runner_parity_uses_same_total_budget_for_direct_and_closed_loop(tmp_pat
     assert v2r.execution.context_metrics["decision_budget"] == 4
     assert v2r.execution.context_metrics["call_tokens"] == 256
     assert v2r.manifest.benchmark_version == GENESIS_V2R_PROTOCOL_VERSION
+    assert v2final_fixed.execution.context_metrics["decision_budget"] == V2FINAL_MAX_DECISIONS
+    assert v2final_endogenous.execution.context_metrics["decision_budget"] == V2FINAL_MAX_DECISIONS
+    assert v2final_fixed.execution.context_metrics["call_tokens"] == V2FINAL_CALL_TOKENS
+    assert v2final_endogenous.execution.context_metrics["call_tokens"] == V2FINAL_CALL_TOKENS
+    assert v2final_fixed.manifest.benchmark_version == GENESIS_V2FINAL_PROTOCOL_VERSION
+    assert v2final_endogenous.manifest.benchmark_version == GENESIS_V2FINAL_PROTOCOL_VERSION
+    assert v2final_fixed.manifest.config_hash == v2final_endogenous.manifest.config_hash
+    assert v2final_fixed.manifest.config_hash != direct.manifest.config_hash
     assert {direct.manifest.config_hash, generic.manifest.config_hash, adaptive.manifest.config_hash, endogenous.manifest.config_hash, v2r.manifest.config_hash}.__len__() == 1
+
+
+def test_v2final_protocol_contract_is_frozen() -> None:
+    assert V2FINAL_HOLDOUT_IDS == ("reasoning_06", "reasoning_07")
+    assert V2FINAL_TOTAL_BUDGET == 1792
+    assert V2FINAL_MAX_DECISIONS == 7
+    assert V2FINAL_CALL_TOKENS == 256
+
+
+def test_v2final_rejects_non_seven_decision_budget(tmp_path: Path) -> None:
+    raw = deepcopy(load_settings(ROOT).raw)
+    settings = Settings(raw=raw, root_dir=tmp_path)
+    runner = GenesisPublicRunner(settings)
+    task = BenchmarkTask(id="reasoning_06", category="reasoning", objective="Calcule 24 dividido por 6 e some 7.", evaluator="exact")
+    with pytest.raises(ValueError, match="v2final_decision_budget_must_be_seven"):
+        asyncio.run(runner.run_one(task=task, condition="generic_closed_loop_v2final", run_id="invalid-final", model_name="fake", seed=42, max_tokens=V2FINAL_TOTAL_BUDGET, decision_budget=4))
 
 
 def test_v2r_structured_outputs_are_compact() -> None:
