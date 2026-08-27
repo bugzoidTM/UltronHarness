@@ -364,3 +364,25 @@ Como nenhum 7B/8B estava disponível e não houve autorização para download, o
 | Benchmark privado, unseen, transferência e writeback | não executados |
 
 O artefato JSON bruto live permanece fora do commit. A fixture validou o encadeamento e o pareamento de budget, mas não constitui evidência de capacidade ou generalização.
+
+
+## Auditoria offline do Genesis v2-FINAL
+
+A auditoria autorizada após o v2-FINAL não executou modelo nem repetiu o probe. Ela lê o JSON bruto já produzido, valida o contrato público de quatro linhas (`B/C × reasoning_06/reasoning_07`), recupera somente um `candidate_answer` explicitamente serializado e aplica o verificador público existente ao candidato final, inclusive quando a VM terminou por `decision_budget_exceeded`. A presença de `candidate_present=true` no estado não é tratada como conteúdo de resposta.
+
+O auditor está em [`scripts/audit_genesis_v2final.py`](scripts/audit_genesis_v2final.py). Ele produz um JSON e um Markdown em `data/artifacts/research/genesis_v2final_audit/`, mas esses arquivos são dados gerados e permanecem fora do commit. A execução não usa `ModelGateway`, não cria nova seed, não altera prompts, não consulta benchmark privado, não envia holdout a sintetizador e não faz writeback.
+
+As métricas foram separadas em:
+
+| Métrica | Definição |
+|---|---|
+| `external_accuracy` | Média do verificador público sobre o último `candidate_answer` explicitamente serializado. |
+| `ECG-task` | `external_accuracy(C) − external_accuracy(B)`. Mede diferença de desempenho externo. |
+| `self_termination_rate` | Fração de linhas que terminam com `verification_supported`. |
+| `ECG-self` | `self_termination_rate(C) − self_termination_rate(B)`. Mede diferença de terminação/auto-verificação. |
+
+O JSON live fornecido contém `response=""` em todas as quatro linhas e não contém `candidate_answer` no nível da linha nem nos itens estruturados do trace. O trace registra `candidate_present=True` em alguns estados, mas não o valor textual ou numérico do candidato. Logo, a auditoria encontrou cobertura explícita `0/2` em B e `0/2` em C, `external_accuracy=null` em B e C, `ECG-task=null` e `ECG-self=0,000`. B terminou por `decision_budget_exceeded` nos dois holdouts; C também terminou por budget, teve duas tentativas de recuperação e nenhuma recuperação completa, com status finais observáveis `contradicted` em `reasoning_06` e `uncertain` em `reasoning_07`.
+
+O resultado é **`AUDIT_INCONCLUSIVE_MISSING_CANDIDATE_ANSWER`**. Isso é uma limitação de observabilidade do artefato, não um resultado de `C≤B`, `C=B` ou `C>B`. A auditoria não autoriza o teste 7B/8B com base nesse JSON, porque não é possível distinguir “candidato correto não serializado” de “candidato incorreto não serializado”. Uma execução futura somente poderá ser auditada nesse eixo se o contrato serializar explicitamente o último candidato, sem inferência retrospectiva.
+
+A cobertura adicional está em [`tests/test_genesis_ablation.py`](tests/test_genesis_ablation.py): ausência de candidato não é inferida de `candidate_present`, candidatos explícitos são avaliados mesmo após erro de budget, `ECG-task` e `ECG-self` são independentes, e budgets não pareados são rejeitados.

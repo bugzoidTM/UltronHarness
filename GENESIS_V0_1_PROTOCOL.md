@@ -273,3 +273,34 @@ A fixture v2-FINAL confirmou o contrato de quatro primitivas, sete decisões e 2
 [1]: https://github.com/bugzoidTM/UltronHarness "UltronHarness — repositório público do projeto"
 
 O commit anterior publicado é `331ccd29055ea20a9a61eca6fbf53f7b34661378`. A publicação desta versão e os gates de validação são registrados no histórico público do repositório [UltronHarness](https://github.com/bugzoidTM/UltronHarness).
+
+
+## Auditoria offline pós-v2-FINAL
+
+A validade de execução e a performance da tarefa são dimensões distintas. Por isso, o pós-processamento autorizado do JSON bruto v2-FINAL deve separar:
+
+```text
+ECG-task = external_score(C) - external_score(B)
+ECG-self = self_termination(C) - self_termination(B)
+```
+
+`ECG-task` avalia, com o verificador público já existente, o último `candidate_answer` explicitamente serializado em cada linha B/C, mesmo que a VM tenha terminado por `decision_budget_exceeded`. `ECG-self` mede a fração de linhas que terminaram com `verification_supported`. Uma linha sem candidato explícito não pode ser convertida em score zero nem reconstruída a partir de `candidate_present`; nesse caso, a acurácia externa e `ECG-task` permanecem `null`.
+
+O auditor [`scripts/audit_genesis_v2final.py`](scripts/audit_genesis_v2final.py) não chama modelos, não cria seeds, não faz tuning, não acessa private/unseen, não envia holdout a sintetizador e não faz writeback. Ele exige exatamente quatro linhas pareadas (`generic_closed_loop_v2final` e `endogenous_executive_v2final` para `reasoning_06` e `reasoning_07`), sete decisões, 256 tokens por chamada, 1792 tokens por tarefa e metadados pareados.
+
+### Resultado da auditoria do JSON live v2-FINAL
+
+No JSON bruto existente, as quatro linhas possuem `response=""` e não serializam o valor de `candidate_answer`; os traces preservam somente a presença booleana e o estado textual. O auditor encontrou:
+
+| Métrica | B — FIXED EXECUTIVE | C — ENDOGENOUS EXECUTIVE |
+|---|---:|---:|
+| Cobertura de candidate explícito | 0/2 | 0/2 |
+| `external_accuracy` | `null` | `null` |
+| `verification_supported` | 0/2 | 0/2 |
+| Recovery attempts | 0 | 2 |
+| Recovery completed | 0 | 0 |
+| Média de decisões | 7 | 7 |
+
+Assim, `ECG-task=null` e `ECG-self=0,000`. O resultado da auditoria é **`AUDIT_INCONCLUSIVE_MISSING_CANDIDATE_ANSWER`**. B terminou com a sequência `REPRESENT → HYPOTHESIZE → HYPOTHESIZE → DEDUCT → VERIFY → HYPOTHESIZE → HYPOTHESIZE` em `reasoning_06` e `REPRESENT → HYPOTHESIZE → DEDUCT → VERIFY → DEDUCT → VERIFY → DEDUCT` em `reasoning_07`. C teve `contradicted` como último status de verificação observável em `reasoning_06` e `uncertain` em `reasoning_07`, mas nenhum candidato foi preservado para avaliação externa.
+
+Esse resultado é uma falha de observabilidade do artefato, não evidência de `C≤B`, `C=B` ou `C>B`. A auditoria não justifica uma nova execução 7B/8B nem uma conclusão de capacidade, porque o JSON não permite distinguir candidato correto de candidato incorreto ausente. Qualquer execução futura que pretenda medir `ECG-task` deve serializar explicitamente o último `candidate_answer` antes de marcar uma linha inválida, sem usar inferência retrospectiva.

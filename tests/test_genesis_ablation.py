@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from scripts.audit_genesis_v2final import _load_public_tasks, audit_payload, render_markdown
 from scripts.run_genesis_v1 import DIAGNOSIS_IDS, HOLDOUT_IDS, MAX_DECISIONS, TOTAL_BUDGET
 from scripts.run_genesis_v2final import CALL_TOKENS as V2FINAL_CALL_TOKENS
 from scripts.run_genesis_v2final import HOLDOUT_IDS as V2FINAL_HOLDOUT_IDS
@@ -232,3 +233,140 @@ def test_policy_source_has_no_external_execution_path() -> None:
     source = (ROOT / "ultron" / "genesis" / "vm.py").read_text(encoding="utf-8")
     for forbidden in ("subprocess", "os.system", "httpx", "socket", "DECOMPOSE", "BACKTRACK"):
         assert forbidden not in source
+
+
+
+def _audit_row(
+    condition: str,
+    task_id: str,
+    *,
+    candidate_answer: str | None = None,
+    final_verification_status: str = "uncertain",
+    termination_reason: str = "decision_budget_exceeded",
+    recovered: bool = False,
+) -> dict[str, object]:
+    row: dict[str, object] = {
+        "task_id": task_id,
+        "condition": condition,
+        "model": "qwen2.5:3b",
+        "seed": 42,
+        "config_hash": "paired-config",
+        "decision_budget": 7,
+        "call_tokens": 256,
+        "model_calls": 7,
+        "decisions": 7,
+        "vm_valid": False,
+        "failure_category": "VM_ERROR",
+        "termination_reason": termination_reason,
+        "recovery_attempted": condition == "endogenous_executive_v2final",
+        "recovered": recovered,
+        "trace": [{"operator": "VERIFY", "verification_status": final_verification_status}],
+    }
+    if candidate_answer is not None:
+        row["candidate_answer"] = candidate_answer
+    return row
+
+
+def _audit_payload(rows: list[dict[str, object]]) -> dict[str, object]:
+    return {
+        "protocol": "genesis-v2-final-executive-control",
+        "holdout_task_ids": ["reasoning_06", "reasoning_07"],
+        "diagnosis_task_ids": [],
+        "max_decisions_per_task": 7,
+        "total_token_budget_per_task_BC": 1792,
+        "call_tokens_fixed_and_endogenous": 256,
+        "holdout_sent_to_synthesizer": False,
+        "rationale_used_for_execution": False,
+        "synthesis_performed": False,
+        "writeback_performed": False,
+        "rows": rows,
+    }
+
+
+def test_v2final_offline_audit_does_not_infer_candidate_from_candidate_present() -> None:
+    rows = [
+        _audit_row(condition, task_id)
+        for condition in ("generic_closed_loop_v2final", "endogenous_executive_v2final")
+        for task_id in ("reasoning_06", "reasoning_07")
+    ]
+    for row in rows:
+        row["trace"] = [{"operator": "DEDUCT", "state": "candidate_present=True;verification_status=uncertain"}]
+    audit = audit_payload(_audit_payload(rows), _load_public_tasks(ROOT))
+    assert audit["decision"] == "AUDIT_INCONCLUSIVE_MISSING_CANDIDATE_ANSWER"
+    assert audit["new_model_calls"] == 0
+    assert audit["metrics"]["B_fixed_executive"]["external_accuracy"] is None
+    assert audit["metrics"]["C_endogenous_executive"]["external_accuracy"] is None
+    assert audit["metrics"]["ecg_task_C_minus_B"] is None
+    assert audit["metrics"]["ecg_self_C_minus_B"] == 0.0
+    assert all(row["candidate_available"] is False for row in audit["rows"])
+
+
+def test_v2final_offline_audit_scores_explicit_candidates_even_after_budget_error() -> None:
+    rows = [
+        _audit_row("generic_closed_loop_v2final", "reasoning_06", candidate_answer="11"),
+        _audit_row("generic_closed_loop_v2final", "reasoning_07", candidate_answer="54"),
+        _audit_row("endogenous_executive_v2final", "reasoning_06", candidate_answer="11"),
+        _audit_row("endogenous_executive_v2final", "reasoning_07", candidate_answer="162"),
+    ]
+    audit = audit_payload(_audit_payload(rows), _load_public_tasks(ROOT))
+    assert audit["decision"] == "AUDIT_COMPLETE"
+    assert audit["metrics"]["B_fixed_executive"]["external_accuracy"] == 0.5
+    assert audit["metrics"]["C_endogenous_executive"]["external_accuracy"] == 1.0
+    assert audit["metrics"]["ecg_task_C_minus_B"] == 0.5
+    assert audit["metrics"]["ecg_self_C_minus_B"] == 0.0
+    assert all(row["candidate_source"] == "row.candidate_answer" for row in audit["rows"])
+
+
+def test_v2final_offline_audit_separates_self_termination_from_task_score() -> None:
+    rows = [
+        _audit_row("generic_closed_loop_v2final", "reasoning_06", candidate_answer="11"),
+        _audit_row("generic_closed_loop_v2final", "reasoning_07", candidate_answer="162"),
+        _audit_row("endogenous_executive_v2final", "reasoning_06", candidate_answer="11", final_verification_status="supported", termination_reason="verification_supported"),
+        _audit_row("endogenous_executive_v2final", "reasoning_07", candidate_answer="162"),
+    ]
+    audit = audit_payload(_audit_payload(rows), _load_public_tasks(ROOT))
+    assert audit["metrics"]["B_fixed_executive"]["external_accuracy"] == 1.0
+    assert audit["metrics"]["C_endogenous_executive"]["external_accuracy"] == 1.0
+    assert audit["metrics"]["ecg_task_C_minus_B"] == 0.0
+    assert audit["metrics"]["ecg_self_C_minus_B"] == 0.5
+
+
+def test_v2final_offline_audit_rejects_unpaired_budget_metadata() -> None:
+    rows = [
+        _audit_row(condition, task_id, candidate_answer="11")
+        for condition in ("generic_closed_loop_v2final", "endogenous_executive_v2final")
+        for task_id in ("reasoning_06", "reasoning_07")
+    ]
+    rows[-1]["call_tokens"] = 255
+    with pytest.raises(ValueError, match="row_call_tokens_mismatch"):
+        audit_payload(_audit_payload(rows), _load_public_tasks(ROOT))
+
+
+def test_v2final_offline_audit_markdown_preserves_null_task_ecg() -> None:
+    rows = [
+        _audit_row(condition, task_id)
+        for condition in ("generic_closed_loop_v2final", "endogenous_executive_v2final")
+        for task_id in ("reasoning_06", "reasoning_07")
+    ]
+    audit = audit_payload(_audit_payload(rows), _load_public_tasks(ROOT))
+    markdown = render_markdown(audit, "genesis_v2final_result.json")
+    assert "AUDIT_INCONCLUSIVE_MISSING_CANDIDATE_ANSWER" in markdown
+    assert "External accuracy no último candidate | null | null" in markdown
+    assert "ausente" in markdown
+
+
+
+def test_v2final_offline_audit_accepts_explicit_response_after_vm_error() -> None:
+    rows = [
+        _audit_row("generic_closed_loop_v2final", "reasoning_06"),
+        _audit_row("generic_closed_loop_v2final", "reasoning_07"),
+        _audit_row("endogenous_executive_v2final", "reasoning_06"),
+        _audit_row("endogenous_executive_v2final", "reasoning_07"),
+    ]
+    for row, response in zip(rows, ("11", "54", "11", "162"), strict=True):
+        row["response"] = response
+    audit = audit_payload(_audit_payload(rows), _load_public_tasks(ROOT))
+    assert audit["decision"] == "AUDIT_COMPLETE"
+    assert audit["metrics"]["B_fixed_executive"]["external_accuracy"] == 0.5
+    assert audit["metrics"]["C_endogenous_executive"]["external_accuracy"] == 1.0
+    assert all(row["candidate_source"] == "row.response" for row in audit["rows"])

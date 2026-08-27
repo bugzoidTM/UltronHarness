@@ -185,6 +185,24 @@ Na única rodada live 3B, todas as quatro linhas B/C chegaram a `7/7` decisões 
 
 O gate registrado foi `RUN_7B8_ONCE`, mas não havia modelo 7B/8B instalado e nenhum download foi autorizado. Assim, não há base para declarar GO ou NO-GO científico: o resultado final disponível é **`REJECTED_INVALID_EXECUTION` no 3B**, sem novas correções no 3B e sem criação de Genesis v2.1. Uma eventual execução 7B/8B deve ser exatamente uma, reproduzir este protocolo e depender de modelo disponível e autorização separada.
 
+### Auditoria offline do Genesis v2-FINAL
+
+O protocolo v2-FINAL originalmente marcou B/C como inválidos quando o budget terminou sem `verification_supported`. A auditoria offline separa duas perguntas: **task performance**, medida pela resposta candidata final avaliada pelo verificador público, e **self-termination**, medida pela terminação com `verification_supported`. Ela não converte `candidate_present=true` em uma resposta: somente um `candidate_answer` explicitamente serializado no JSON é aceito.
+
+O auditor não chama modelos, não cria seeds, não faz tuning, não acessa dados privados e não repete a execução:
+
+```powershell
+.\\.venv\\Scripts\\python.exe scripts\\audit_genesis_v2final.py `
+  --input caminho\\genesis_v2final_result.json `
+  --output-dir data\\artifacts\\research\\genesis_v2final_audit
+```
+
+As métricas são `ECG-task = external_accuracy(C) − external_accuracy(B)` e `ECG-self = self_termination_rate(C) − self_termination_rate(B)`. A acurácia externa permanece `null` quando qualquer linha não possui candidato explícito; isso representa limitação de observabilidade, não score zero.
+
+Na auditoria da rodada live já existente, as quatro linhas tinham `response=""` e não serializavam o valor de `candidate_answer`; os traces preservavam apenas a presença booleana e o estado textual. O resultado foi `AUDIT_INCONCLUSIVE_MISSING_CANDIDATE_ANSWER`, com cobertura de candidatos `0/2` em B e `0/2` em C, `external_accuracy=null` em ambas, `ECG-task=null` e `ECG-self=0,000`. B teve sequências fixas que terminaram em `decision_budget_exceeded`; C teve duas tentativas de recuperação, nenhuma completada, e terminou com estados finais `contradicted`/`uncertain` observáveis no trace. Portanto, a auditoria não autoriza afirmar `C>B`, `C=B` ou `C<B` em task performance.
+
+O auditor e seus contratos estão em [`scripts/audit_genesis_v2final.py`](scripts/audit_genesis_v2final.py), com cobertura em [`tests/test_genesis_ablation.py`](tests/test_genesis_ablation.py). O JSON live permanece fora do commit; os arquivos produzidos em `data/artifacts/` são dados gerados e não devem ser publicados.
+
 ## Segurança e autonomia
 
 O UltronPro começa em **Mode 2 — Supervised Agent**. Ações R0 e R1 permitidas podem ser executadas dentro do workspace; modificações R2 aguardam aprovação. As ações R3/R4 requerem aprovação e as R5 são bloqueadas. O diretório permitido é:
