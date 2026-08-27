@@ -199,3 +199,36 @@ Foi executada uma única rodada live bounded com `qwen2.5:3b`, seed `42` e as qu
 O único resultado positivo observável foi de mecanismo: em uma tarefa de diagnóstico de C, o modelo produziu `REPRESENT -> DEDUCT -> VERIFY(contradicted) -> DEDUCT -> VERIFY(supported)` em cinco chamadas, sem roteador extra. Isso confirma que o contrato online e o trace de recuperação funcionam na fixture live, mas não fornece evidência de ganho em holdout.
 
 A conclusão é limitada ao modelo, seed, timeout e tarefas desta rodada. A engenharia do controlador endógeno está implementada; a hipótese de ganho executivo permanece sem teste científico válido porque a execução não completou todos os pares necessários. Não se autoriza transferência, novos operadores ou tuning aberto. Qualquer comparação com modelo maior deve repetir exatamente este protocolo em execução separada e somente após autorização explícita.
+
+
+## Genesis v2-R — Executive Validity Closure
+
+A v2-R é uma etapa de validade operacional, não uma nova arquitetura. O controlador endógeno, as quatro primitivas, o estado acumulativo, a recuperação por feedback e a ausência de roteador extra permanecem congelados. A única alteração é de engenharia: os schemas foram compactados para no máximo 4 entidades, 4 fatos, 4 restrições, 4 incógnitas, 2 hipóteses e 2 previsões, com textos individuais curtos, conclusão de até 96 caracteres e explicação de verificação de até 96 caracteres.
+
+| Elemento | Regra v2-R |
+|---|---|
+| A — DIRECT | Uma chamada estruturada com teto de 1024 tokens; controle secundário. |
+| B — FIXED EXECUTIVE | Até quatro chamadas de 256 tokens, mesmo frame e primitivas; `next_operator` ignorado. |
+| C — ENDOGENOUS EXECUTIVE | Até quatro chamadas de 256 tokens, mesmo frame e primitivas; respeita `next_operator` na própria resposta. |
+| Budget total B/C | 1024 tokens solicitados por tarefa, sem retries e sem chamada de roteamento. |
+| Reparos | `repair_attempts=0`; JSON inválido falha diretamente. |
+| Tarefas | Diagnóstico público `reasoning_01`/`reasoning_02`; holdout público `reasoning_06`/`reasoning_07`. |
+| Seed/modelo | Seed `42`, `qwen2.5:3b`, gateway local. |
+| Escrita | Sem síntese, writeback, promoção, transferência, benchmark privado ou autoedição. |
+| Gate | ECG só existe se A, B e C tiverem holdout integralmente válido. |
+
+### Resultado live v2-R
+
+Foi executada uma única rodada live com o protocolo congelado. A condição A terminou validamente nos dois holdouts, embora tenha obtido `0/2`. B e C executaram as quatro decisões disponíveis, mas não terminaram com `verification_supported`; portanto, ambas foram marcadas inválidas por `decision_budget_exceeded`. C teve duas tentativas de recuperação após feedback `contradicted`/`uncertain`, mas nenhuma chegou a `supported` dentro do budget.
+
+| Condição | reasoning_06 | reasoning_07 | Agregado bruto | Validade |
+|---|---:|---:|---:|---|
+| A — DIRECT | 0/1 | 0/1 | 0,000 | válida |
+| B — FIXED EXECUTIVE | inválida | inválida | 0,000* | rejeitada |
+| C — ENDOGENOUS EXECUTIVE | inválida | inválida | 0,000* | rejeitada |
+
+`ECG=C−B` foi registrado como `null`, conforme o gate. Os zeros brutos de B/C não são uma comparação científica válida e não devem ser lidos como `C≤B`. O status correto é `REJECTED_INVALID_EXECUTION`, não `NO-GO` por desempenho.
+
+O catálogo local disponível no Windows continha `qwen2.5:3b`, `qwen2.5:0.5b` e `nomic-embed-text`; não havia 7B/8B. Nenhum modelo foi baixado ou substituído automaticamente. Dessa forma, a etapa opcional posterior em 7B/8B permanece bloqueada por disponibilidade e requer autorização/modelo fornecido separadamente; não foi executada.
+
+A v2-R eliminou a hipótese imediata de que o problema era somente JSON truncado em 170 tokens, mas não produziu um A/B/C válido com quatro decisões. O resultado não permite concluir se o controle endógeno supera o fixo. Não se deve acrescentar v2.1, novos operadores ou tuning aberto. A linha permanece parada até eventual execução independente em um modelo 7B/8B disponível.

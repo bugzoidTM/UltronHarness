@@ -293,3 +293,37 @@ A decisão correta é `REJECTED_INVALID_EXECUTION`. O teste não demonstra `C>B`
 
 
 A validação final do v2 no staging Windows foi concluída com 12 testes de segurança aprovados, 1 teste ignorado e 1 warning não relacionado ao código Genesis. As três fixtures públicas (`run_genesis_v1.py`, `run_genesis_v022.py` e `run_genesis_v2.py`) permanecem executáveis; a suíte Linux completa passou com 249 testes e 1 warning. O resultado live bruto foi preservado fora do commit e a auditoria confirmou que `ecg_C_minus_B` é `null` quando os holdouts B/C não são válidos.
+
+
+## Genesis v2-R — Executive Validity Closure
+
+A v2-R fecha a validade operacional do controlador sem adicionar capacidade cognitiva. Foram compactados os schemas para no máximo 4 entidades, 4 fatos, 4 restrições, 4 incógnitas, 2 hipóteses e 2 previsões, com textos individuais de até 80 caracteres, conclusão de até 96 caracteres e explicação de verificação de até 96 caracteres. O controlador, as quatro primitivas e a decisão online de `next_operator` permanecem inalterados. B e C passaram a usar quatro chamadas de 256 tokens, totalizando o mesmo teto solicitado de 1024 tokens por tarefa; `repair_attempts=0` foi mantido.
+
+O entrypoint separado está em [`scripts/run_genesis_v2r.py`](scripts/run_genesis_v2r.py). A usa uma chamada direta de até 1024 tokens. B usa `generic_closed_loop_v2r`, o mesmo frame acumulativo e o controlador fixo. C usa `endogenous_executive_v2r` e respeita a decisão online na própria saída estruturada. Nenhuma condição usa uma chamada adicional de roteamento, síntese, writeback ou seleção retrospectiva.
+
+### Resultado live v2-R
+
+Foi realizada uma única rodada live com `qwen2.5:3b`, seed `42`, dois diagnósticos e dois holdouts públicos. A terminou validamente nos dois holdouts, mas acertou `0/2`. B e C executaram quatro decisões em cada holdout e não terminaram por `verification_supported`; o gate registrou `decision_budget_exceeded` e marcou ambas como inválidas. C registrou duas tentativas de recuperação após feedback contradito/incerto, sem recuperação concluída dentro do limite.
+
+| Condição | reasoning_06 | reasoning_07 | Agregado bruto | Validade |
+|---|---:|---:|---:|---|
+| A — DIRECT | 0/1 | 0/1 | 0,000 | válida |
+| B — FIXED EXECUTIVE | inválida | inválida | 0,000* | rejeitada |
+| C — ENDOGENOUS EXECUTIVE | inválida | inválida | 0,000* | rejeitada |
+
+`ECG=C−B` foi corretamente registrado como `null`; os zeros brutos não são evidência de `C≤B`. O status é `REJECTED_INVALID_EXECUTION`, não uma decisão de desempenho. A compactação removeu o problema específico de truncamento observado no budget de 170 tokens, mas quatro decisões ainda não foram suficientes para obter uma execução válida nos holdouts desta rodada.
+
+Foi verificado o catálogo local do Windows: havia `qwen2.5:3b`, `qwen2.5:0.5b` e `nomic-embed-text`, sem modelo 7B/8B. Nenhum modelo foi baixado automaticamente. A rodada opcional em 7B/8B permanece bloqueada até existir um modelo adequado e autorização separada; não foi substituída pelo modelo 0.5B.
+
+A conclusão permanece estritamente limitada: a v2-R não confirmou nem refutou ganho executivo, porque o A/B/C não alcançou validade integral. Não se autoriza v2.1, novos operadores, tuning aberto ou transferência. A linha Genesis fica parada, aguardando no máximo uma execução independente em 7B/8B se esse modelo for disponibilizado.
+
+## Validação v2-R
+
+| Gate | Resultado |
+|---|---:|
+| Testes Genesis direcionados | 19 passed |
+| Suíte Linux completa com `ULTRON_VECTOR_ENABLED=false` | 250 passed, 1 warning |
+| Ruff e `git diff --check` | aprovados |
+| Fixture v2-R | aprovada; development-only |
+| Segurança Windows | 12 passed, 1 skipped, 1 warning |
+| Writeback, transferência e benchmark privado | não executados |

@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
 GENESIS_PROTOCOL_VERSION = "genesis-v0.2.2-non-solving"
 GENESIS_V1_PROTOCOL_VERSION = "genesis-v1-adaptive-policy"
 GENESIS_V2_PROTOCOL_VERSION = "genesis-v2-endogenous-executive"
+GENESIS_V2R_PROTOCOL_VERSION = "genesis-v2r-executive-validity-closure"
 GENESIS_MAX_PROGRAMS = 2
 GENESIS_MAX_OPERATORS = 4
 
 GenesisOperator = Literal["REPRESENT", "HYPOTHESIZE", "DEDUCT", "VERIFY"]
+ShortText = Annotated[str, Field(min_length=1, max_length=80)]
 
 GENESIS_OPERATORS: tuple[str, ...] = (
     "REPRESENT",
@@ -49,39 +51,39 @@ class CognitiveProgramBatch(BaseModel):
 
 class CognitiveFrame(BaseModel):
     problem: str = Field(min_length=1, max_length=8000)
-    entities: list[str] = Field(default_factory=list, max_length=32)
-    facts: list[str] = Field(default_factory=list, max_length=32)
-    unknowns: list[str] = Field(default_factory=list, max_length=16)
-    constraints: list[str] = Field(default_factory=list, max_length=32)
-    hypotheses: list[str] = Field(default_factory=list, max_length=16)
-    predictions: list[str] = Field(default_factory=list, max_length=16)
+    entities: list[ShortText] = Field(default_factory=list, max_length=4)
+    facts: list[ShortText] = Field(default_factory=list, max_length=4)
+    unknowns: list[ShortText] = Field(default_factory=list, max_length=4)
+    constraints: list[ShortText] = Field(default_factory=list, max_length=4)
+    hypotheses: list[ShortText] = Field(default_factory=list, max_length=2)
+    predictions: list[ShortText] = Field(default_factory=list, max_length=2)
     candidate_answer: str | None = Field(default=None, max_length=256)
     verification: dict[str, str] = Field(default_factory=dict, max_length=16)
     trace: list[dict[str, str]] = Field(default_factory=list, max_length=32)
 
 
 class RepresentationOutput(BaseModel):
-    entities: list[str] = Field(default_factory=list, max_length=16)
-    facts: list[str] = Field(default_factory=list, max_length=16)
-    constraints: list[str] = Field(default_factory=list, max_length=16)
-    unknowns: list[str] = Field(default_factory=list, max_length=8)
+    entities: list[ShortText] = Field(default_factory=list, max_length=4)
+    facts: list[ShortText] = Field(default_factory=list, max_length=4)
+    constraints: list[ShortText] = Field(default_factory=list, max_length=4)
+    unknowns: list[ShortText] = Field(default_factory=list, max_length=4)
     next_operator: GenesisOperator
 
 
 class HypothesisOutput(BaseModel):
-    hypotheses: list[str] = Field(default_factory=list, max_length=8)
-    predictions: list[str] = Field(default_factory=list, max_length=8)
+    hypotheses: list[ShortText] = Field(default_factory=list, max_length=2)
+    predictions: list[ShortText] = Field(default_factory=list, max_length=2)
     next_operator: GenesisOperator
 
 
 class DeductionOutput(BaseModel):
-    conclusion: str = Field(min_length=1, max_length=256)
+    conclusion: str = Field(min_length=1, max_length=96)
     next_operator: GenesisOperator
 
 
 class VerificationOutput(BaseModel):
     status: Literal["supported", "contradicted", "uncertain"]
-    explanation: str = Field(min_length=1, max_length=512)
+    explanation: str = Field(min_length=1, max_length=96)
     next_operator: GenesisOperator
 
 

@@ -165,6 +165,16 @@ O probe está em [`scripts/run_genesis_v2.py`](scripts/run_genesis_v2.py). O dia
 
 Na única rodada live, A foi válido, mas B e C tiveram falhas de schema truncado, ausência de progresso e/ou excesso de decisões. C demonstrou uma recuperação em uma tarefa de diagnóstico, mas não completou validamente os dois holdouts. O resultado correto é **`REJECTED_INVALID_EXECUTION`**; `ECG` foi registrado como `null` e os zeros brutos do artefato não devem ser interpretados como `C ≤ B`. A hipótese de ganho executivo permanece sem confirmação e sem refutação.
 
+### Project Genesis v2-R — Executive Validity Closure
+
+A v2-R é uma etapa de validade operacional, sem nova capacidade cognitiva, operador, memória ou mudança de arquitetura. Os schemas foram compactados para no máximo 4 entidades, 4 fatos, 4 restrições, 4 incógnitas, 2 hipóteses e 2 previsões, com textos curtos, conclusão de até 96 caracteres e explicação de verificação de até 96 caracteres. B e C usam quatro chamadas de 256 tokens, totalizando o mesmo teto solicitado de 1024 tokens por tarefa; `repair_attempts=0` permanece ativo.
+
+O entrypoint é [`scripts/run_genesis_v2r.py`](scripts/run_genesis_v2r.py). A é `DIRECT`; B é `FIXED EXECUTIVE` com o controlador fixo; C é `ENDOGENOUS EXECUTIVE` e respeita `next_operator`. Diagnóstico e holdout continuam restritos às tarefas públicas, sem síntese, writeback, transferência, benchmark privado ou chamada extra de roteamento.
+
+Na única rodada 3B, A terminou validamente mas acertou `0/2`. B e C chegaram ao limite de quatro decisões sem terminar validamente por `verification_supported`; ambas foram rejeitadas por `decision_budget_exceeded`. C registrou duas tentativas de recuperação sem sucesso dentro do budget. Portanto, o resultado é **`REJECTED_INVALID_EXECUTION`**, `ECG=C−B` é `null` e os zeros brutos não significam `C≤B`.
+
+O catálogo local não possui modelo 7B/8B — somente `qwen2.5:3b`, `qwen2.5:0.5b` e `nomic-embed-text`. Nenhum modelo foi baixado automaticamente. A linha fica parada: não haverá v2.1, novos operadores ou tuning aberto; uma eventual execução única em 7B/8B requer disponibilidade e autorização separadas.
+
 ## Segurança e autonomia
 
 O UltronPro começa em **Mode 2 — Supervised Agent**. Ações R0 e R1 permitidas podem ser executadas dentro do workspace; modificações R2 aguardam aprovação. As ações R3/R4 requerem aprovação e as R5 são bloqueadas. O diretório permitido é:

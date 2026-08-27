@@ -25,6 +25,7 @@ from ultron.genesis.schemas import (
     GENESIS_PROTOCOL_VERSION,
     GENESIS_V1_PROTOCOL_VERSION,
     GENESIS_V2_PROTOCOL_VERSION,
+    GENESIS_V2R_PROTOCOL_VERSION,
     CognitivePolicy,
     CognitiveProgram,
     DeliberationOutput,
@@ -43,7 +44,8 @@ GENESIS_PUBLIC_TASK_IDS = ("reasoning_01", "reasoning_02", "reasoning_06", "reas
 GenesisCondition = Literal["direct", "generic_closed_loop", "adaptive_policy"]
 LegacyGenesisCondition = Literal["matched_compute", "program"]
 GenesisV2Condition = Literal["endogenous_executive"]
-AnyGenesisCondition = GenesisCondition | LegacyGenesisCondition | GenesisV2Condition
+GenesisV2RCondition = Literal["generic_closed_loop_v2r", "endogenous_executive_v2r"]
+AnyGenesisCondition = GenesisCondition | LegacyGenesisCondition | GenesisV2Condition | GenesisV2RCondition
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,10 +141,10 @@ class GenesisPublicRunner:
         )
         if condition == "direct":
             instruction = "Resolva diretamente o objetivo e retorne o schema final."
-        elif condition == "generic_closed_loop":
-            instruction = f"Execute a etapa {call_index}/6 de uma política fixa de feedback, usando o frame acumulado."
-        elif condition == "endogenous_executive":
-            instruction = f"Execute a etapa {call_index}/6 e escolha next_operator para o próximo pensamento a partir do frame acumulado."
+        elif condition in {"generic_closed_loop", "generic_closed_loop_v2r"}:
+            instruction = f"Execute a etapa {call_index}/4 de uma política fixa de feedback, usando o frame acumulado."
+        elif condition in {"endogenous_executive", "endogenous_executive_v2r"}:
+            instruction = f"Execute a etapa {call_index}/4 e escolha next_operator para o próximo pensamento a partir do frame acumulado."
         else:
             instruction = f"Execute a etapa {call_index}/6 escolhida pela política adaptativa, usando o frame acumulado."
         context = f"Condição={condition}. {instruction}"
@@ -193,11 +195,13 @@ class GenesisPublicRunner:
             raise ValueError("direct_decision_budget_must_be_one")
         if condition in {"generic_closed_loop", "adaptive_policy", "endogenous_executive"} and decision_budget != 6:
             raise ValueError("closed_loop_decision_budget_must_be_six")
+        if condition in {"generic_closed_loop_v2r", "endogenous_executive_v2r"} and decision_budget != 4:
+            raise ValueError("v2r_decision_budget_must_be_four")
         if condition in {"matched_compute", "program"} and decision_budget != 4:
             raise ValueError("legacy_call_budget_must_be_four")
         started_at = datetime.now(UTC)
         effective_model = self._effective_model(model_name)
-        workspace_name = "genesis-v0.2.2" if legacy_condition else ("genesis-v2" if condition == "endogenous_executive" else "genesis-v1")
+        workspace_name = "genesis-v0.2.2" if legacy_condition else ("genesis-v2r" if condition in {"generic_closed_loop_v2r", "endogenous_executive_v2r"} else ("genesis-v2" if condition == "endogenous_executive" else "genesis-v1"))
         workspace = self.settings.artifacts_dir / workspace_name / run_id / condition / task.id
         workspace.mkdir(parents=True, exist_ok=True)
         call_tokens = max(1, int(max_tokens) // decision_budget)
@@ -214,7 +218,7 @@ class GenesisPublicRunner:
                     timeout=task.timeout_seconds,
                 )
                 response_text = output.answer
-            elif condition == "generic_closed_loop":
+            elif condition in {"generic_closed_loop", "generic_closed_loop_v2r"}:
                 vm_execution = await asyncio.wait_for(
                     GenericClosedLoopVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0).execute_closed_loop(task.objective, max_decisions=decision_budget),
                     timeout=task.timeout_seconds * decision_budget,
@@ -244,7 +248,7 @@ class GenesisPublicRunner:
                     failure_category = "VM_ERROR"
                 else:
                     response_text = vm_execution.frame.candidate_answer or ""
-            elif condition == "endogenous_executive":
+            elif condition in {"endogenous_executive", "endogenous_executive_v2r"}:
                 vm_execution = await asyncio.wait_for(
                     EndogenousExecutiveVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0).execute_online(task.objective, max_decisions=decision_budget),
                     timeout=task.timeout_seconds * decision_budget,
@@ -289,9 +293,9 @@ class GenesisPublicRunner:
             run_id=f"{run_id}:{condition}:{task.id}",
             git_commit="runtime",
             model=effective_model,
-            runtime="local-public-genesis-v0.2.2" if legacy_condition else ("local-public-genesis-v2" if condition == "endogenous_executive" else "local-public-genesis-v1"),
+            runtime="local-public-genesis-v0.2.2" if legacy_condition else ("local-public-genesis-v2r" if condition in {"generic_closed_loop_v2r", "endogenous_executive_v2r"} else ("local-public-genesis-v2" if condition == "endogenous_executive" else "local-public-genesis-v1")),
             benchmark="genesis_public",
-            benchmark_version=GENESIS_PROTOCOL_VERSION if legacy_condition else (GENESIS_V2_PROTOCOL_VERSION if condition == "endogenous_executive" else GENESIS_V1_PROTOCOL_VERSION),
+            benchmark_version=GENESIS_PROTOCOL_VERSION if legacy_condition else (GENESIS_V2R_PROTOCOL_VERSION if condition in {"generic_closed_loop_v2r", "endogenous_executive_v2r"} else (GENESIS_V2_PROTOCOL_VERSION if condition == "endogenous_executive" else GENESIS_V1_PROTOCOL_VERSION)),
             mode="baseline",
             seed=seed,
             config_hash=config_hash,

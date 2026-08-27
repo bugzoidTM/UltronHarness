@@ -4,12 +4,15 @@ import asyncio
 from copy import deepcopy
 from pathlib import Path
 
+import pytest
+
 from scripts.run_genesis_v1 import DIAGNOSIS_IDS, HOLDOUT_IDS, MAX_DECISIONS, TOTAL_BUDGET
 from ultron.benchmarks.models import BenchmarkTask
 from ultron.configuration import Settings, load_settings
 from ultron.genesis.public_runner import GenesisPublicRunner
 from ultron.genesis.schemas import (
     GENESIS_V2_PROTOCOL_VERSION,
+    GENESIS_V2R_PROTOCOL_VERSION,
     CognitivePolicy,
     CognitivePolicyRule,
     DeductionOutput,
@@ -168,6 +171,7 @@ def test_runner_parity_uses_same_total_budget_for_direct_and_closed_loop(tmp_pat
     generic = asyncio.run(runner.run_one(task=task, condition="generic_closed_loop", run_id="b", model_name="fake", seed=42, max_tokens=TOTAL_BUDGET, decision_budget=MAX_DECISIONS))
     adaptive = asyncio.run(runner.run_one(task=task, condition="adaptive_policy", run_id="c", model_name="fake", seed=42, max_tokens=TOTAL_BUDGET, policy=policy, decision_budget=MAX_DECISIONS))
     endogenous = asyncio.run(runner.run_one(task=task, condition="endogenous_executive", run_id="d", model_name="fake", seed=42, max_tokens=TOTAL_BUDGET, decision_budget=MAX_DECISIONS))
+    v2r = asyncio.run(runner.run_one(task=task, condition="endogenous_executive_v2r", run_id="e", model_name="fake", seed=42, max_tokens=TOTAL_BUDGET, decision_budget=4))
 
     assert direct.execution.context_metrics["decision_budget"] == 1
     assert direct.execution.context_metrics["call_tokens"] == 1024
@@ -178,7 +182,19 @@ def test_runner_parity_uses_same_total_budget_for_direct_and_closed_loop(tmp_pat
     assert endogenous.execution.context_metrics["decision_budget"] == 6
     assert endogenous.execution.context_metrics["call_tokens"] == 170
     assert endogenous.manifest.benchmark_version == GENESIS_V2_PROTOCOL_VERSION
-    assert {direct.manifest.config_hash, generic.manifest.config_hash, adaptive.manifest.config_hash, endogenous.manifest.config_hash}.__len__() == 1
+    assert v2r.execution.context_metrics["decision_budget"] == 4
+    assert v2r.execution.context_metrics["call_tokens"] == 256
+    assert v2r.manifest.benchmark_version == GENESIS_V2R_PROTOCOL_VERSION
+    assert {direct.manifest.config_hash, generic.manifest.config_hash, adaptive.manifest.config_hash, endogenous.manifest.config_hash, v2r.manifest.config_hash}.__len__() == 1
+
+
+def test_v2r_structured_outputs_are_compact() -> None:
+    with pytest.raises(ValueError):
+        RepresentationOutput(entities=["x"] * 5, next_operator="HYPOTHESIZE")
+    with pytest.raises(ValueError):
+        HypothesisOutput(hypotheses=["x"] * 3, next_operator="DEDUCT")
+    with pytest.raises(ValueError):
+        VerificationOutput(status="uncertain", explanation="x" * 97, next_operator="DEDUCT")
 
 
 def test_policy_source_has_no_external_execution_path() -> None:
