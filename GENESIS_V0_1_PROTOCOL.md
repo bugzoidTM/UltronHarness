@@ -272,4 +272,4 @@ A fixture v2-FINAL confirmou o contrato de quatro primitivas, sete decisões e 2
 
 [1]: https://github.com/bugzoidTM/UltronHarness "UltronHarness — repositório público do projeto"
 
-O commit anterior publicado é `331ccd29055ea20a9a61eca6fbf53f7b34661378`; o commit que contém este protocolo v2-FINAL será informado após a validação e publicação.
+O commit anterior publicado é `331ccd29055ea20a9a61eca6fbf53f7b34661378`. A publicação desta versão e os gates de validação são registrados no histórico público do repositório [UltronHarness](https://github.com/bugzoidTM/UltronHarness).
