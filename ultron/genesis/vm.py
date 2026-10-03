@@ -25,6 +25,20 @@ class VMExecution:
     decisions: int = 0
     termination_reason: str | None = None
 
+    @property
+    def candidate_history(self) -> tuple[str, ...]:
+        """Conclusões emitidas por DEDUCT, na ordem; HYPOTHESIZE não as apaga daqui."""
+        return tuple(
+            entry["candidate_answer"]
+            for entry in self.frame.trace
+            if entry.get("operator") == "DEDUCT" and entry.get("candidate_answer")
+        )
+
+    @property
+    def last_candidate_answer(self) -> str | None:
+        history = self.candidate_history
+        return history[-1] if history else None
+
 
 class CognitiveVM:
     """VM não solucionadora: cada operador delega ao mesmo modelo via schema."""
@@ -45,9 +59,18 @@ class CognitiveVM:
         self.max_tokens = max(1, int(max_tokens))
         self.max_steps = max(1, int(max_steps))
         self.repair_attempts = max(0, int(repair_attempts))
+        # Observabilidade: o frame em curso e as chamadas iniciadas continuam legíveis
+        # mesmo quando a execução é cancelada por timeout externo.
+        self.frame: CognitiveFrame | None = None
+        self.model_calls_started = 0
+
+    def _new_frame(self, problem: str) -> CognitiveFrame:
+        self.frame = CognitiveFrame(problem=problem)
+        self.model_calls_started = 0
+        return self.frame
 
     async def execute(self, problem: str, program: CognitiveProgram) -> VMExecution:
-        frame = CognitiveFrame(problem=problem)
+        frame = self._new_frame(problem)
         steps = 0
         model_calls = 0
         for operator in program.operators:
@@ -58,7 +81,7 @@ class CognitiveVM:
                 await self._apply_operator(frame, operator)
             except Exception as exc:
                 return VMExecution(frame, halted=True, valid=False, error=f"operator_error:{type(exc).__name__}:{str(exc)[:200]}", steps=steps, model_calls=model_calls)
-            frame.trace.append({"operator": operator, "state": self._state_digest(frame)})
+            frame.trace.append({"operator": operator, "state": self._state_digest(frame), **self._observation(frame)})
             steps += 1
         return VMExecution(frame, halted=True, valid=True, error=None, steps=steps, model_calls=model_calls)
 
@@ -105,6 +128,7 @@ class CognitiveVM:
         raise ValueError(f"unknown_operator:{operator}")
 
     async def _structured(self, schema: type[Any], instruction: str, frame: CognitiveFrame) -> Any:
+        self.model_calls_started += 1
         return await self.gateway.structured(
             schema,
             self._messages(instruction, frame),
@@ -133,6 +157,14 @@ class CognitiveVM:
         ]
 
     @staticmethod
+    def _observation(frame: CognitiveFrame) -> dict[str, str]:
+        """Valores explícitos para auditoria; o trace nunca entra nas mensagens do modelo."""
+        return {
+            "candidate_answer": frame.candidate_answer or "",
+            "verification_status": frame.verification.get("status", ""),
+        }
+
+    @staticmethod
     def _state_digest(frame: CognitiveFrame) -> str:
         return (
             f"entities={len(frame.entities)};facts={len(frame.facts)};unknowns={len(frame.unknowns)};"
@@ -145,7 +177,7 @@ class EndogenousExecutiveVM(CognitiveVM):
     """Controlador online: o último operador escolhe o próximo sem chamada adicional."""
 
     async def execute_online(self, problem: str, max_decisions: int = 6) -> VMExecution:
-        frame = CognitiveFrame(problem=problem)
+        frame = self._new_frame(problem)
         decisions = 0
         model_calls = 0
         next_operator = "REPRESENT"
@@ -192,8 +224,8 @@ class EndogenousExecutiveVM(CognitiveVM):
                     "operator": operator,
                     "controller": "endogenous_online",
                     "next_operator": next_operator,
-                    "verification_status": frame.verification.get("status", ""),
                     "state": self._state_digest(frame),
+                    **self._observation(frame),
                 }
             )
             decisions += 1
@@ -224,7 +256,7 @@ class GenericClosedLoopVM(CognitiveVM):
     """Política fixa de feedback usada como controle matched-compute."""
 
     async def execute_closed_loop(self, problem: str, max_decisions: int = 6) -> VMExecution:
-        frame = CognitiveFrame(problem=problem)
+        frame = self._new_frame(problem)
         decisions = 0
         model_calls = 0
         while decisions < max_decisions:
@@ -259,6 +291,7 @@ class GenericClosedLoopVM(CognitiveVM):
                     "operator": operator,
                     "controller": "generic_fixed_feedback",
                     "state": self._state_digest(frame),
+                    **self._observation(frame),
                 }
             )
             decisions += 1
@@ -292,7 +325,7 @@ class AdaptiveCognitiveVM(CognitiveVM):
     """Interpreta uma política finita: estado, escolha segura, operação e feedback."""
 
     async def execute_policy(self, problem: str, policy: CognitivePolicy) -> VMExecution:
-        frame = CognitiveFrame(problem=problem)
+        frame = self._new_frame(problem)
         decisions = 0
         model_calls = 0
         while decisions < policy.max_decisions:
@@ -341,6 +374,7 @@ class AdaptiveCognitiveVM(CognitiveVM):
                     "priority": str(rule.priority),
                     "conditions": ",".join(name for name, value in predicates.items() if value),
                     "state": self._state_digest(frame),
+                    **self._observation(frame),
                 }
             )
             decisions += 1

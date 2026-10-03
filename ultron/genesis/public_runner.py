@@ -102,6 +102,52 @@ def evaluate_public_task(task: BenchmarkTask, execution: TaskExecution) -> Evalu
     )
 
 
+_SCHEMA_ERROR_TYPES = ("ValidationError", "ValueError", "JSONDecodeError")
+
+
+def failure_class(result: GenesisTaskResult) -> str:
+    """Separa falha cognitiva (schema, budget, controle) de falha de infraestrutura."""
+    category = result.execution.failure_category
+    if category is None:
+        return "none"
+    if category != "VM_ERROR":
+        return "infra"
+    vm = result.vm_execution
+    if vm is not None and vm.termination_reason == "operator_error":
+        error = vm.error or ""
+        if not any(error.startswith(f"operator_error:{name}:") for name in _SCHEMA_ERROR_TYPES):
+            return "infra"
+    return "cognitive"
+
+
+def candidate_observation(result: GenesisTaskResult) -> dict[str, Any]:
+    """Serializa explicitamente os candidatos de uma linha, válida ou não.
+
+    `candidate_answer` é o último candidato emitido (última conclusão de DEDUCT, ou a
+    resposta de uma chamada direta), mesmo que HYPOTHESIZE o tenha retirado do frame
+    depois ou que a VM tenha terminado por budget, erro ou timeout. Uma linha com
+    histórico vazio significa que nenhum candidato foi produzido, não que ele se perdeu.
+    """
+    vm = result.vm_execution
+    if vm is None:
+        answer = result.execution.response.strip() if result.execution.failure_category is None else ""
+        history = [answer] if answer else []
+        final_frame_candidate = None
+        final_status = ""
+    else:
+        history = list(vm.candidate_history)
+        final_frame_candidate = vm.frame.candidate_answer
+        final_status = vm.frame.verification.get("status", "")
+    return {
+        "candidate_observability": "complete",
+        "candidate_answer": history[-1] if history else None,
+        "candidate_history": history,
+        "final_frame_candidate_answer": final_frame_candidate,
+        "final_verification_status": final_status,
+        "failure_class": failure_class(result),
+    }
+
+
 class GenesisPublicRunner:
     """Runner público que usa somente tarefas públicas e o mesmo gateway do experimento."""
 
@@ -185,7 +231,9 @@ class GenesisPublicRunner:
         policy: CognitivePolicy | None = None,
         decision_budget: int = 1,
         call_budget: int | None = None,
+        call_timeout_seconds: float | None = None,
     ) -> GenesisTaskResult:
+        """Executa uma condição; `call_timeout_seconds` só substitui o timeout de parede da tarefa."""
         if call_budget is not None:
             decision_budget = int(call_budget)
         legacy_condition = condition in {"matched_compute", "program"}
@@ -215,6 +263,8 @@ class GenesisPublicRunner:
         call_tokens = max(1, int(max_tokens) // decision_budget)
         config_hash = self._config_hash(model_name=model_name, seed=seed, max_tokens=max_tokens)
         started = perf_counter()
+        timeout_unit = float(call_timeout_seconds) if call_timeout_seconds is not None else task.timeout_seconds
+        vm: CognitiveVM | None = None
         vm_execution: VMExecution | None = None
         response_text = ""
         failure_category: str | None = None
@@ -223,13 +273,14 @@ class GenesisPublicRunner:
             if condition == "direct":
                 output = await asyncio.wait_for(
                     self._structured(FinalAnswerOutput, self._messages(task, condition, None, 1), model_name, seed, max_tokens),
-                    timeout=task.timeout_seconds,
+                    timeout=timeout_unit,
                 )
                 response_text = output.answer
             elif condition in {"generic_closed_loop", "generic_closed_loop_v2r", "generic_closed_loop_v2final"}:
+                vm = GenericClosedLoopVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0)
                 vm_execution = await asyncio.wait_for(
-                    GenericClosedLoopVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0).execute_closed_loop(task.objective, max_decisions=decision_budget),
-                    timeout=task.timeout_seconds * decision_budget,
+                    vm.execute_closed_loop(task.objective, max_decisions=decision_budget),
+                    timeout=timeout_unit * decision_budget,
                 )
                 if not vm_execution.valid:
                     failure_category = "VM_ERROR"
@@ -240,7 +291,7 @@ class GenesisPublicRunner:
                 for call_index in range(1, decision_budget + 1):
                     output = await asyncio.wait_for(
                         self._structured(DeliberationOutput, self._messages(task, condition, None, call_index), model_name, seed, call_tokens),
-                        timeout=task.timeout_seconds,
+                        timeout=timeout_unit,
                     )
                     notes.append(output.note)
                     if output.candidate_answer:
@@ -248,27 +299,30 @@ class GenesisPublicRunner:
                 if not response_text and notes:
                     response_text = notes[-1]
             elif condition == "program":
+                vm = CognitiveVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0)
                 vm_execution = await asyncio.wait_for(
-                    CognitiveVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0).execute(task.objective, program),
-                    timeout=task.timeout_seconds * decision_budget,
+                    vm.execute(task.objective, program),
+                    timeout=timeout_unit * decision_budget,
                 )
                 if not vm_execution.valid:
                     failure_category = "VM_ERROR"
                 else:
                     response_text = vm_execution.frame.candidate_answer or ""
             elif condition in {"endogenous_executive", "endogenous_executive_v2r", "endogenous_executive_v2final"}:
+                vm = EndogenousExecutiveVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0)
                 vm_execution = await asyncio.wait_for(
-                    EndogenousExecutiveVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0).execute_online(task.objective, max_decisions=decision_budget),
-                    timeout=task.timeout_seconds * decision_budget,
+                    vm.execute_online(task.objective, max_decisions=decision_budget),
+                    timeout=timeout_unit * decision_budget,
                 )
                 if not vm_execution.valid:
                     failure_category = "VM_ERROR"
                 else:
                     response_text = vm_execution.frame.candidate_answer or ""
             else:
+                vm = AdaptiveCognitiveVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0)
                 vm_execution = await asyncio.wait_for(
-                    AdaptiveCognitiveVM(self.models, model_name=model_name, seed=seed, max_tokens=call_tokens, max_steps=decision_budget, repair_attempts=0).execute_policy(task.objective, policy),
-                    timeout=task.timeout_seconds * decision_budget,
+                    vm.execute_policy(task.objective, policy),
+                    timeout=timeout_unit * decision_budget,
                 )
                 if not vm_execution.valid:
                     failure_category = "VM_ERROR"
@@ -276,9 +330,11 @@ class GenesisPublicRunner:
                     response_text = vm_execution.frame.candidate_answer or ""
         except TimeoutError:
             failure_category = "TIMEOUT"
+            vm_execution = self._partial_execution(vm, "timeout")
         except Exception as exc:
             failure_category = "TOOL_ERROR"
             response_text = str(exc)[:500]
+            vm_execution = self._partial_execution(vm, "tool_error")
         execution = TaskExecution(
             task_id=task.id,
             mode="baseline",
@@ -319,6 +375,23 @@ class GenesisPublicRunner:
             },
         )
         return GenesisTaskResult(task, condition, manifest, execution, evaluation, vm_execution)
+
+    @staticmethod
+    def _partial_execution(vm: CognitiveVM | None, reason: str) -> VMExecution | None:
+        """Preserva o frame parcial (e seus candidatos) quando a VM é interrompida de fora."""
+        if vm is None or vm.frame is None:
+            return None
+        completed = len(vm.frame.trace)
+        return VMExecution(
+            vm.frame,
+            halted=True,
+            valid=False,
+            error=reason,
+            steps=completed,
+            model_calls=vm.model_calls_started,
+            decisions=completed,
+            termination_reason=reason,
+        )
 
     def persist_result(self, result: GenesisTaskResult) -> None:
         summary = BenchmarkRunSummary(

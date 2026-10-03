@@ -20,7 +20,11 @@ from typing import Any
 
 from ultron.benchmarks.models import BenchmarkTask
 from ultron.configuration import Settings, load_settings
-from ultron.genesis.public_runner import GenesisPublicRunner, GenesisTaskResult
+from ultron.genesis.public_runner import (
+    GenesisPublicRunner,
+    GenesisTaskResult,
+    candidate_observation,
+)
 from ultron.genesis.schemas import (
     GENESIS_MAX_OPERATORS,
     GENESIS_MAX_PROGRAMS,
@@ -150,6 +154,7 @@ def _record(result: GenesisTaskResult) -> dict[str, Any]:
         "recovered": recovered,
         "trace": list(vm.frame.trace) if vm else [],
         "evidence": list(result.evaluation.evidence),
+        **candidate_observation(result),
     }
 
 

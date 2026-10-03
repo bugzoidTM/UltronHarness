@@ -203,6 +203,20 @@ Na auditoria da rodada live já existente, as quatro linhas tinham `response=""`
 
 O auditor e seus contratos estão em [`scripts/audit_genesis_v2final.py`](scripts/audit_genesis_v2final.py), com cobertura em [`tests/test_genesis_ablation.py`](tests/test_genesis_ablation.py). O JSON live permanece fora do commit; os arquivos produzidos em `data/artifacts/` são dados gerados e não devem ser publicados.
 
+### Genesis v2-FINAL-OBS — Fechamento observável
+
+A v2-FINAL-OBS fecha o Genesis v2 antes de qualquer v3. Ela corrige somente a observabilidade: toda linha, válida ou não, serializa `candidate_answer` (o último candidato emitido), `candidate_history`, `final_frame_candidate_answer`, `final_verification_status` e `failure_class`, inclusive após `decision_budget_exceeded`, erro de schema ou timeout. O trace do controlador fixo (B) passa a registrar `verification_status` como o de C, o que torna simétricas as medidas de recuperação e auto-terminação. As mensagens enviadas ao modelo são byte a byte idênticas às da v2-FINAL.
+
+O entrypoint é [`scripts/run_genesis_v2final_obs.py`](scripts/run_genesis_v2final_obs.py). Ele exige o modelo já instalado (nunca baixa), registra o digest, faz um aquecimento neutro descartado, executa B/C e depois a referência secundária A, e regrava o JSON após cada linha:
+
+```bash
+python -m scripts.run_genesis_v2final_obs --mode live --model ollama_research_7b \
+  --call-timeout-seconds 300 --http-timeout-seconds 600 --global-timeout-seconds 14400 \
+  --output data/artifacts/research/genesis_v2final_obs/qwen2.5-7b
+```
+
+O pré-registro (escada 3B → 7B → 14B no mesmo hardware, gate e leitura arquitetura × escala) está em [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md). A cobertura está em [`tests/test_genesis_observability.py`](tests/test_genesis_observability.py).
+
 ## Segurança e autonomia
 
 O UltronPro começa em **Mode 2 — Supervised Agent**. Ações R0 e R1 permitidas podem ser executadas dentro do workspace; modificações R2 aguardam aprovação. As ações R3/R4 requerem aprovação e as R5 são bloqueadas. O diretório permitido é:

@@ -304,3 +304,85 @@ No JSON bruto existente, as quatro linhas possuem `response=""` e não serializa
 Assim, `ECG-task=null` e `ECG-self=0,000`. O resultado da auditoria é **`AUDIT_INCONCLUSIVE_MISSING_CANDIDATE_ANSWER`**. B terminou com a sequência `REPRESENT → HYPOTHESIZE → HYPOTHESIZE → DEDUCT → VERIFY → HYPOTHESIZE → HYPOTHESIZE` em `reasoning_06` e `REPRESENT → HYPOTHESIZE → DEDUCT → VERIFY → DEDUCT → VERIFY → DEDUCT` em `reasoning_07`. C teve `contradicted` como último status de verificação observável em `reasoning_06` e `uncertain` em `reasoning_07`, mas nenhum candidato foi preservado para avaliação externa.
 
 Esse resultado é uma falha de observabilidade do artefato, não evidência de `C≤B`, `C=B` ou `C>B`. A auditoria não justifica uma nova execução 7B/8B nem uma conclusão de capacidade, porque o JSON não permite distinguir candidato correto de candidato incorreto ausente. Qualquer execução futura que pretenda medir `ECG-task` deve serializar explicitamente o último `candidate_answer` antes de marcar uma linha inválida, sem usar inferência retrospectiva.
+
+
+## Genesis v2-FINAL-OBS — Fechamento observável (pré-registro)
+
+Esta etapa fecha o Genesis v2 antes de qualquer Genesis v3. Ela corrige **somente a observabilidade** que tornou a auditoria pós-v2-FINAL inconclusiva, recongela o protocolo e executa o mesmo teste B/C com modelos locais mais capazes da mesma família. A pergunta é: a falha do 3B vem da arquitetura do controle executivo ou de um modelo-base pequeno demais?
+
+Esta seção foi escrita e commitada antes de qualquer execução live da v2-FINAL-OBS.
+
+### O que mudou: somente observabilidade
+
+| Falha observada | Correção |
+|---|---|
+| `HYPOTHESIZE` zera `candidate_answer` no frame e o trace guardava só `candidate_present` | Cada entrada do trace serializa o valor de `candidate_answer`. `VMExecution.candidate_history` lista todas as conclusões de `DEDUCT`. |
+| Linhas inválidas gravavam `response=""` sem o candidato | Toda linha grava `candidate_answer` (último candidato emitido), `candidate_history`, `final_frame_candidate_answer`, `final_verification_status`, `candidate_observability="complete"` e `failure_class`. |
+| Timeout por linha descartava o frame inteiro | A VM mantém o frame em curso acessível. Em timeout, o runner preserva o frame parcial com `termination_reason="timeout"`. |
+| O trace de B (controlador fixo) não gravava `verification_status` | B e C passam a gravar os mesmos campos. Sem isso, o auditor nunca contava auto-terminação nem tentativas de recuperação de B. O registro "B: 0 tentativas de recuperação" da auditoria anterior é, ao menos em parte, um artefato dessa assimetria: a sequência de B em `reasoning_07` contém `VERIFY → DEDUCT`, que no controlador fixo implica um `uncertain`. |
+| Falha de transporte e falha de schema caíam ambas em `VM_ERROR` | `failure_class` separa `cognitive` (schema inválido, budget de decisões, `next_operator` inválido) de `infra` (timeout de parede, erro HTTP ou de conexão). |
+
+Prova de que não há mudança comportamental: uma captura determinística de todas as chamadas ao gateway em 6 cenários B/C (35 chamadas, incluindo mensagens, seed, `max_tokens`, sequência de operadores, validade e score) produz o mesmo SHA-256 antes e depois da correção. O teste `test_observability_fields_never_reach_model_messages` garante que trace e histórico nunca entram nas mensagens do modelo.
+
+### Contrato cognitivo (inalterado em relação à v2-FINAL)
+
+| Elemento | Regra |
+|---|---|
+| Condições primárias | B `generic_closed_loop_v2final` (controlador fixo) e C `endogenous_executive_v2final` (respeita `next_operator`) |
+| Tarefas | Somente `reasoning_06` e `reasoning_07`, públicas |
+| Budget B/C | `7 × 256 = 1792` tokens solicitados por tarefa; `repair_attempts=0`; sem roteador extra |
+| Operadores | `REPRESENT`, `HYPOTHESIZE`, `DEDUCT`, `VERIFY` |
+| Seed | `42`, temperatura `0,2` |
+| Síntese, writeback, transferência, autoedição | Desativados |
+| Verificador | Fórmula pública com igualdade exata |
+
+### Adições operacionais pré-registradas
+
+| Item | Regra |
+|---|---|
+| Identidade do modelo | Digest, tamanho de parâmetros e quantização lidos de `/api/tags` antes da execução. Modelo ausente resulta em `MODEL_UNAVAILABLE`. Nunca há download automático pelo script. |
+| Aquecimento | Uma chamada neutra fora do protocolo (problema da estante, schema `RepresentationOutput`), saída descartada, para que o carregamento a frio não consuma o timeout da primeira linha de B. |
+| Referência A | `DIRECT`: uma chamada estruturada de até 1792 tokens, executada depois de B/C. É secundária e nunca entra em ECG. |
+| Persistência | O JSON é regravado após cada linha. Uma interrupção preserva todas as linhas concluídas. |
+| Perfil de timeout | Os timeouts de parede não fazem parte do orçamento cognitivo, que continua sendo tokens e decisões. O perfil de referência (30 s por chamada, 540 s globais) segue como default para a máquina Windows original. Nesta execução, em container CPU, usa-se um perfil declarado e idêntico para A, B e C: 300 s por chamada (2100 s por linha B/C), 600 s de timeout HTTP e deadline suave de 14 400 s verificado entre linhas. Na v2-FINAL original nenhuma linha terminou por timeout, então o perfil de referência não foi a restrição ativa. Qualquer timeout é `INFRA_INVALID`, nunca score cognitivo. |
+
+### Escada de modelos pré-registrada
+
+Mesma família (Qwen2.5 Instruct, GGUF `Q4_K_M`), mesmo hardware (container Linux com 4 vCPU, 15 GB de RAM e sem GPU) e mesmo runtime (Ollama `0.35.1`, `OLLAMA_NUM_PARALLEL=1`, um modelo carregado por vez):
+
+| Papel | Tag | Parâmetros | Digest |
+|---|---|---:|---|
+| Controle de mesmo hardware | `qwen2.5:3b` | 3,1B | `357c53fb659c` |
+| Primário | `qwen2.5:7b` | 7,6B | `845dbda0ea48` |
+| Ponto de escala secundário | `qwen2.5:14b` | 14,8B | `7cdf5a0187d5` |
+
+Cada modelo é executado exatamente uma vez, na ordem 3B → 7B → 14B. Não há repetição, troca de seed, seleção de modelo ou omissão de resultado: os três resultados são reportados. O 3B é reexecutado aqui porque o registro anterior foi obtido em outro hardware e sem observabilidade. A comparação de escala é feita dentro do mesmo hardware.
+
+### Métricas e gate pré-registrados
+
+| Métrica | Definição |
+|---|---|
+| Validade operacional `V` | Linhas B/C que terminam com `verification_supported`, sem falha de infraestrutura (0 a 4) |
+| `ECG` | `score(C) − score(B)` pelo protocolo. Só existe se `V = 4/4`. |
+| `ECG-task` | `external(C) − external(B)` sobre o último candidato emitido. Com observabilidade completa, uma linha sem candidato vale 0 (nenhum candidato foi produzido). |
+| `ECG-task-final-frame` | Igual a `ECG-task`, mas usando o candidato presente no frame ao término (secundária) |
+| `ECG-self` | Taxa de auto-terminação `supported` de C menos a de B |
+| `Δtask(C−A)`, `Δtask(B−A)` | Referência secundária contra o mesmo modelo sem VM |
+
+| Gate | Condição |
+|---|---|
+| `INFRA_INVALID` | Alguma linha B/C com falha de infraestrutura ou não executada. Nenhum delta é calculado. |
+| `REJECTED_INVALID_EXECUTION` | `V = 0`. `ECG` é `null`; `ECG-task` e `ECG-self` são descritivos. |
+| `PARTIAL_VALIDITY` | `0 < V < 4` |
+| `GO_REPLICATE` | `V = 4` e `ECG > 0` |
+| `NO_GO` | `V = 4` e `ECG ≤ 0` |
+
+### Leitura pré-registrada: arquitetura × escala
+
+1. Se 7B ou 14B atingir `V > 0` enquanto o 3B no mesmo hardware fica em `V = 0`, a capacidade do modelo-base é ao menos parte da falha do 3B, e o contrato executivo é executável em escala maior.
+2. Se 7B e 14B permanecerem em `V = 0`, aumentar a escala até 14B não resolve. O contrato de terminação e controle passa a ser o suspeito principal, e o Genesis v2 fecha como arquitetura não suportada nesta forma.
+3. `GO_REPLICATE` tem uma única consequência permitida: replicar no benchmark *genuinely unseen* da etapa GR-2 (múltiplas famílias, múltiplas seeds, avaliador externo). Ele nunca autoriza promoção, writeback, transferência ou Genesis v3 por si só.
+4. `NO_GO` significa que o controlador endógeno não supera o fixo com orçamento igual. O mecanismo não é promovido.
+5. Em qualquer caso, são duas tarefas fáceis e uma seed. O resultado é exploratório e não sustenta alegação de capacidade geral.
+
+**Fechamento.** Depois desta escada, o Genesis v2 está encerrado: sem v2.x, sem novas execuções nestes holdouts e sem ajuste de prompts. O que for aprendido aqui alimenta somente o desenho do meta-controller (fusão Horizon + Genesis) e o benchmark unseen.

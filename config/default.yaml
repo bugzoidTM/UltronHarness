@@ -136,6 +136,18 @@ models:
       model: qwen2.5:3b
       enabled: true
       roles: [planning, reasoning, tools, research]
+    ollama_research_7b:
+      provider: ollama
+      endpoint: http://127.0.0.1:11434
+      model: qwen2.5:7b
+      enabled: true
+      roles: [planning, reasoning, tools, research]
+    ollama_research_14b:
+      provider: ollama
+      endpoint: http://127.0.0.1:11434
+      model: qwen2.5:14b
+      enabled: true
+      roles: [planning, reasoning, tools, research]
     llamacpp:
       provider: llamacpp
       endpoint: http://127.0.0.1:8080/v1
