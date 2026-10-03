@@ -386,3 +386,21 @@ O JSON live fornecido contém `response=""` em todas as quatro linhas e não con
 O resultado é **`AUDIT_INCONCLUSIVE_MISSING_CANDIDATE_ANSWER`**. Isso é uma limitação de observabilidade do artefato, não um resultado de `C≤B`, `C=B` ou `C>B`. A auditoria não autoriza o teste 7B/8B com base nesse JSON, porque não é possível distinguir “candidato correto não serializado” de “candidato incorreto não serializado”. Uma execução futura somente poderá ser auditada nesse eixo se o contrato serializar explicitamente o último candidato, sem inferência retrospectiva.
 
 A cobertura adicional está em [`tests/test_genesis_ablation.py`](tests/test_genesis_ablation.py): ausência de candidato não é inferida de `candidate_present`, candidatos explícitos são avaliados mesmo após erro de budget, `ECG-task` e `ECG-self` são independentes, e budgets não pareados são rejeitados.
+
+
+## Genesis v2-FINAL-OBS — Fechamento observável
+
+A etapa corrigiu somente a observabilidade, recongelou o protocolo e executou o mesmo teste B/C numa escada de modelos da mesma família (`qwen2.5` 3B, 7B e 14B) no mesmo hardware. O pré-registro foi commitado em `68f6555` antes de qualquer execução live.
+
+| Componente | Alteração |
+|---|---|
+| [`ultron/genesis/vm.py`](ultron/genesis/vm.py) | Trace com `candidate_answer` e `verification_status` em todos os controladores; `VMExecution.candidate_history` e `last_candidate_answer`; frame em curso acessível após cancelamento. |
+| [`ultron/genesis/public_runner.py`](ultron/genesis/public_runner.py) | Frame parcial preservado em timeout; `call_timeout_seconds` opcional e igual entre condições; `candidate_observation()` e `failure_class()`. |
+| [`scripts/run_genesis_v2final.py`](scripts/run_genesis_v2final.py) | As linhas passam a serializar os campos de candidato. |
+| [`scripts/run_genesis_v2final_obs.py`](scripts/run_genesis_v2final_obs.py) | Entrypoint v2-FINAL-OBS: identidade do modelo por digest sem download, aquecimento neutro, persistência incremental, referência A e gate pré-registrado. |
+| [`scripts/diagnose_genesis_interface.py`](scripts/diagnose_genesis_interface.py) | Diagnóstico pós-hoc, não confirmatório, da interface de saída estruturada, com itens sintéticos fora do protocolo. |
+| [`tests/test_genesis_observability.py`](tests/test_genesis_observability.py) | 16 testes: candidato preservado após HYPOTHESIZE, budget, erro de schema e timeout; simetria B/C; separação cognitiva × infraestrutura; gate; fixture; compatibilidade com o auditor; ausência de download; itens do diagnóstico disjuntos do protocolo. |
+
+As mensagens enviadas ao modelo não mudaram: 35 chamadas capturadas em 6 cenários B/C têm o mesmo SHA-256 antes e depois da correção.
+
+Resultado: `PARTIAL_VALIDITY` em 3B (V = 1/4), 7B (1/4) e 14B (3/4); `ECG` `null` em todos; `ECG-task` 0,0 / −0,5 / −0,5; `ECG-self` −0,5 nas três escalas. O Genesis v2 foi encerrado como `NOT_SUPPORTED`. Detalhes por linha, leitura contra o pré-registro e diagnóstico de interface estão em [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md).

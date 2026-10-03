@@ -217,6 +217,16 @@ python -m scripts.run_genesis_v2final_obs --mode live --model ollama_research_7b
 
 O pré-registro (escada 3B → 7B → 14B no mesmo hardware, gate e leitura arquitetura × escala) está em [`GENESIS_V0_1_PROTOCOL.md`](GENESIS_V0_1_PROTOCOL.md). A cobertura está em [`tests/test_genesis_observability.py`](tests/test_genesis_observability.py).
 
+Resultado da escada (uma execução por modelo, sem falha de infraestrutura):
+
+| Modelo | Gate | Validade B+C | Score B | Score C | `ECG-task` | `ECG-self` |
+|---|---|---:|---:|---:|---:|---:|
+| `qwen2.5:3b` | `PARTIAL_VALIDITY` | 1/4 | 0,5 | 0,0 | 0,0 | −0,5 |
+| `qwen2.5:7b` | `PARTIAL_VALIDITY` | 1/4 | 0,5 | 0,0 | −0,5 | −0,5 |
+| `qwen2.5:14b` | `PARTIAL_VALIDITY` | 3/4 | 1,0 | 0,5 | −0,5 | −0,5 |
+
+A escala torna o controlador fixo válido (2/2 no 14B), mas o controlador endógeno continua falhando por repetir o mesmo operador sem progresso, em todas as escalas. **O Genesis v2 está encerrado como `NOT_SUPPORTED`**, sem v2.x. Um diagnóstico pós-hoc ([`scripts/diagnose_genesis_interface.py`](scripts/diagnose_genesis_interface.py)) identificou ainda um confundidor de interface (campos de conteúdo opcionais e schema estrito para a resposta final), que precisa ser corrigido antes de qualquer teste futuro de controle cognitivo.
+
 ## Segurança e autonomia
 
 O UltronPro começa em **Mode 2 — Supervised Agent**. Ações R0 e R1 permitidas podem ser executadas dentro do workspace; modificações R2 aguardam aprovação. As ações R3/R4 requerem aprovação e as R5 são bloqueadas. O diretório permitido é:

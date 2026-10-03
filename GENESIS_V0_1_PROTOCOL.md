@@ -386,3 +386,86 @@ Cada modelo é executado exatamente uma vez, na ordem 3B → 7B → 14B. Não h�
 5. Em qualquer caso, são duas tarefas fáceis e uma seed. O resultado é exploratório e não sustenta alegação de capacidade geral.
 
 **Fechamento.** Depois desta escada, o Genesis v2 está encerrado: sem v2.x, sem novas execuções nestes holdouts e sem ajuste de prompts. O que for aprendido aqui alimenta somente o desenho do meta-controller (fusão Horizon + Genesis) e o benchmark unseen.
+
+### Resultado live v2-FINAL-OBS
+
+A escada foi executada uma única vez por modelo, na ordem pré-registrada, em 3 de outubro de 2026 (UTC), sobre o commit de pré-registro `68f6555`. Nenhuma linha teve falha de infraestrutura. O `config_hash` foi idêntico entre as linhas de cada modelo. Os tempos totais por modelo, incluindo o aquecimento, foram 150 s (3B), 329 s (7B) e 628 s (14B).
+
+| Modelo | Gate | `V` (B+C) | Score B | Score C | `ECG` | `ECG-task` | `ECG-self` | A direto (exato) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `qwen2.5:3b` | `PARTIAL_VALIDITY` | 1/4 | 0,5 | 0,0 | `null` | 0,0 | −0,5 | 0/2 |
+| `qwen2.5:7b` | `PARTIAL_VALIDITY` | 1/4 | 0,5 | 0,0 | `null` | −0,5 | −0,5 | 0/2 |
+| `qwen2.5:14b` | `PARTIAL_VALIDITY` | 3/4 | 1,0 | 0,5 | `null` | −0,5 | −0,5 | 0/2 |
+
+"Score" é o score do protocolo (linha inválida vale 0). `ECG-task` usa o último candidato emitido, com observabilidade completa: o candidato de toda linha foi serializado.
+
+| Modelo | Condição | Tarefa | Término | Candidato final | Histórico de candidatos | Sequência de operadores |
+|---|---|---|---|---|---|---|
+| 3B | B | `reasoning_06` | `verification_supported` | `11` ✓ | `11` | REPRESENT → HYPOTHESIZE → DEDUCT → VERIFY(supported) |
+| 3B | B | `reasoning_07` | budget (7) | nenhum | — | REPRESENT × 7 (representação sempre vazia) |
+| 3B | C | `reasoning_06` | budget (7) | `8` ✗ | `24 ÷ 6 + 7 = 11`, `testing`, `8`, `8` | REPRESENT → DEDUCT → VERIFY(contradicted) → HYPOTHESIZE → DEDUCT × 3 |
+| 3B | C | `reasoning_07` | budget (7) | `162` ✓ | `Heptaquer`, `162`, `162`, `162` | REPRESENT → DEDUCT → DEDUCT → VERIFY(uncertain) → DEDUCT → VERIFY(uncertain) → DEDUCT |
+| 7B | B | `reasoning_06` | `verification_supported` | `11` ✓ | `11` | REPRESENT → HYPOTHESIZE → DEDUCT → VERIFY(supported) |
+| 7B | B | `reasoning_07` | budget (7) | nenhum | — | REPRESENT → HYPOTHESIZE × 6 (hipóteses sempre vazias) |
+| 7B | C | `reasoning_06` | budget (7) | nenhum | — | REPRESENT × 7 (o modelo escolheu REPRESENT como próximo operador em todas as decisões) |
+| 7B | C | `reasoning_07` | budget (7) | nenhum | — | REPRESENT → HYPOTHESIZE × 6 (hipóteses vazias; o modelo escolheu HYPOTHESIZE de novo a cada decisão) |
+| 14B | B | `reasoning_06` | `verification_supported` | `11` ✓ | `11` | REPRESENT → HYPOTHESIZE → DEDUCT → VERIFY(supported) |
+| 14B | B | `reasoning_07` | `verification_supported` | `162` ✓ | `162` | REPRESENT → HYPOTHESIZE → DEDUCT → VERIFY(supported) |
+| 14B | C | `reasoning_06` | budget (7) | `4` ✗ | `4` × 6 | REPRESENT → DEDUCT × 6 (repetiu o passo intermediário 24/6 e nunca chamou VERIFY) |
+| 14B | C | `reasoning_07` | `verification_supported` | `162` ✓ | `162` | REPRESENT → DEDUCT → VERIFY(supported) |
+
+A referência A (chamada direta com schema estrito) errou as duas tarefas em todas as escalas. As respostas foram `x` e um texto em francês (3B), `w` e `indices_observados=[2, 6, 18, 54]; razão=3; próximo_número=54*3=162` (7B), e `Our calculation is as follows: 24 divided by 6 equals 4, and then adding 7 results in 11.` e `userResponse` (14B).
+
+### Leitura contra o pré-registro
+
+- **Gate.** `PARTIAL_VALIDITY` nos três modelos. `ECG` é `null` em todos, porque nenhum atingiu `V = 4/4`. Não há `GO_REPLICATE`, logo nada segue para replicação.
+- **Leituras 1 e 2 não se aplicam literalmente.** Ambas supunham o 3B em `V = 0` no mesmo hardware, como na máquina Windows. Aqui o 3B obteve `V = 1/4` com a mesma seed, o mesmo protocolo e a mesma tag de modelo (o digest do 3B na máquina Windows não foi registrado na época). Isso mostra que um resultado de seed única não se reproduz entre runtimes, o que reforça a exigência de múltiplas seeds na etapa GR-2.
+- **Descritivamente, a escala ajuda o controlador fixo, não o endógeno.** A validade de B foi 1/2 → 1/2 → 2/2; a de C foi 0/2 → 0/2 → 1/2. `ECG-task ≤ 0` e `ECG-self = −0,5` nas três escalas. Em nenhum modelo o controle endógeno igualou o fixo.
+- **Modo de falha de C independente da escala.** Em todas as escalas, a falha dominante de C foi repetir o mesmo operador sem progresso (REPRESENT × 7, HYPOTHESIZE × 6, DEDUCT × 6). O contrato endógeno delega ao modelo a escolha do próximo operador sem nenhuma proteção contra ausência de progresso, e o modelo não detecta de forma confiável que o estado não mudou. Isso é um defeito do desenho, não só de capacidade. B não tem esse problema na escolha do operador porque a regra fixa avança quando o frame muda, mas herda o mesmo loop quando o modelo devolve conteúdo vazio.
+
+### Veredito de fechamento do Genesis v2
+
+**Genesis v2 está encerrado como `NOT_SUPPORTED`.** O controle executivo endógeno não produziu evidência de ganho sobre o controle fixo em nenhuma das três escalas, com orçamento igual. O mecanismo não é promovido, e não haverá Genesis v2.x nem novas execuções nestes holdouts.
+
+Resposta à pergunta da etapa: a falha do 3B **não** era só tamanho de modelo. A capacidade importa (o controlador fixo só fica totalmente válido no 14B), mas o controle endógeno falha por um defeito de desenho que persiste em escala. Há ainda um terceiro fator, de interface, que confunde as duas leituras e está documentado no diagnóstico abaixo.
+
+### Diagnóstico pós-hoc de interface (não confirmatório)
+
+A referência A errou as duas tarefas em todas as escalas, inclusive no 14B, com respostas como `w`, `x` e `userResponse`. Como isso é implausível para a capacidade desses modelos, a interface de saída estruturada foi diagnosticada depois da escada com [`scripts/diagnose_genesis_interface.py`](scripts/diagnose_genesis_interface.py). O diagnóstico não altera o veredito acima, que segue o pré-registro.
+
+O método usa 8 itens sintéticos nas mesmas formas públicas, fora do protocolo (um teste garante que são disjuntos de `reasoning_01/02/06/07`), seed `42` e os mesmos três modelos. As reexecuções do schema estrito reproduziram exatamente os números da primeira execução.
+
+**D1 — resposta direta.** Mesmas mensagens da condição A. Cada célula mostra acerto exato e, entre parênteses, acerto do último número no texto (métrica descritiva que separa formato de raciocínio).
+
+| Modelo | Schema estrito (atual) | Schema + formato descrito no prompt | `format=json` sem schema | Texto livre |
+|---|---:|---:|---:|---:|
+| 3B | 0/8 (4/8) | 6/8 (6/8) | 0/8 (0/8) | 4/8 (4/8) |
+| 7B | 1/8 (3/8) | 3/8 (3/8) | 4/8 (7/8) | 7/8 (7/8) |
+| 14B | 0/8 (4/8) | 4/8 (5/8) | 5/8 (8/8) | 5/8 (5/8) |
+
+No 7B, o schema sem `minLength`/`maxLength` acertou 2/8, então os limites de comprimento não são a causa. Mesmo com o formato descrito no prompt, o schema estrito acerta os 3 itens de sequência no 7B e no 14B, mas só 0/5 (7B) e 1/5 (14B) dos aritméticos, que saem como placeholders (`inserir_aqui_o_resultado`, `dobro_do_resultado_da_divisao_mais_oito`, `:@`). Um schema que contém só a resposta obriga o modelo a emiti-la como primeiros tokens de uma string, sem espaço para calcular. O operador `DEDUCT` tem o mesmo desenho (`conclusion` de até 96 caracteres, sem campo de trabalho), o que é coerente com o 14B repetindo apenas o passo intermediário `4` em C.
+
+**D2 — conteúdo opcional.** Fração de saídas sem nenhum conteúdo cognitivo (só `next_operator`):
+
+| Modelo | REPRESENT atual (opcional) | REPRESENT obrigatório | HYPOTHESIZE atual (opcional) | HYPOTHESIZE obrigatório |
+|---|---:|---:|---:|---:|
+| 3B | 3/8 | 0/8 | 0/8 | 0/8 |
+| 7B | 0/8 | 0/8 | 4/8 | 0/8 |
+| 14B | 0/8 | 0/8 | 0/8 | 0/8 |
+
+Nos schemas atuais, o único campo obrigatório de `RepresentationOutput` e `HypothesisOutput` é `next_operator`. Sob decodificação restrita, o modelo pode cumprir o schema sem produzir conteúdo. Isso reproduz os loops da escada: REPRESENT × 7 no 3B (B, `reasoning_07`) e HYPOTHESIZE × 6 no 7B (B e C, `reasoning_07`, uma sequência; no D2, os três itens de sequência estão entre os 4 vazios do 7B). Com conteúdo obrigatório, nenhuma saída veio vazia e nenhuma violou o schema.
+
+**O que o diagnóstico muda na interpretação.**
+
+1. O veredito `NOT_SUPPORTED` permanece. A comparação B × C mediu os dois controladores pela mesma interface defeituosa.
+2. Parte da falha de C não é explicada pela interface. No 7B (C, `reasoning_06`), a representação tinha conteúdo e ainda assim o modelo escolheu REPRESENT sete vezes. No 14B (C, `reasoning_06`), havia candidato e o modelo escolheu DEDUCT seis vezes sem chamar VERIFY. A falta de proteção contra ausência de progresso no controle endógeno é um defeito próprio.
+3. A referência A (0/2 em todas as escalas) não mede a capacidade do modelo-base. Ela mede o schema de resposta sem espaço de trabalho.
+
+**Requisitos para qualquer teste futuro de controle cognitivo** (meta-controller da etapa 4 ou um eventual Genesis v3):
+
+- campo de trabalho antes do campo de resposta em todo schema, ou raciocínio em texto livre seguido de extração separada;
+- campos de conteúdo obrigatórios e não vazios;
+- formato descrito no prompt, não só imposto pela gramática;
+- proteção contra repetição de operador sem mudança de estado;
+- política de extração e normalização da resposta pré-registrada;
+- gate de validade de interface num conjunto de calibração fora do benchmark antes da comparação.

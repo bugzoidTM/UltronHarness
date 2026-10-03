@@ -237,3 +237,28 @@ def test_model_identity_never_downloads_missing_model() -> None:
         asyncio.run(model_identity("http://ollama.test", "qwen2.5:7b", transport=transport))
     identity = asyncio.run(model_identity("http://ollama.test", "qwen2.5:3b", transport=transport))
     assert identity["digest"] == "abc"
+
+
+def test_interface_diagnostic_items_never_touch_protocol_tasks() -> None:
+    from scripts.diagnose_genesis_interface import ITEMS
+    from ultron.genesis.public_runner import _public_answer
+
+    protocol = {task.objective for task in _load_public_tasks(ROOT).values()}
+    assert len(protocol) == 4
+    assert protocol.isdisjoint(ITEMS)
+    assert all(_public_answer(item) is not None for item in ITEMS)
+
+
+def test_interface_diagnostic_summary_separates_format_from_reasoning() -> None:
+    from scripts.diagnose_genesis_interface import last_number, summarize
+
+    assert last_number("os próximo número é 768.") == "768"
+    assert last_number("13.000000000000002 (retornado como 13") == "13"
+    assert last_number("w") is None
+    rows = [
+        {"expected": "41", "schema": {"answer": "12 x 3 = 36, mais 5 = 41", "exact": False}, "text": {"answer": "41", "exact": True}},
+        {"expected": "80", "schema": {"answer": "nil", "exact": False}, "text": {"answer": "80", "exact": True}},
+    ]
+    summary = summarize({"d1_variants": ["schema", "text"], "D1": rows, "D2": []})
+    assert summary["D1_exact_rate"] == {"schema": 0.0, "text": 1.0}
+    assert summary["D1_last_number_rate"] == {"schema": 0.5, "text": 1.0}
